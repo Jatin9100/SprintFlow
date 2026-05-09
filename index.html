@@ -267,13 +267,10 @@
   #backlog-content{overflow-anchor:none}
   /* Prevent flash on filter/re-render */
   #kanban-board{overflow-anchor:none}
-  #search-filter-bar select:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 2px rgba(99,102,241,0.12)}
-  #search-filter-bar select:hover{border-color:#a5b4fc}
   #search-results-panel::-webkit-scrollbar{width:4px}
   #search-results-panel::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
   @media(max-width:640px){
     #search-container{max-width:100%}
-    #search-filter-bar{position:fixed;left:8px;right:8px;top:auto}
   }
 
   /* ── FIREBASE AUTH LOGIN SCREEN ── */
@@ -316,10 +313,19 @@
   .rbac-denied-text{font-size:14px;color:#64748b;max-width:320px;line-height:1.6;margin-bottom:24px}
   .rbac-denied-badge{display:inline-flex;align-items:center;gap:6px;background:#fef3c7;
     color:#b45309;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600}
-  /* ── FILTER PANEL ── */
-  #search-filter-bar select:focus{border-color:#6366f1;box-shadow:0 0 0 2px rgba(99,102,241,0.1)}
-  #search-filter-bar select:hover{border-color:#a5b4fc}
-  #sf-active-chips span:hover{background:#ddd6fe}
+  /* ── REPORTS ADVANCED FILTER PANEL ── */
+  #rpt-adv-filter-panel{position:absolute;top:calc(100% + 8px);left:0;z-index:500;background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);padding:20px;width:480px;max-width:96vw;animation:rptPanelIn 0.18s cubic-bezier(.34,1.2,.64,1)}
+  @keyframes rptPanelIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+  #rpt-adv-filter-panel .rpt-filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  #rpt-adv-filter-panel label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+  #rpt-adv-filter-panel select{font-size:13px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;width:100%;outline:none;transition:border 0.15s,box-shadow 0.15s;color:#1e293b}
+  #rpt-adv-filter-panel select:focus{border-color:#6366f1;box-shadow:0 0 0 2px rgba(99,102,241,0.1);background:#fff}
+  .rpt-filter-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#ede9fe;color:#6d28d9;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;transition:background 0.12s}
+  .rpt-filter-chip:hover{background:#ddd6fe}
+  .rpt-filter-chip .chip-x{font-size:13px;line-height:1;margin-left:2px;opacity:0.6}
+  #rpt-filter-btn-wrap{position:relative;display:inline-block}
+  #rpt-active-badge{display:none;position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#6366f1;color:#fff;font-size:9px;font-weight:800;align-items:center;justify-content:center}
+  #rpt-active-badge.visible{display:flex}
 </style>
 </head>
 <body class="flex overflow-hidden h-screen">
@@ -446,13 +452,6 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
-        <!-- Filter toggle -->
-        <button id="search-filter-btn" onclick="toggleSearchFilters()" title="Filters"
-          style="flex-shrink:0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#64748b;font-family:'DM Sans',sans-serif;transition:all 0.15s">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-          <span class="hidden sm:inline">Filters</span>
-          <span id="filter-active-count" style="display:none;background:#6366f1;color:#fff;border-radius:10px;padding:0 5px;font-size:10px;min-width:16px;text-align:center"></span>
-        </button>
       </div>
 
       <!-- Search dropdown (results + recent) -->
@@ -473,68 +472,6 @@
         </div>
       </div>
 
-      <!-- Filter panel (redesigned compact dropdown) -->
-      <div id="search-filter-bar" style="display:none;opacity:0;transform:translateY(-4px);transition:opacity 0.18s ease,transform 0.18s ease;margin-top:6px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:998;position:absolute;left:0;right:0;overflow:hidden">
-        <!-- Filter chips row -->
-        <div id="sf-active-chips" style="display:none;padding:8px 12px 0;gap:5px;flex-wrap:wrap"></div>
-        <!-- Filter sections -->
-        <div style="padding:10px 12px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-          <div>
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Status</div>
-            <select id="sf-status" onchange="applyGlobalFilters()" style="font-size:12px;padding:5px 8px;border:1px solid #e2e8f0;border-radius:7px;color:#475569;background:#f8fafc;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;width:100%">
-              <option value="">All Statuses</option>
-              <option value="open">Open</option>
-              <option value="dev-in-progress">Dev In Progress</option>
-              <option value="dev-completed">Dev Completed</option>
-              <option value="in-qa">In QA</option>
-              <option value="qa-in-progress">QA In Progress</option>
-              <option value="reopen">Reopen</option>
-              <option value="pending-with-client">Pending With Client</option>
-              <option value="ready-for-prod">Ready for Prod</option>
-              <option value="released">Released</option>
-            </select>
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Priority</div>
-            <select id="sf-priority" onchange="applyGlobalFilters()" style="font-size:12px;padding:5px 8px;border:1px solid #e2e8f0;border-radius:7px;color:#475569;background:#f8fafc;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;width:100%">
-              <option value="">All</option>
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Assignee</div>
-            <select id="sf-assignee" onchange="applyGlobalFilters()" style="font-size:12px;padding:5px 8px;border:1px solid #e2e8f0;border-radius:7px;color:#475569;background:#f8fafc;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;width:100%">
-              <option value="">All</option>
-            </select>
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Epic</div>
-            <select id="sf-epic" onchange="applyGlobalFilters()" style="font-size:12px;padding:5px 8px;border:1px solid #e2e8f0;border-radius:7px;color:#475569;background:#f8fafc;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;width:100%">
-              <option value="">All</option>
-            </select>
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Sprint</div>
-            <select id="sf-sprint" onchange="applyGlobalFilters()" style="font-size:12px;padding:5px 8px;border:1px solid #e2e8f0;border-radius:7px;color:#475569;background:#f8fafc;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;width:100%">
-              <option value="">All</option>
-            </select>
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Project</div>
-            <select id="sf-project" onchange="applyGlobalFilters()" style="font-size:12px;padding:5px 8px;border:1px solid #e2e8f0;border-radius:7px;color:#475569;background:#f8fafc;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;width:100%">
-              <option value="">All</option>
-            </select>
-          </div>
-        </div>
-        <!-- Sticky footer -->
-        <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:8px 12px;margin-top:8px;border-top:1px solid #f1f5f9;background:#fafafa">
-          <button onclick="resetSearchFilters()" style="font-size:12px;font-weight:600;color:#64748b;background:none;border:1px solid #e2e8f0;cursor:pointer;padding:5px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;transition:all 0.12s" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">Reset</button>
-          <button onclick="applyGlobalFilters();_closeFilterPanel()" style="font-size:12px;font-weight:600;color:#fff;background:#6366f1;border:none;cursor:pointer;padding:5px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;transition:background 0.12s" onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#6366f1'">Apply</button>
-        </div>
-      </div>
     </div>
     <button class="btn btn-primary" onclick="openCreateTaskModal()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -751,13 +688,89 @@
 
     <!-- REPORTS — Analytics Dashboard v2 -->
     <div class="page" id="page-reports">
-      <!-- Header row with project filter -->
+      <!-- Header row with filter controls -->
       <div class="page-header">
         <div>
           <div class="page-title">Analytics Dashboard</div>
           <div class="page-subtitle">Project health, team productivity & release insights</div>
         </div>
         <div class="flex gap-2 items-center" style="flex-wrap:nowrap">
+          <!-- Advanced Filters button (LEFT) -->
+          <div id="rpt-filter-btn-wrap">
+            <button class="btn btn-secondary text-xs" id="rpt-filter-toggle-btn" onclick="toggleRptFilterPanel()" style="position:relative">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filters
+            </button>
+            <span id="rpt-active-badge">0</span>
+            <!-- Advanced filter panel (absolutely positioned below button) -->
+            <div id="rpt-adv-filter-panel" style="display:none">
+              <div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+                <span>Advanced Filters</span>
+                <button onclick="toggleRptFilterPanel()" style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:0;line-height:1">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <div class="rpt-filter-grid">
+                <div>
+                  <label>Status</label>
+                  <select id="rpt-adv-status">
+                    <option value="all">All Statuses</option>
+                    <option value="open">Open</option>
+                    <option value="dev-in-progress">Dev In Progress</option>
+                    <option value="dev-completed">Dev Completed</option>
+                    <option value="in-qa">In QA</option>
+                    <option value="qa-in-progress">QA In Progress</option>
+                    <option value="reopen">Reopen</option>
+                    <option value="pending-with-client">Pending With Client</option>
+                    <option value="ready-for-prod">Ready for Prod</option>
+                    <option value="released">Released</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Priority</label>
+                  <select id="rpt-adv-priority">
+                    <option value="all">All Priorities</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Assignee</label>
+                  <select id="rpt-adv-assignee">
+                    <option value="all">All Assignees</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Task Type</label>
+                  <select id="rpt-adv-type">
+                    <option value="all">All Types</option>
+                    <option value="story">Story</option>
+                    <option value="task">Task</option>
+                    <option value="bug">Bug</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Epic</label>
+                  <select id="rpt-adv-epic">
+                    <option value="all">All Epics</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Release</label>
+                  <select id="rpt-adv-release">
+                    <option value="all">All Releases</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid #f1f5f9">
+                <button class="btn btn-secondary text-xs" onclick="resetRptAdvFilters()">Reset</button>
+                <button class="btn btn-primary text-xs" onclick="applyRptAdvFilters()">Apply Filters</button>
+              </div>
+            </div>
+          </div>
+          <!-- Project and Sprint dropdowns (RIGHT of Filters) -->
           <select id="rpt-project-filter" class="text-sm" style="width:auto;padding:8px 12px" onchange="renderReports()">
             <option value="all">All Projects</option>
           </select>
@@ -770,6 +783,8 @@
           </button>
         </div>
       </div>
+      <!-- Active filter chips row -->
+      <div id="rpt-active-chips" style="display:none;margin-bottom:12px;margin-top:-12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center"></div>
 
       <!-- ═══ EXECUTIVE HEALTH STRIP ═══ -->
       <div class="card mb-5" style="padding:14px 20px">
@@ -3365,14 +3380,214 @@ function kanbanDrop(e,status){
 let _rptProdSort = 'completed';
 function setSortProd(col){ _rptProdSort=col; document.getElementById('rpt-prod-sort').value=col; renderProductivityTable(); }
 
-function _rptFilteredTasks(tasks){
+// ── Advanced filter state (applied on Apply click) ──
+let _rptAdvFilters = {status:'all',priority:'all',assignee:'all',type:'all',epic:'all',release:'all'};
+// ── Pending state (in-panel, not yet applied) ──
+let _rptAdvPending = {};
+
+function toggleRptFilterPanel(){
+  const panel=document.getElementById('rpt-adv-filter-panel');
+  if(!panel)return;
+  const isOpen=panel.style.display!=='none';
+  if(isOpen){
+    panel.style.display='none';
+  } else {
+    _rptPopulateAdvFilterDropdowns();
+    // Sync panel selects with currently applied filters
+    ['status','priority','assignee','type','epic','release'].forEach(k=>{
+      const el=document.getElementById('rpt-adv-'+k);
+      if(el) el.value=_rptAdvFilters[k]||'all';
+    });
+    panel.style.display='block';
+  }
+}
+
+// Close panel on outside click or ESC
+document.addEventListener('click',function(e){
+  const panel=document.getElementById('rpt-adv-filter-panel');
+  const btn=document.getElementById('rpt-filter-btn-wrap');
+  if(panel&&panel.style.display!=='none'&&btn&&!btn.contains(e.target)){
+    panel.style.display='none';
+  }
+},true);
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    const panel=document.getElementById('rpt-adv-filter-panel');
+    if(panel) panel.style.display='none';
+  }
+});
+
+function _rptPopulateAdvFilterDropdowns(){
+  // Assignees
+  const assigneeSel=document.getElementById('rpt-adv-assignee');
+  if(assigneeSel){
+    const prev=assigneeSel.value;
+    assigneeSel.innerHTML=`<option value="all">All Assignees</option>`+
+      state.users.map(u=>`<option value="${u.id}"${u.id===prev?' selected':''}>${u.name}</option>`).join('');
+  }
+  // Epics
+  const epicSel=document.getElementById('rpt-adv-epic');
+  if(epicSel){
+    const prev=epicSel.value;
+    epicSel.innerHTML=`<option value="all">All Epics</option>`+
+      (state.epics||[]).map(e=>`<option value="${e.id}"${e.id===prev?' selected':''}>${e.title}</option>`).join('');
+  }
+  // Releases
+  const relSel=document.getElementById('rpt-adv-release');
+  if(relSel){
+    const prev=relSel.value;
+    relSel.innerHTML=`<option value="all">All Releases</option>`+
+      (state.releases||[]).map(r=>`<option value="${r.id}"${r.id===prev?' selected':''}>${r.name}</option>`).join('');
+  }
+}
+
+function applyRptAdvFilters(){
+  ['status','priority','assignee','type','epic','release'].forEach(k=>{
+    const el=document.getElementById('rpt-adv-'+k);
+    _rptAdvFilters[k]=el?el.value:'all';
+  });
+  document.getElementById('rpt-adv-filter-panel').style.display='none';
+  _rptUpdateActiveBadge();
+  _rptUpdateActiveChips();
+  renderReports();
+}
+
+function resetRptAdvFilters(){
+  _rptAdvFilters={status:'all',priority:'all',assignee:'all',type:'all',epic:'all',release:'all'};
+  ['status','priority','assignee','type','epic','release'].forEach(k=>{
+    const el=document.getElementById('rpt-adv-'+k);
+    if(el) el.value='all';
+  });
+  document.getElementById('rpt-adv-filter-panel').style.display='none';
+  _rptUpdateActiveBadge();
+  _rptUpdateActiveChips();
+  renderReports();
+}
+
+function removeRptAdvFilter(key){
+  _rptAdvFilters[key]='all';
+  _rptUpdateActiveBadge();
+  _rptUpdateActiveChips();
+  renderReports();
+}
+
+function _rptActiveFilterCount(){
+  const projSel=document.getElementById('rpt-project-filter');
+  const sprintSel=document.getElementById('rpt-sprint-filter');
+  let count=0;
+  if(projSel&&projSel.value!=='all') count++;
+  if(sprintSel&&sprintSel.value!=='all') count++;
+  Object.values(_rptAdvFilters).forEach(v=>{ if(v&&v!=='all') count++; });
+  return count;
+}
+
+function _rptUpdateActiveBadge(){
+  const badge=document.getElementById('rpt-active-badge');
+  if(!badge)return;
+  const count=Object.values(_rptAdvFilters).filter(v=>v&&v!=='all').length;
+  if(count>0){
+    badge.textContent=count;
+    badge.classList.add('visible');
+  } else {
+    badge.classList.remove('visible');
+  }
+}
+
+function _rptUpdateActiveChips(){
+  const container=document.getElementById('rpt-active-chips');
+  if(!container)return;
+  const labels={
+    status:'Status',priority:'Priority',assignee:'Assignee',
+    type:'Type',epic:'Epic',release:'Release'
+  };
+  const activeEntries=Object.entries(_rptAdvFilters).filter(([k,v])=>v&&v!=='all');
+  if(!activeEntries.length){container.style.display='none';return;}
+  container.style.display='flex';
+  container.innerHTML=activeEntries.map(([k,v])=>{
+    // Get human-readable label
+    let displayVal=v;
+    if(k==='assignee'){const u=state.users.find(u=>u.id===v);displayVal=u?u.name:v;}
+    if(k==='epic'){const e=(state.epics||[]).find(e=>e.id===v);displayVal=e?e.title:v;}
+    if(k==='release'){const r=(state.releases||[]).find(r=>r.id===v);displayVal=r?r.name:v;}
+    return `<span class="rpt-filter-chip" onclick="removeRptAdvFilter('${k}')">
+      ${labels[k]}: ${displayVal}<span class="chip-x">×</span>
+    </span>`;
+  }).join('');
+}
+
+// ── CENTRALIZED: filteredReportsData ──
+// All reports widgets MUST consume this — never raw state arrays.
+function _getFilteredReportsData(){
   const projSel=document.getElementById('rpt-project-filter');
   const sprintSel=document.getElementById('rpt-sprint-filter');
   const pid=projSel?projSel.value:'all';
   const sid=sprintSel?sprintSel.value:'all';
+  const f=_rptAdvFilters;
+
+  let tasks=RBAC.getVisibleTasks(state.tasks);
+  // project filter
+  if(pid&&pid!=='all') tasks=tasks.filter(t=>t.project===pid);
+  // sprint filter
+  if(sid&&sid!=='all') tasks=tasks.filter(t=>t.sprint===sid);
+  // status
+  if(f.status&&f.status!=='all') tasks=tasks.filter(t=>t.status===f.status);
+  // priority
+  if(f.priority&&f.priority!=='all') tasks=tasks.filter(t=>t.priority===f.priority);
+  // assignee
+  if(f.assignee&&f.assignee!=='all') tasks=tasks.filter(t=>t.assignee===f.assignee);
+  // type
+  if(f.type&&f.type!=='all') tasks=tasks.filter(t=>t.type===f.type);
+  // epic
+  if(f.epic&&f.epic!=='all') tasks=tasks.filter(t=>t.epicId===f.epic);
+  // release
+  if(f.release&&f.release!=='all'){
+    const rel=(state.releases||[]).find(r=>r.id===f.release);
+    const relTaskIds=rel?(rel.taskIds||[]):[];
+    tasks=tasks.filter(t=>relTaskIds.includes(t.id));
+  }
+
+  let sprints=RBAC.getVisibleSprints();
+  if(pid&&pid!=='all') sprints=sprints.filter(s=>s.project===pid);
+  if(sid&&sid!=='all') sprints=sprints.filter(s=>s.id===sid);
+
+  let epics=RBAC.getVisibleEpics();
+  if(pid&&pid!=='all') epics=epics.filter(e=>e.projectId===pid);
+  if(f.epic&&f.epic!=='all') epics=epics.filter(e=>e.id===f.epic);
+
+  let projects=RBAC.getVisibleProjects();
+  if(pid&&pid!=='all') projects=projects.filter(p=>p.id===pid);
+
+  let releases=state.releases||[];
+  if(pid&&pid!=='all') releases=releases.filter(r=>r.projectId===pid);
+  if(f.release&&f.release!=='all') releases=releases.filter(r=>r.id===f.release);
+  // When task-level filters are active, also filter release task lists to only matching tasks
+  const filteredTaskIds=new Set(tasks.map(t=>t.id));
+  // (releases themselves stay, but downstream task lookups use filteredTaskIds)
+
+  return {tasks,sprints,epics,projects,releases,filteredTaskIds};
+}
+
+// Legacy helpers kept for backward compatibility — now delegate to centralized filter
+function _rptFilteredTasks(tasks){
+  // Not used directly in renderReports anymore, kept for renderProductivityTable compatibility
+  const projSel=document.getElementById('rpt-project-filter');
+  const sprintSel=document.getElementById('rpt-sprint-filter');
+  const pid=projSel?projSel.value:'all';
+  const sid=sprintSel?sprintSel.value:'all';
+  const f=_rptAdvFilters;
   let filtered=tasks;
   if(pid&&pid!=='all') filtered=filtered.filter(t=>t.project===pid);
   if(sid&&sid!=='all') filtered=filtered.filter(t=>t.sprint===sid);
+  if(f.status&&f.status!=='all') filtered=filtered.filter(t=>t.status===f.status);
+  if(f.priority&&f.priority!=='all') filtered=filtered.filter(t=>t.priority===f.priority);
+  if(f.assignee&&f.assignee!=='all') filtered=filtered.filter(t=>t.assignee===f.assignee);
+  if(f.type&&f.type!=='all') filtered=filtered.filter(t=>t.type===f.type);
+  if(f.epic&&f.epic!=='all') filtered=filtered.filter(t=>t.epicId===f.epic);
+  if(f.release&&f.release!=='all'){
+    const rel=(state.releases||[]).find(r=>r.id===f.release);
+    const relTaskIds=rel?(rel.taskIds||[]):[];
+    filtered=filtered.filter(t=>relTaskIds.includes(t.id));
+  }
   return filtered;
 }
 
@@ -3447,12 +3662,17 @@ function renderReports(){
       visibleSprints.map(s=>`<option value="${s.id}"${s.id===prevSprint?' selected':''}>${s.name}</option>`).join('');
   }
 
-  // ── RBAC-scoped data ──
-  const _rt=_rptFilteredTasks(RBAC.getVisibleTasks(state.tasks));
-  const _rs=_rptFilteredSprints(RBAC.getVisibleSprints());
-  const _re=RBAC.getVisibleEpics();
-  const _rp=RBAC.getVisibleProjects();
-  const _rl=(state.releases||[]);
+  // ── Sync badge & chips with current applied filters ──
+  _rptUpdateActiveBadge();
+  _rptUpdateActiveChips();
+
+  // ── ALL data flows through centralized filteredReportsData ──
+  const fd=_getFilteredReportsData();
+  const _rt=fd.tasks;
+  const _rs=fd.sprints;
+  const _re=fd.epics;
+  const _rp=fd.projects;
+  const _rl=fd.releases;
 
   // ── KPI: row 1 ──
   const activeSprints=_rs.filter(s=>s.status==='active');
@@ -3669,9 +3889,9 @@ function renderReports(){
     }).join('')||`<tr><td colspan="7" style="padding:24px;text-align:center;color:#94a3b8;font-size:13px">No projects</td></tr>`;
   }
 
-  // ── RELEASE KPIs ──
-  const totalRelTasks=_rl.flatMap(r=>r.taskIds||[]).length;
-  const totalRelDone=_rl.flatMap(r=>r.taskIds||[]).map(id=>_rt.find(t=>t.id===id)).filter(t=>t&&t.status==='released').length;
+  // ── RELEASE KPIs — use fd.filteredTaskIds for task-level filter awareness ──
+  const totalRelTasks=_rl.flatMap(r=>(r.taskIds||[]).filter(id=>fd.filteredTaskIds.has(id))).length;
+  const totalRelDone=_rl.flatMap(r=>(r.taskIds||[]).filter(id=>fd.filteredTaskIds.has(id))).map(id=>_rt.find(t=>t.id===id)).filter(t=>t&&t.status==='released').length;
   const relCompPct=totalRelTasks?Math.round((totalRelDone/totalRelTasks)*100):0;
   setEl('rpt-rel-comp',relCompPct+'%');
   const rcBar=document.getElementById('rpt-rel-comp-bar');if(rcBar)rcBar.style.width=relCompPct+'%';
@@ -3686,7 +3906,7 @@ function renderReports(){
   const rcCtx=document.getElementById('relCompChart').getContext('2d');
   const rlAbbrv=_rl.map(r=>(r.name||'').length>14?r.name.slice(0,13)+'…':r.name);
   const rlPcts=_rl.map(r=>{
-    const rTasks=(r.taskIds||[]).map(id=>_rt.find(t=>t.id===id)).filter(Boolean);
+    const rTasks=(r.taskIds||[]).filter(id=>fd.filteredTaskIds.has(id)).map(id=>_rt.find(t=>t.id===id)).filter(Boolean);
     const rDone=rTasks.filter(t=>t.status==='released').length;
     return rTasks.length?Math.round((rDone/rTasks.length)*100):0;
   });
@@ -3715,12 +3935,16 @@ function renderReports(){
     options:_chartOpts({plugins:{legend:{display:false}}})
   });
 
-  // ── EPIC CHARTS ──
+  // ── EPIC CHARTS — use _re (already filtered by _getFilteredReportsData) ──
+  // For counts/points, scope to filtered tasks only
   const epics=_re||[];
   const epicLabels=epics.map(e=>e.title.length>12?e.title.slice(0,11)+'…':e.title);
   const epicColors=epics.map(e=>e.color);
-  const ecDone=epics.map(e=>getEpicProgress(e.id).done);
-  const ecTotal=epics.map(e=>getEpicProgress(e.id).total);
+  const ecDone=epics.map(e=>{
+    const eTasks=_rt.filter(t=>t.epicId===e.id);
+    return eTasks.filter(t=>['released','ready-for-prod'].includes(t.status)).length;
+  });
+  const ecTotal=epics.map(e=>_rt.filter(t=>t.epicId===e.id).length);
   const ecRemaining=ecTotal.map((t,i)=>t-ecDone[i]);
   const ecCtx=document.getElementById('epicCompletionChart').getContext('2d');
   charts.epicCompletion=new Chart(ecCtx,{
@@ -3734,15 +3958,15 @@ function renderReports(){
     },
     options:_chartOpts({scales:{x:{stacked:true,grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{stacked:true,grid:{color:'#f8fafc'},ticks:{font:{family:'DM Sans',size:11},stepSize:1}}}})
   });
-  const ewPts=epics.map(e=>getEpicStoryPoints(e.id).total);
+  const ewPts=epics.map(e=>_rt.filter(t=>t.epicId===e.id).reduce((a,t)=>a+(t.points||0),0));
   const ewCtx=document.getElementById('epicWorkloadChart').getContext('2d');
   charts.epicWorkload=new Chart(ewCtx,{
     type:'bar',
     data:{labels:epicLabels.length?epicLabels:['No Epics'],datasets:[{label:'Story Points',data:ewPts.length?ewPts:[0],backgroundColor:epicColors.length?epicColors.map(c=>c+'bb'):['#e2e8f0'],borderRadius:6}]},
     options:_chartOpts({plugins:{legend:{display:false}}})
   });
-  const evDone=epics.map(e=>getEpicStoryPoints(e.id).done);
-  const evRemaining=epics.map(e=>getEpicStoryPoints(e.id).remaining);
+  const evDone=epics.map(e=>_rt.filter(t=>t.epicId===e.id&&['released','ready-for-prod'].includes(t.status)).reduce((a,t)=>a+(t.points||0),0));
+  const evRemaining=epics.map(e=>_rt.filter(t=>t.epicId===e.id&&!['released','ready-for-prod'].includes(t.status)).reduce((a,t)=>a+(t.points||0),0));
   const evCtx=document.getElementById('epicVelocityChart').getContext('2d');
   charts.epicVelocity=new Chart(evCtx,{
     type:'bar',
@@ -5981,7 +6205,6 @@ function submitEditRelease(id){
 
 // ── State ──
 let _searchDebounce = null;
-let _searchFiltersVisible = false;
 const SEARCH_RECENT_KEY = 'sprintflow_recent_searches';
 const MAX_RECENT = 5;
 
@@ -6015,132 +6238,6 @@ function highlightMatch(text,q){
   if(!q||!text)return text||'';
   const safe=q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   return String(text).replace(new RegExp('('+safe+')','gi'),'<mark style="background:#fef08a;border-radius:2px;padding:0 1px">$1</mark>');
-}
-
-// ── Filter active count ──
-function countActiveFilters(){
-  const ids=['sf-status','sf-priority','sf-assignee','sf-epic','sf-sprint','sf-project'];
-  return ids.filter(id=>{ const el=document.getElementById(id); return el&&el.value; }).length;
-}
-function updateFilterBadge(){
-  const n=countActiveFilters();
-  const badge=document.getElementById('filter-active-count');
-  const btn=document.getElementById('search-filter-btn');
-  if(badge){ badge.textContent=n; badge.style.display=n?'inline-block':'none'; }
-  if(btn){ btn.style.borderColor=n?'#6366f1':'#e2e8f0'; btn.style.color=n?'#6366f1':'#64748b'; }
-}
-
-// ── Populate filter dropdowns ──
-function populateFilterDropdowns(){
-  const assigneeSel=document.getElementById('sf-assignee');
-  const epicSel=document.getElementById('sf-epic');
-  const sprintSel=document.getElementById('sf-sprint');
-  const projSel=document.getElementById('sf-project');
-  if(!assigneeSel)return;
-
-  const savedAssignee=assigneeSel.value;
-  const savedEpic=epicSel.value;
-  const savedSprint=sprintSel.value;
-  const savedProj=projSel.value;
-
-  assigneeSel.innerHTML='<option value="">All Assignees</option>'+
-    state.users.map(u=>`<option value="${u.id}"${u.id===savedAssignee?' selected':''}>${u.name}</option>`).join('');
-  epicSel.innerHTML='<option value="">All Epics</option>'+
-    (state.epics||[]).map(e=>`<option value="${e.id}"${e.id===savedEpic?' selected':''}>◈ ${e.title}</option>`).join('');
-  sprintSel.innerHTML='<option value="">All Sprints</option>'+
-    state.sprints.map(s=>`<option value="${s.id}"${s.id===savedSprint?' selected':''}>${s.name}</option>`).join('');
-  projSel.innerHTML='<option value="">All Projects</option>'+
-    state.projects.map(p=>`<option value="${p.id}"${p.id===savedProj?' selected':''}>${p.name}</option>`).join('');
-}
-
-// ── Filter panel open/close helpers ──
-function _openFilterPanel(){
-  _searchFiltersVisible=true;
-  const bar=document.getElementById('search-filter-bar');
-  const btn=document.getElementById('search-filter-btn');
-  if(!bar)return;
-  bar.style.display='block';
-  // Trigger CSS transition
-  requestAnimationFrame(()=>{ bar.style.opacity='1'; bar.style.transform='translateY(0)'; });
-  if(btn){ btn.style.background='#ede9fe'; btn.style.borderColor='#a5b4fc'; btn.style.color='#6366f1'; }
-  populateFilterDropdowns();
-  _updateFilterChips();
-  // Register outside-click listener once
-  setTimeout(()=>document.addEventListener('mousedown',_filterPanelOutsideClick), 50);
-}
-
-function _closeFilterPanel(){
-  _searchFiltersVisible=false;
-  const bar=document.getElementById('search-filter-bar');
-  const btn=document.getElementById('search-filter-btn');
-  if(!bar)return;
-  bar.style.opacity='0'; bar.style.transform='translateY(-4px)';
-  setTimeout(()=>{ if(!_searchFiltersVisible) bar.style.display='none'; }, 180);
-  if(btn){ btn.style.background=''; btn.style.borderColor=''; btn.style.color=''; }
-  document.removeEventListener('mousedown',_filterPanelOutsideClick);
-}
-
-function _filterPanelOutsideClick(e){
-  const bar=document.getElementById('search-filter-bar');
-  const btn=document.getElementById('search-filter-btn');
-  if(bar&&!bar.contains(e.target)&&btn&&!btn.contains(e.target)){
-    _closeFilterPanel();
-  }
-}
-
-// ── Toggle filter bar ──
-function toggleSearchFilters(){
-  if(_searchFiltersVisible){ _closeFilterPanel(); }
-  else { _openFilterPanel(); }
-}
-
-// ── Update active filter chips in the panel ──
-function _updateFilterChips(){
-  const chipsEl=document.getElementById('sf-active-chips');
-  if(!chipsEl)return;
-  const f=getSearchFilters();
-  const labels={status:f.status,priority:f.priority,assignee:f.assignee?(state.users.find(u=>u.id===f.assignee)||{}).name||f.assignee:'',epic:f.epic?((state.epics||[]).find(e=>e.id===f.epic)||{}).title||f.epic:'',sprint:f.sprint?(state.sprints.find(s=>s.id===f.sprint)||{}).name||f.sprint:'',project:f.project?(state.projects.find(p=>p.id===f.project)||{}).name||f.project:''};
-  const active=Object.entries(labels).filter(([,v])=>v);
-  if(!active.length){ chipsEl.style.display='none'; chipsEl.innerHTML=''; return; }
-  chipsEl.style.display='flex';
-  chipsEl.innerHTML=active.map(([k,v])=>`<span style="display:inline-flex;align-items:center;gap:4px;background:#ede9fe;color:#6366f1;padding:2px 8px 2px 8px;border-radius:20px;font-size:11px;font-weight:600">
-    ${v}
-    <button onclick="document.getElementById('sf-${k}').value='';applyGlobalFilters();_updateFilterChips()" style="background:none;border:none;cursor:pointer;color:#a5b4fc;padding:0;line-height:1;font-size:12px;margin-left:1px">×</button>
-  </span>`).join('');
-}
-
-// ── Reset filters ──
-function resetSearchFilters(){
-  ['sf-status','sf-priority','sf-assignee','sf-epic','sf-sprint','sf-project'].forEach(id=>{
-    const el=document.getElementById(id); if(el)el.value='';
-  });
-  updateFilterBadge();
-  _updateFilterChips();
-  const q=(document.getElementById('global-search')||{}).value||'';
-  if(q.trim()) performGlobalSearch(q.trim());
-  else closeSearchDropdown();
-}
-
-// ── Get filter values ──
-function getSearchFilters(){
-  return {
-    status:   (document.getElementById('sf-status')||{}).value||'',
-    priority: (document.getElementById('sf-priority')||{}).value||'',
-    assignee: (document.getElementById('sf-assignee')||{}).value||'',
-    epic:     (document.getElementById('sf-epic')||{}).value||'',
-    sprint:   (document.getElementById('sf-sprint')||{}).value||'',
-    project:  (document.getElementById('sf-project')||{}).value||''
-  };
-}
-
-// ── applyGlobalFilters() — called when filter dropdown changes ──
-function applyGlobalFilters(){
-  updateFilterBadge();
-  _updateFilterChips();
-  const q=(document.getElementById('global-search')||{}).value||'';
-  if(q.trim().length>=1) performGlobalSearch(q.trim());
-  else if(countActiveFilters()>0) performGlobalSearch('');
-  else closeSearchDropdown();
 }
 
 // ── clearSearch() ──
@@ -6203,17 +6300,15 @@ function removeRecentSearch(q){
 }
 
 // ── Main search engine ──
-// performGlobalSearch(query) — searches across all entity types, respects filters
+// performGlobalSearch(query) — searches across all entity types by query text
 function performGlobalSearch(rawQ){
   const q=(rawQ||'').toLowerCase().trim();
-  const filters=getSearchFilters();
   const hasQuery=q.length>0;
-  const hasFilters=countActiveFilters()>0;
 
-  if(!hasQuery&&!hasFilters){ closeSearchDropdown(); return; }
+  if(!hasQuery){ closeSearchDropdown(); return; }
 
   // Check cache — skip full search if nothing changed
-  const cacheKey=_getSearchCacheKey(rawQ||'',filters);
+  const cacheKey=_getSearchCacheKey(rawQ||'',{});
   if(cacheKey===_lastSearchKey&&_lastSearchHTML!==null){
     openSearchDropdown();
     const rp=document.getElementById('search-recent-panel');
@@ -6244,66 +6339,45 @@ function performGlobalSearch(rawQ){
   // ── Tasks ──
   state.tasks.forEach(t=>{
     const assigneeName=assigneeNameCache.get(t.assignee)||'';
-    const matchQ=!hasQuery||(
+    const matchQ=
       t.title.toLowerCase().includes(q)||
       (t.description||'').toLowerCase().includes(q)||
       t.status.toLowerCase().includes(q)||
       t.priority.toLowerCase().includes(q)||
       assigneeName.includes(q)||
       (t.tags||[]).some(tag=>tag.toLowerCase().includes(q))||
-      (t.subtasks||[]).some(s=>s.title.toLowerCase().includes(q)||s.status.toLowerCase().includes(q))
-    );
+      (t.subtasks||[]).some(s=>s.title.toLowerCase().includes(q)||s.status.toLowerCase().includes(q));
     if(!matchQ)return;
-    if(filters.status&&t.status!==filters.status)return;
-    if(filters.priority&&t.priority!==filters.priority)return;
-    if(filters.assignee&&t.assignee!==filters.assignee)return;
-    if(filters.epic&&t.epicId!==filters.epic)return;
-    if(filters.sprint&&t.sprint!==filters.sprint)return;
-    if(filters.project&&t.project!==filters.project)return;
     results.push({type:'task',item:t,score:t.title.toLowerCase().startsWith(q)?2:1});
   });
 
-  // ── Epics (only if no task-specific filters) ──
-  if(!filters.status&&!filters.priority&&!filters.assignee&&!filters.sprint){
-    (state.epics||[]).forEach(e=>{
-      if(filters.project&&e.projectId!==filters.project)return;
-      if(filters.epic&&e.id!==filters.epic)return;
-      const matchQ=!hasQuery||(e.title.toLowerCase().includes(q)||(e.description||'').toLowerCase().includes(q));
-      if(!matchQ)return;
-      results.push({type:'epic',item:e,score:e.title.toLowerCase().startsWith(q)?2:1});
-    });
-  }
+  // ── Epics ──
+  (state.epics||[]).forEach(e=>{
+    const matchQ=e.title.toLowerCase().includes(q)||(e.description||'').toLowerCase().includes(q);
+    if(!matchQ)return;
+    results.push({type:'epic',item:e,score:e.title.toLowerCase().startsWith(q)?2:1});
+  });
 
   // ── Sprints ──
-  if(!filters.status&&!filters.priority&&!filters.assignee&&!filters.epic){
-    state.sprints.forEach(s=>{
-      if(filters.project&&s.project!==filters.project)return;
-      if(filters.sprint&&s.id!==filters.sprint)return;
-      const matchQ=!hasQuery||(s.name.toLowerCase().includes(q)||(s.goal||'').toLowerCase().includes(q));
-      if(!matchQ)return;
-      results.push({type:'sprint',item:s,score:s.name.toLowerCase().startsWith(q)?2:1});
-    });
-  }
+  state.sprints.forEach(s=>{
+    const matchQ=s.name.toLowerCase().includes(q)||(s.goal||'').toLowerCase().includes(q);
+    if(!matchQ)return;
+    results.push({type:'sprint',item:s,score:s.name.toLowerCase().startsWith(q)?2:1});
+  });
 
   // ── Releases ──
-  if(!filters.status&&!filters.priority&&!filters.assignee&&!filters.epic&&!filters.sprint){
-    (state.releases||[]).forEach(r=>{
-      if(filters.project&&r.projectId!==filters.project)return;
-      const matchQ=!hasQuery||(r.name.toLowerCase().includes(q)||r.version.toLowerCase().includes(q)||(r.releaseNotes||'').toLowerCase().includes(q));
-      if(!matchQ)return;
-      results.push({type:'release',item:r,score:r.name.toLowerCase().startsWith(q)?2:1});
-    });
-  }
+  (state.releases||[]).forEach(r=>{
+    const matchQ=r.name.toLowerCase().includes(q)||r.version.toLowerCase().includes(q)||(r.releaseNotes||'').toLowerCase().includes(q);
+    if(!matchQ)return;
+    results.push({type:'release',item:r,score:r.name.toLowerCase().startsWith(q)?2:1});
+  });
 
   // ── Projects ──
-  if(!filters.status&&!filters.priority&&!filters.assignee&&!filters.epic&&!filters.sprint){
-    state.projects.forEach(p=>{
-      if(filters.project&&p.id!==filters.project)return;
-      const matchQ=!hasQuery||(p.name.toLowerCase().includes(q)||p.key.toLowerCase().includes(q)||(p.description||'').toLowerCase().includes(q));
-      if(!matchQ)return;
-      results.push({type:'project',item:p,score:p.name.toLowerCase().startsWith(q)?2:1});
-    });
-  }
+  state.projects.forEach(p=>{
+    const matchQ=p.name.toLowerCase().includes(q)||p.key.toLowerCase().includes(q)||(p.description||'').toLowerCase().includes(q);
+    if(!matchQ)return;
+    results.push({type:'project',item:p,score:p.name.toLowerCase().startsWith(q)?2:1});
+  });
 
   // Sort: higher score first, then by type priority
   const typePriority={task:0,epic:1,sprint:2,release:3,project:4};
@@ -6314,7 +6388,7 @@ function performGlobalSearch(rawQ){
     if(emptyState){
       emptyState.style.display='block';
       const emptyText=document.getElementById('search-empty-text');
-      if(emptyText)emptyText.textContent=hasQuery?`No results for "${rawQ||q}"`:'No items match the selected filters';
+      if(emptyText)emptyText.textContent=`No results for "${rawQ||q}"`;
     }
     _lastSearchKey=cacheKey; _lastSearchHTML='';
     return;
@@ -6456,7 +6530,7 @@ function renderSearchResultItem(type,item,q){
     clearTimeout(_searchDebounce);
     _searchDebounce=setTimeout(()=>{
       const trimmed=q.trim();
-      if(!trimmed&&!countActiveFilters()){
+      if(!trimmed){
         closeSearchDropdown();
         const recent=loadRecentSearches();
         if(recent.length&&q===''){
@@ -6475,7 +6549,7 @@ function renderSearchResultItem(type,item,q){
 
   inp.addEventListener('focus',function(){
     const q=this.value.trim();
-    if(!q&&!countActiveFilters()){
+    if(!q){
       const recent=loadRecentSearches();
       if(recent.length){
         openSearchDropdown();
@@ -6484,30 +6558,24 @@ function renderSearchResultItem(type,item,q){
         if(emptyStateEl)emptyStateEl.style.display='none';
         renderRecentSearches();
       }
-    } else if(q||countActiveFilters()){
+    } else {
       performGlobalSearch(q);
     }
   });
 
   inp.addEventListener('keydown',function(e){
     if(e.key==='Escape'){
-      if(_searchFiltersVisible){ _closeFilterPanel(); return; }
       clearSearch();
       this.blur();
     }
   });
 
-  // Close on outside click (also closes filter panel if open)
+  // Close on outside click
   document.addEventListener('click',function(e){
     const container=document.getElementById('search-container');
     if(container&&!container.contains(e.target)){
       closeSearchDropdown();
     }
-  });
-
-  // Global ESC closes filter panel from anywhere
-  document.addEventListener('keydown',function(e){
-    if(e.key==='Escape'&&_searchFiltersVisible){ _closeFilterPanel(); }
   });
 })();
 
