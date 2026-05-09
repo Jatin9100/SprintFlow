@@ -8,15 +8,84 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
+  /* ════════════════════════════════════════════════
+     SPRINTFLOW — UNIFIED DESIGN SYSTEM v16
+     Pure visual standardization pass.
+     All JS, Firebase, RBAC, and logic untouched.
+  ════════════════════════════════════════════════ */
+
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'DM Sans',sans-serif;background:#f1f5f9;color:#1e293b;overflow:hidden}
+
+  /* ── DESIGN TOKENS ── */
   :root{
-    --sidebar-w:240px;--sidebar-collapsed:56px;
-    --accent:#6366f1;--accent-light:#818cf8;--accent-dark:#4f46e5;
-    --sidebar-bg:#0f172a;--sidebar-text:#94a3b8;--sidebar-active:#e2e8f0;
-    --card-bg:#ffffff;--card-border:#e2e8f0;
-    --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--info:#0ea5e9;
+    /* Layout */
+    --sidebar-w:240px;
+    --sidebar-collapsed:56px;
+
+    /* Brand */
+    --accent:#6366f1;
+    --accent-light:#818cf8;
+    --accent-dark:#4f46e5;
+    --accent-ghost:rgba(99,102,241,0.08);
+    --accent-ring:rgba(99,102,241,0.12);
+
+    /* Sidebar */
+    --sidebar-bg:#0f172a;
+    --sidebar-text:#94a3b8;
+    --sidebar-active:#e2e8f0;
+    --sidebar-hover:rgba(255,255,255,0.06);
+    --sidebar-active-bg:rgba(99,102,241,0.2);
+    --sidebar-border:#1e293b;
+
+    /* Surface */
+    --card-bg:#ffffff;
+    --card-border:#e8edf3;
+    --card-shadow:0 1px 3px rgba(0,0,0,0.05),0 1px 2px rgba(0,0,0,0.04);
+    --card-shadow-hover:0 6px 20px rgba(0,0,0,0.08),0 2px 8px rgba(0,0,0,0.04);
+    --page-bg:#f1f5f9;
+
+    /* Semantic */
+    --success:#10b981;
+    --success-bg:#ecfdf5;
+    --warning:#f59e0b;
+    --warning-bg:#fffbeb;
+    --danger:#ef4444;
+    --danger-bg:#fef2f2;
+    --info:#0ea5e9;
+    --info-bg:#f0f9ff;
+
+    /* Typography */
+    --text-primary:#0f172a;
+    --text-secondary:#475569;
+    --text-tertiary:#94a3b8;
+    --text-muted:#cbd5e1;
+
+    /* Control */
+    --control-h:36px;
+    --control-radius:8px;
+    --control-border:#e2e8f0;
+    --control-bg:#f8fafc;
+    --control-bg-focus:#ffffff;
+
+    /* Spacing rhythm */
+    --sp-1:4px;
+    --sp-2:8px;
+    --sp-3:12px;
+    --sp-4:16px;
+    --sp-5:20px;
+    --sp-6:24px;
+
+    /* Radius system */
+    --r-sm:6px;
+    --r-md:8px;
+    --r-lg:12px;
+    --r-xl:14px;
+    --r-2xl:16px;
+    --r-pill:999px;
   }
+
+  body{font-family:'DM Sans',sans-serif;background:var(--page-bg);color:var(--text-primary);overflow:hidden}
+  /* ── SIDEBAR ── */
   #sidebar{width:var(--sidebar-w);transition:width 0.25s cubic-bezier(.4,0,.2,1);overflow:hidden;flex-shrink:0;position:relative}
   #sidebar.collapsed{width:var(--sidebar-collapsed)}
   #sidebar .nav-label,#sidebar .nav-section-label,#sidebar .logo-text,#sidebar .user-info{transition:opacity 0.15s ease,width 0.15s ease;white-space:nowrap;overflow:hidden}
@@ -25,14 +94,52 @@
   #sidebar.collapsed .nav-item svg{margin:0}
   #sidebar.collapsed #sidebar-toggle-btn{left:50%;transform:translateX(-50%)}
   #main{flex:1;overflow:hidden;transition:all 0.25s}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;cursor:pointer;transition:all 0.15s;color:var(--sidebar-text);font-size:14px;font-weight:500}
-  .nav-item:hover{background:rgba(255,255,255,0.07);color:#e2e8f0}
-  .nav-item.active{background:rgba(99,102,241,0.25);color:#a5b4fc}
-  .nav-item svg{flex-shrink:0;width:18px;height:18px}
-  .page{display:none;height:100%;overflow-y:auto;padding:24px}
+
+  /* ── NAVIGATION ── */
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:7px 10px;border-radius:var(--r-md);
+    cursor:pointer;transition:background 0.12s,color 0.12s;
+    color:var(--sidebar-text);font-size:13.5px;font-weight:500;
+    letter-spacing:.01em;
+  }
+  .nav-item:hover{background:var(--sidebar-hover);color:#e2e8f0}
+  .nav-item.active{background:var(--sidebar-active-bg);color:#a5b4fc}
+  .nav-item svg{flex-shrink:0;width:17px;height:17px;opacity:.85}
+  .nav-item.active svg{opacity:1}
+  .nav-section-label{
+    font-size:10px;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;color:#475569;
+    padding:8px 10px 4px;
+  }
+
+  /* ── PAGES ── */
+  .page{display:none;height:100%;overflow-y:auto;padding:var(--sp-6)}
   .page.active{display:block}
-  .card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-  .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+
+  /* ── CARD SYSTEM ── */
+  .card{
+    background:var(--card-bg);border:1px solid var(--card-border);
+    border-radius:var(--r-lg);padding:var(--sp-5);
+    box-shadow:var(--card-shadow);
+  }
+  .stat-card{
+    background:var(--card-bg);border:1px solid var(--card-border);
+    border-radius:var(--r-lg);padding:var(--sp-5);
+    position:relative;overflow:hidden;
+    box-shadow:var(--card-shadow);
+    transition:box-shadow 0.18s;
+  }
+  .stat-card:hover{box-shadow:var(--card-shadow-hover)}
+
+  /* ── BADGE SYSTEM ── */
+  .badge{
+    display:inline-flex;align-items:center;gap:3px;
+    padding:2px 7px;border-radius:var(--r-pill);
+    font-size:10.5px;font-weight:600;
+    letter-spacing:.02em;text-transform:uppercase;
+    white-space:nowrap;flex-shrink:0;
+  }
   .badge-open{background:#f1f5f9;color:#475569}
   .badge-dev-in-progress,.badge-devinprogress{background:#dbeafe;color:#2563eb}
   .badge-dev-completed,.badge-devcompleted{background:#e0e7ff;color:#4338ca}
@@ -54,107 +161,239 @@
   .badge-admin{background:#ede9fe;color:#7c3aed}
   .badge-member{background:#e0f2fe;color:#0369a1}
   .badge-team_member{background:#e0f2fe;color:#0369a1}
-  .avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-size:11px;font-weight:700;flex-shrink:0;letter-spacing:.5px}
-  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;border:none;font-family:'DM Sans',sans-serif}
+
+  /* ── AVATAR ── */
+  .avatar{
+    display:inline-flex;align-items:center;justify-content:center;
+    border-radius:50%;font-size:11px;font-weight:700;
+    flex-shrink:0;letter-spacing:.3px;
+  }
+
+  /* ── BUTTON SYSTEM ── */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    height:var(--control-h);padding:0 14px;
+    border-radius:var(--r-md);
+    font-size:13px;font-weight:600;
+    cursor:pointer;transition:background 0.12s,box-shadow 0.12s,transform 0.1s;
+    border:none;font-family:'DM Sans',sans-serif;
+    white-space:nowrap;flex-shrink:0;
+  }
+  .btn:active{transform:scale(0.97)}
+  .btn svg{flex-shrink:0}
   .btn-primary{background:var(--accent);color:#fff}
-  .btn-primary:hover{background:var(--accent-dark)}
-  .btn-secondary{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
-  .btn-secondary:hover{background:#e2e8f0}
-  .btn-danger{background:#fee2e2;color:#dc2626}
+  .btn-primary:hover{background:var(--accent-dark);box-shadow:0 2px 8px rgba(99,102,241,0.3)}
+  .btn-secondary{background:#f1f5f9;color:var(--text-secondary);border:1px solid var(--card-border)}
+  .btn-secondary:hover{background:#e8edf3;border-color:#d0d8e4}
+  .btn-danger{background:#fee2e2;color:#dc2626;border:1px solid #fecaca}
   .btn-danger:hover{background:#fecaca}
-  .progress-bar{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
-  .progress-fill{height:100%;border-radius:3px;transition:width 0.4s ease}
-  .task-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;cursor:grab;transition:all 0.15s;user-select:none}
-  .task-card:hover{border-color:#a5b4fc;box-shadow:0 4px 12px rgba(99,102,241,0.15)}
-  .task-card.dragging{opacity:0.5;transform:rotate(2deg);box-shadow:0 8px 24px rgba(0,0,0,0.15)}
-  .kanban-col{transition:background 0.15s}
-  .kanban-col.drag-over{background:#f0f4ff;border-radius:12px}
-  .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(3px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;transition:opacity 0.18s ease;pointer-events:none}
+  .btn-ghost{background:transparent;color:var(--text-secondary);border:1px solid transparent}
+  .btn-ghost:hover{background:#f1f5f9;border-color:var(--card-border)}
+
+  /* ── PROGRESS ── */
+  .progress-bar{height:6px;background:#e8edf3;border-radius:var(--r-pill);overflow:hidden}
+  .progress-fill{height:100%;border-radius:var(--r-pill);transition:width 0.4s ease}
+
+  /* ── TASK CARDS (Kanban) ── */
+  .task-card{
+    background:#fff;border:1px solid var(--card-border);
+    border-radius:var(--r-lg);padding:14px;
+    cursor:grab;transition:border-color 0.15s,box-shadow 0.15s;
+    user-select:none;will-change:transform,opacity;
+  }
+  .task-card:hover{border-color:#a5b4fc;box-shadow:0 4px 14px rgba(99,102,241,0.12)}
+  .task-card.dragging{opacity:0.45;transform:rotate(1.5deg) scale(0.97);box-shadow:0 10px 28px rgba(99,102,241,0.2);cursor:grabbing}
+  .task-card:active{cursor:grabbing}
+
+  /* ── KANBAN COLUMNS ── */
+  .kanban-col{transition:background 0.15s;contain:layout style}
+  .kanban-col.drag-over{background:#eef2ff;border-radius:var(--r-lg);outline:2px dashed #a5b4fc;outline-offset:-2px}
+  .kanban-col.drag-over-sub{background:#ede9fe;border-radius:var(--r-lg);outline:2px dashed #a78bfa;outline-offset:-2px}
+
+  /* ── MODAL SYSTEM ── */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(15,23,42,0.5);
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    z-index:1000;display:flex;align-items:center;justify-content:center;
+    padding:16px;opacity:0;transition:opacity 0.18s ease;pointer-events:none;
+  }
   .modal-overlay.modal-visible{opacity:1;pointer-events:auto}
-  .modal-box{background:#fff;border-radius:16px;width:min(680px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,0.18);transform:translateY(16px) scale(0.98);transition:transform 0.22s cubic-bezier(.34,1.4,.64,1),opacity 0.18s ease;opacity:0;will-change:transform,opacity}
+  .modal-box{
+    background:#fff;border-radius:var(--r-2xl);
+    width:min(680px,95vw);max-height:88vh;overflow-y:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,0.2),0 4px 16px rgba(0,0,0,0.08);
+    transform:translateY(16px) scale(0.98);
+    transition:transform 0.22s cubic-bezier(.34,1.4,.64,1),opacity 0.18s ease;
+    opacity:0;will-change:transform,opacity;
+  }
   .modal-overlay.modal-visible .modal-box{transform:translateY(0) scale(1);opacity:1}
   .modal-box::-webkit-scrollbar{width:4px}
   .modal-box::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
   body.modal-open{overflow:hidden}
+
+  /* ── ANIMATIONS ── */
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-  /* ── MODAL SCROLL LOCK ── */
-  /* Applied via JS */
 
-  /* ── SPACING + CARD CONSISTENCY ── */
-  .card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
-  .stat-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;position:relative;overflow:hidden}
-
-  /* ── DROPDOWN SMOOTH ── */
-  select{transition:border-color 0.15s,box-shadow 0.15s}
-
-  /* ── KANBAN mobile overflow ── */
+  /* ── MOBILE ── */
   @media(max-width:640px){
     #kanban-board{padding-bottom:20px;-webkit-overflow-scrolling:touch}
     .kanban-col{min-width:240px}
-    .page{padding:16px}
-    .page-header{margin-bottom:16px}
-    .modal-box{width:100%;border-radius:12px 12px 0 0;position:fixed;bottom:0;top:auto;max-height:92vh;transform:translateY(100%)!important}
+    .page{padding:var(--sp-4)}
+    .page-header{margin-bottom:var(--sp-4)}
+    .modal-box{width:100%;border-radius:var(--r-xl) var(--r-xl) 0 0;position:fixed;bottom:0;top:auto;max-height:92vh;transform:translateY(100%)!important}
     .modal-overlay.modal-visible .modal-box{transform:translateY(0)!important}
   }
 
   /* ── EMPTY STATES ── */
-  .empty-state{text-align:center;padding:48px 24px;color:#94a3b8}
-  .empty-state-icon{width:56px;height:56px;background:#f1f5f9;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+  .empty-state{text-align:center;padding:52px var(--sp-6);color:var(--text-tertiary)}
+  .empty-state-icon{
+    width:52px;height:52px;background:#f1f5f9;
+    border-radius:var(--r-xl);display:flex;align-items:center;
+    justify-content:center;margin:0 auto var(--sp-4);
+  }
 
-  /* ── DROP HIGHLIGHT IMPROVEMENT ── */
-  .kanban-col.drag-over{background:#eef2ff;border-radius:12px;outline:2px dashed #a5b4fc;outline-offset:-2px}
-  .kanban-col.drag-over-sub{background:#ede9fe;border-radius:12px;outline:2px dashed #a78bfa;outline-offset:-2px}
-
-  /* ── DRAG CARD IMPROVEMENT ── */
-  .task-card.dragging{opacity:0.45;transform:rotate(1.5deg) scale(0.97);box-shadow:0 10px 28px rgba(99,102,241,0.2);cursor:grabbing}
-
-  /* ── HOVER FEEDBACK ── */
-  .nav-item{transition:background 0.12s,color 0.12s}
-  .btn{transition:background 0.12s,box-shadow 0.12s,transform 0.1s}
-  .btn:active{transform:scale(0.97)}
-  .sprint-card{transition:border-color 0.15s,background 0.15s,box-shadow 0.15s}
-  .team-card{transition:box-shadow 0.18s,transform 0.18s}
+  /* ── FORM CONTROLS ── */
+  input,select,textarea{
+    font-family:'DM Sans',sans-serif;
+    border:1px solid var(--control-border);
+    border-radius:var(--r-md);
+    padding:0 12px;height:var(--control-h);
+    font-size:13.5px;width:100%;outline:none;
+    transition:border-color 0.15s,box-shadow 0.15s;
+    background:var(--control-bg);color:var(--text-primary);
+    appearance:none;-webkit-appearance:none;
+  }
+  textarea{height:auto;padding:10px 12px;resize:vertical;min-height:80px}
+  select{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;
+    padding-right:28px;cursor:pointer;
+  }
+  input:focus,select:focus,textarea:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-ring);
+    background:var(--control-bg-focus);
+  }
+  label{font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;letter-spacing:.01em}
 
   /* ── NOTIFICATION ── */
-  .notification{position:fixed;top:20px;right:20px;background:#1e293b;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;z-index:2000;animation:slideInNotif 0.28s cubic-bezier(.34,1.4,.64,1),fadeOutNotif 0.45s 2.55s forwards;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,0.18);max-width:340px}
-  input,select,textarea{font-family:'DM Sans',sans-serif;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;width:100%;outline:none;transition:border 0.15s,box-shadow 0.15s;background:#fff;color:#1e293b}
-  input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,0.1)}
-  label{font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px}
-  .sprint-card{border:2px solid #e2e8f0;border-radius:12px;padding:16px;cursor:pointer}
-  .sprint-card:hover{border-color:#a5b4fc;background:#fafafe}
-  .sprint-card.active-sprint{border-color:#6366f1;background:#f5f3ff}
-  .tag{display:inline-flex;padding:2px 8px;background:#f1f5f9;border-radius:4px;font-size:11px;color:#64748b;font-family:'DM Mono',monospace}
+  .notification{
+    position:fixed;top:20px;right:20px;
+    background:#1e293b;color:#fff;
+    padding:12px 18px;border-radius:var(--r-lg);
+    font-size:13px;z-index:2000;
+    animation:slideInNotif 0.28s cubic-bezier(.34,1.4,.64,1),fadeOutNotif 0.45s 2.55s forwards;
+    display:flex;align-items:center;gap:8px;
+    box-shadow:0 4px 16px rgba(0,0,0,0.2);max-width:340px;
+  }
+
+  /* ── SPRINT CARDS ── */
+  .sprint-card{
+    border:1.5px solid var(--card-border);border-radius:var(--r-lg);
+    padding:var(--sp-4);cursor:pointer;
+    transition:border-color 0.15s,background 0.15s,box-shadow 0.15s;
+  }
+  .sprint-card:hover{border-color:#a5b4fc;background:#fafafe;box-shadow:var(--card-shadow)}
+  .sprint-card.active-sprint{border-color:var(--accent);background:#f5f3ff}
+
+  /* ── TAG ── */
+  .tag{
+    display:inline-flex;padding:2px 7px;
+    background:#f1f5f9;border-radius:var(--r-sm);
+    font-size:11px;color:#64748b;
+    font-family:'DM Mono',monospace;letter-spacing:.01em;
+  }
+
+  /* ── SCROLLBARS ── */
   .scroll-thin::-webkit-scrollbar{width:4px}
   .scroll-thin::-webkit-scrollbar-track{background:transparent}
   .scroll-thin::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
-  .backlog-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;border:1px solid transparent;transition:background 0.12s,border-color 0.12s;cursor:pointer}
-  .backlog-item:hover{background:#f8fafc;border-color:#e2e8f0}
-  .drop-zone{border:2px dashed #c7d2fe;border-radius:10px;padding:16px;text-align:center;color:#818cf8;font-size:13px;display:none;transition:background 0.15s,border-color 0.15s}
+
+  /* ── BACKLOG ITEMS ── */
+  .backlog-item{
+    display:flex;align-items:center;gap:12px;
+    padding:9px 14px;border-radius:var(--r-md);
+    border:1px solid transparent;
+    transition:background 0.1s,border-color 0.1s;cursor:pointer;
+  }
+  .backlog-item:hover{background:#f8fafc;border-color:var(--card-border)}
+
+  /* ── DROP ZONE ── */
+  .drop-zone{
+    border:1.5px dashed #c7d2fe;border-radius:var(--r-lg);
+    padding:16px;text-align:center;color:#818cf8;font-size:13px;
+    display:none;transition:background 0.15s,border-color 0.15s;
+  }
   .drop-zone.active{display:block}
-  .drop-zone.drag-over{background:#f0f4ff;border-color:#6366f1}
+  .drop-zone.drag-over{background:#f0f4ff;border-color:var(--accent)}
+
+  /* ── CHART CONTAINERS ── */
   .chart-container{position:relative;height:240px}
-  .team-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px}
-  .team-card:hover{box-shadow:0 4px 14px rgba(0,0,0,0.07);transform:translateY(-2px)}
-  .settings-section{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:20px}
-  .settings-header{padding:16px 20px;border-bottom:1px solid #f1f5f9;font-weight:600;font-size:15px;color:#1e293b}
-  .settings-row{padding:16px 20px;border-bottom:1px solid #f8fafc;display:flex;align-items:center;justify-content:space-between;gap:20px}
+
+  /* ── TEAM CARDS ── */
+  .team-card{
+    background:#fff;border:1px solid var(--card-border);
+    border-radius:var(--r-lg);padding:var(--sp-5);
+    transition:box-shadow 0.18s,transform 0.18s;
+  }
+  .team-card:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-2px)}
+
+  /* ── SETTINGS ── */
+  .settings-section{background:#fff;border:1px solid var(--card-border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:var(--sp-5)}
+  .settings-header{padding:16px var(--sp-5);border-bottom:1px solid #f1f5f9;font-weight:600;font-size:14px;color:var(--text-primary);letter-spacing:.01em}
+  .settings-row{padding:15px var(--sp-5);border-bottom:1px solid #f8fafc;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-5)}
   .settings-row:last-child{border-bottom:none}
-  .toggle{width:44px;height:24px;border-radius:12px;background:#cbd5e1;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0}
+
+  /* ── TOGGLE ── */
+  .toggle{width:44px;height:24px;border-radius:var(--r-pill);background:#cbd5e1;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0}
   .toggle.on{background:var(--accent)}
   .toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
   .toggle.on::after{left:23px}
-  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
-  .page-title{font-size:22px;font-weight:700;color:#0f172a}
-  .page-subtitle{font-size:14px;color:#64748b;margin-top:2px}
+
+  /* ── PAGE HEADER ── */
+  .page-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:var(--sp-6);flex-wrap:wrap;gap:var(--sp-3);
+  }
+  .page-title{font-size:21px;font-weight:700;color:var(--text-primary);letter-spacing:-.02em;line-height:1.2}
+  .page-subtitle{font-size:13.5px;color:var(--text-secondary);margin-top:2px;font-weight:400}
+
+  /* ── SECTION LABEL ── */
+  .section-label{
+    font-size:10.5px;font-weight:700;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--text-tertiary);
+    margin-bottom:12px;
+  }
+
+  /* ── ANIMATIONS ── */
   @keyframes slideInNotif{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
   @keyframes fadeOutNotif{to{opacity:0;transform:translateX(120%)}}
-  .kanban-header{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
-  .kanban-count{background:#f1f5f9;border-radius:20px;padding:2px 8px;font-size:11px;color:#64748b}
-  /* Sidebar toggle button — always visible */
-  #sidebar-toggle-btn{position:absolute;bottom:72px;right:8px;width:28px;height:28px;border-radius:8px;background:#1e293b;border:1px solid #334155;color:#94a3b8;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;z-index:10;flex-shrink:0}
+
+  /* ── KANBAN HEADER ── */
+  .kanban-header{
+    font-size:11.5px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.06em;color:var(--text-secondary);
+    padding:10px 14px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .kanban-count{
+    background:#f1f5f9;border-radius:var(--r-pill);
+    padding:2px 8px;font-size:11px;color:var(--text-secondary);font-weight:600;
+  }
+
+  /* ── SIDEBAR TOGGLE ── */
+  #sidebar-toggle-btn{
+    position:absolute;bottom:72px;right:8px;
+    width:28px;height:28px;border-radius:var(--r-md);
+    background:#1e293b;border:1px solid #334155;
+    color:#94a3b8;display:flex;align-items:center;
+    justify-content:center;cursor:pointer;
+    transition:background 0.15s,color 0.15s;z-index:10;flex-shrink:0;
+  }
   #sidebar-toggle-btn:hover{background:#334155;color:#e2e8f0}
   #sidebar.collapsed #sidebar-toggle-btn{right:50%;transform:translateX(50%)}
+
+  /* ── RESPONSIVE ── */
   @media(max-width:768px){
     #sidebar{position:fixed;z-index:200;height:100vh}
     #sidebar.collapsed{width:0}
@@ -162,51 +401,77 @@
     #mobile-menu-btn{display:flex!important}
   }
   #mobile-menu-btn{display:none}
+
   /* ── SUBTASK STYLES ── */
-  .subtask-connector{border-left:2px solid #e2e8f0;margin-left:10px;padding-left:10px}
-  .subtask-mini-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:12px;transition:all 0.12s;cursor:pointer;position:relative}
-  .subtask-mini-card::before{content:'';position:absolute;left:-12px;top:50%;width:10px;height:2px;background:#e2e8f0}
+  .subtask-connector{border-left:2px solid var(--card-border);margin-left:10px;padding-left:10px}
+  .subtask-mini-card{
+    background:#f8fafc;border:1px solid var(--card-border);
+    border-radius:var(--r-md);padding:10px 12px;font-size:12px;
+    transition:border-color 0.12s,background 0.12s;cursor:pointer;position:relative;
+  }
+  .subtask-mini-card::before{content:'';position:absolute;left:-12px;top:50%;width:10px;height:2px;background:var(--card-border)}
   .subtask-mini-card:hover{border-color:#a5b4fc;background:#f5f3ff}
-  .subtask-progress-bar{height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden}
-  .subtask-progress-fill{height:100%;border-radius:2px;background:#6366f1;transition:width 0.4s ease}
-  .kanban-subtask-row{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px;color:#64748b;border-top:1px dashed #f1f5f9;margin-top:4px;padding-top:6px}
-  .subtask-toggle-btn{background:none;border:none;cursor:pointer;color:#94a3b8;padding:0;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:color 0.15s}
-  .subtask-toggle-btn:hover{color:#6366f1}
+  .subtask-progress-bar{height:4px;background:#e8edf3;border-radius:2px;overflow:hidden}
+  .subtask-progress-fill{height:100%;border-radius:2px;background:var(--accent);transition:width 0.4s ease}
+  .kanban-subtask-row{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px;color:var(--text-secondary);border-top:1px dashed #f1f5f9;margin-top:4px;padding-top:6px}
+  .subtask-toggle-btn{background:none;border:none;cursor:pointer;color:var(--text-tertiary);padding:0;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:color 0.15s}
+  .subtask-toggle-btn:hover{color:var(--accent)}
   .subtask-expanded-area{overflow:hidden;transition:max-height 0.3s ease,opacity 0.3s ease}
-  .subtask-inline-card{background:#fff;border:1px solid #e8ecf2;border-radius:6px;padding:6px 10px;margin-top:4px;font-size:11px;display:flex;align-items:center;gap:6px;cursor:pointer}
+  .subtask-inline-card{background:#fff;border:1px solid #e8ecf2;border-radius:var(--r-sm);padding:6px 10px;margin-top:4px;font-size:11px;display:flex;align-items:center;gap:6px;cursor:pointer;transition:border-color 0.1s,background 0.1s}
   .subtask-inline-card:hover{border-color:#a5b4fc;background:#f5f3ff}
   .subtask-status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
   /* ── EPIC STYLES ── */
-  .epic-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;transition:all 0.18s;position:relative;overflow:hidden}
-  .epic-card:hover{box-shadow:0 6px 20px rgba(0,0,0,0.09);transform:translateY(-2px)}
-  .epic-color-strip{position:absolute;top:0;left:0;width:100%;height:4px;border-radius:14px 14px 0 0}
-  .epic-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px}
+  .epic-card{background:#fff;border:1px solid var(--card-border);border-radius:var(--r-xl);padding:var(--sp-5);transition:box-shadow 0.18s,transform 0.18s;position:relative;overflow:hidden}
+  .epic-card:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-2px)}
+  .epic-color-strip{position:absolute;top:0;left:0;width:100%;height:3px;border-radius:var(--r-xl) var(--r-xl) 0 0}
+  .epic-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:var(--r-pill);font-size:11px;font-weight:700;letter-spacing:.02em}
   .kanban-epic-strip{height:3px;border-radius:2px;margin-bottom:8px}
   .badge-epic-planned{background:#f1f5f9;color:#64748b}
   .badge-epic-active{background:#dbeafe;color:#2563eb}
   .badge-epic-completed{background:#d1fae5;color:#065f46}
   .badge-epic-on-hold{background:#fef3c7;color:#b45309}
-  .epic-section-header{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;cursor:pointer;transition:all 0.15s;user-select:none}
+  .epic-section-header{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 14px;border-radius:var(--r-md);
+    background:#f8fafc;border:1px solid var(--card-border);
+    cursor:pointer;transition:background 0.12s;user-select:none;
+  }
   .epic-section-header:hover{background:#f1f5f9}
   .epic-section-collapse-icon{transition:transform 0.2s}
   .epic-section-collapse-icon.open{transform:rotate(90deg)}
+
   /* ── KANBAN SUBTASK LINKED CARDS ── */
-  .kanban-subtask-card{background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #a5b4fc;border-radius:8px;padding:9px 11px;cursor:grab;transition:all 0.15s;margin-top:4px;position:relative;user-select:none}
-  .kanban-subtask-card:hover{border-color:#a5b4fc;border-left-color:#6366f1;background:#f0f4ff;box-shadow:0 2px 8px rgba(99,102,241,0.12)}
+  .kanban-subtask-card{
+    background:#f8fafc;border:1px solid var(--card-border);
+    border-left:3px solid #a5b4fc;border-radius:var(--r-md);
+    padding:9px 11px;cursor:grab;transition:border-color 0.15s,background 0.15s,box-shadow 0.15s;
+    margin-top:4px;position:relative;user-select:none;
+    will-change:transform,opacity;
+  }
+  .kanban-subtask-card:hover{border-color:#a5b4fc;border-left-color:var(--accent);background:#f0f4ff;box-shadow:0 2px 8px rgba(99,102,241,0.1)}
   .kanban-subtask-card::before{content:'';position:absolute;left:-1px;top:-6px;width:2px;height:6px;background:#c7d2fe}
   .kanban-subtask-card.dragging{opacity:0.45;transform:rotate(1.5deg) scale(0.97);box-shadow:0 8px 24px rgba(99,102,241,0.22);cursor:grabbing}
   .kanban-subtask-card.drag-placeholder{background:#f0f4ff;border:2px dashed #a5b4fc;opacity:0.6}
   .kanban-parent-card{border-left:3px solid transparent}
-  .kanban-parent-card.has-subtasks{border-left-color:#6366f1}
+  .kanban-parent-card.has-subtasks{border-left-color:var(--accent)}
   .kanban-subtask-group{position:relative;padding-left:10px}
   .kanban-subtask-group::before{content:'';position:absolute;left:0;top:0;bottom:8px;width:2px;background:#c7d2fe;border-radius:1px}
-  .backlog-subtask-row{padding:6px 12px 6px 36px;border-radius:6px;border:1px solid transparent;transition:all 0.12s;cursor:pointer;display:flex;align-items:center;gap:10px;position:relative}
+
+  /* ── BACKLOG SUBTASK ROW ── */
+  .backlog-subtask-row{
+    padding:6px 12px 6px 36px;border-radius:var(--r-sm);
+    border:1px solid transparent;transition:background 0.1s,border-color 0.1s;
+    cursor:pointer;display:flex;align-items:center;gap:10px;position:relative;
+  }
   .backlog-subtask-row::before{content:'';position:absolute;left:20px;top:50%;width:10px;height:1px;background:#cbd5e1}
-  .backlog-subtask-row:hover{background:#f8fafc;border-color:#e2e8f0}
-  /* Sticky kanban column headers */
-  .kanban-header{position:sticky;top:0;z-index:10;background:#f1f5f9;border-radius:10px 10px 0 0;margin-bottom:2px}
-  /* Kanban board scroll */
-  #kanban-board{overflow-x:auto;overflow-y:visible;padding-bottom:16px}
+  .backlog-subtask-row:hover{background:#f8fafc;border-color:var(--card-border)}
+
+  /* ── STICKY KANBAN HEADERS ── */
+  .kanban-header{position:sticky;top:0;z-index:10;background:var(--page-bg);border-radius:var(--r-md) var(--r-md) 0 0;margin-bottom:2px}
+
+  /* ── KANBAN BOARD SCROLL ── */
+  #kanban-board{overflow-x:auto;overflow-y:visible;padding-bottom:16px;overflow-anchor:none}
   #kanban-board::-webkit-scrollbar{height:6px}
   #kanban-board::-webkit-scrollbar-track{background:transparent}
   #kanban-board::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
@@ -214,37 +479,59 @@
   .kanban-col{overflow-y:auto;max-height:calc(100vh - 220px)}
   .kanban-col::-webkit-scrollbar{width:3px}
   .kanban-col::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
-  /* Drop indicator line */
-  .kanban-col.drag-over-sub{background:#ede9fe;border-radius:12px}
-  .task-card:active{cursor:grabbing}
-  /* ── RELEASE BOARD STYLES ── */
-  .release-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;transition:all 0.18s;position:relative}
-  .release-card:hover{box-shadow:0 6px 20px rgba(0,0,0,0.09);transform:translateY(-2px)}
-  .release-status-strip{height:4px;width:100%}
+
+  /* ── RELEASE BOARD ── */
+  .release-card{
+    background:#fff;border:1px solid var(--card-border);
+    border-radius:var(--r-xl);overflow:hidden;
+    transition:box-shadow 0.18s,transform 0.18s;position:relative;
+  }
+  .release-card:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-2px)}
+  .release-status-strip{height:3px;width:100%}
   .release-badge-planned{background:#f1f5f9;color:#64748b}
   .release-badge-ready{background:#dbeafe;color:#2563eb}
   .release-badge-released{background:#d1fae5;color:#065f46}
   .release-badge-rolledback{background:#fee2e2;color:#dc2626}
-  .release-task-row{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:8px;font-size:12px;transition:background 0.1s;cursor:pointer}
+  .release-task-row{
+    display:flex;align-items:center;gap:8px;padding:7px 12px;
+    border-radius:var(--r-md);font-size:12px;
+    transition:background 0.1s;cursor:pointer;
+  }
   .release-task-row:hover{background:#f8fafc}
-  .release-notes-preview{font-size:12px;color:#64748b;background:#f8fafc;border-radius:8px;padding:10px 12px;line-height:1.5;border-left:3px solid #e2e8f0;margin-bottom:12px}
-  .release-section-toggle{background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#64748b;padding:0;font-family:'DM Sans',sans-serif;transition:color 0.15s;width:100%}
-  .release-section-toggle:hover{color:#6366f1}
+  .release-notes-preview{
+    font-size:12px;color:var(--text-secondary);
+    background:#f8fafc;border-radius:var(--r-md);padding:10px 12px;
+    line-height:1.55;border-left:3px solid var(--card-border);margin-bottom:12px;
+  }
+  .release-section-toggle{
+    background:none;border:none;cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+    font-size:11.5px;font-weight:600;color:var(--text-secondary);
+    padding:0;font-family:'DM Sans',sans-serif;
+    transition:color 0.15s;width:100%;
+  }
+  .release-section-toggle:hover{color:var(--accent)}
   .release-tasks-area{overflow:hidden;transition:max-height 0.3s ease}
-  .release-warn{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:6px 10px;border-radius:6px;background:#fef3c7;color:#b45309;margin-top:8px}
-  /* ── RELEASE QUEUE STYLES ── */
-  .rq-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;transition:all 0.15s;position:relative}
-  .rq-card:hover{border-color:#a5b4fc;box-shadow:0 3px 10px rgba(99,102,241,0.12)}
+  .release-warn{
+    display:flex;align-items:center;gap:6px;
+    font-size:11px;font-weight:600;padding:6px 10px;
+    border-radius:var(--r-sm);background:#fef3c7;color:#b45309;margin-top:8px;
+  }
+
+  /* ── RELEASE QUEUE ── */
+  .rq-card{background:#fff;border:1px solid var(--card-border);border-radius:var(--r-lg);padding:12px 14px;transition:border-color 0.15s,box-shadow 0.15s;position:relative}
+  .rq-card:hover{border-color:#a5b4fc;box-shadow:0 3px 10px rgba(99,102,241,0.1)}
   .rq-map-row{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9}
-  .rq-map-select{flex:1;font-size:12px;padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;color:#475569;font-family:'DM Sans',sans-serif;outline:none}
-  .rq-map-select:focus{border-color:#6366f1}
-  .rq-map-btn{flex-shrink:0;background:#6366f1;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s}
-  .rq-map-btn:hover{background:#4f46e5}
+  .rq-map-select{flex:1;font-size:12px;padding:0 8px;height:30px;border:1px solid var(--card-border);border-radius:var(--r-sm);background:#f8fafc;color:var(--text-secondary);font-family:'DM Sans',sans-serif;outline:none}
+  .rq-map-select:focus{border-color:var(--accent)}
+  .rq-map-btn{flex-shrink:0;background:var(--accent);color:#fff;border:none;border-radius:var(--r-sm);padding:0 10px;height:30px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s}
+  .rq-map-btn:hover{background:var(--accent-dark)}
   .rq-map-btn:disabled{background:#c7d2fe;cursor:not-allowed}
-  .rq-empty{text-align:center;padding:28px 16px;border:2px dashed #e2e8f0;border-radius:12px;color:#94a3b8;font-size:13px}
+  .rq-empty{text-align:center;padding:28px 16px;border:1.5px dashed var(--card-border);border-radius:var(--r-lg);color:var(--text-tertiary);font-size:13px}
   @media(max-width:900px){
     #page-releases>[style*="grid-template-columns:320px"]{grid-template-columns:1fr!important}
   }
+
   /* ── SYNC INDICATORS ── */
   .sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0;position:relative}
   .sync-dot-pending{background:#f59e0b;box-shadow:0 0 0 2px rgba(245,158,11,0.2)}
@@ -252,80 +539,221 @@
   .sync-dot-synced{display:none}
   @keyframes syncPulse{0%,100%{opacity:1}50%{opacity:0.4}}
   .sync-dot-pending{animation:syncPulse 1.5s ease-in-out infinite}
+
   /* ── NETWORK TOAST ── */
-  .network-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e293b;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:500;z-index:3000;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.22);transition:transform 0.35s cubic-bezier(.34,1.4,.64,1),opacity 0.25s;opacity:0;pointer-events:none;white-space:nowrap}
+  .network-toast{
+    position:fixed;bottom:24px;left:50%;
+    transform:translateX(-50%) translateY(80px);
+    background:#1e293b;color:#fff;padding:10px 20px;
+    border-radius:var(--r-pill);font-size:13px;font-weight:500;
+    z-index:3000;display:flex;align-items:center;gap:8px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    transition:transform 0.35s cubic-bezier(.34,1.4,.64,1),opacity 0.25s;
+    opacity:0;pointer-events:none;white-space:nowrap;
+  }
   .network-toast.visible{transform:translateX(-50%) translateY(0);opacity:1}
+
   /* ── PERFORMANCE HINTS ── */
-  /* Prevent paint invalidation during drag by promoting to own layer */
-  .task-card{will-change:transform,opacity}
-  .kanban-subtask-card{will-change:transform,opacity}
-  /* Contain layout changes within kanban columns */
-  .kanban-col{contain:layout style}
-  /* Stable search dropdown */
   #search-dropdown{contain:layout}
-  /* Prevent scroll thrash on backlog re-render */
   #backlog-content{overflow-anchor:none}
-  /* Prevent flash on filter/re-render */
-  #kanban-board{overflow-anchor:none}
+
+  /* ── SEARCH RESULTS ── */
   #search-results-panel::-webkit-scrollbar{width:4px}
   #search-results-panel::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
   @media(max-width:640px){
     #search-container{max-width:100%}
   }
 
-  /* ── FIREBASE AUTH LOGIN SCREEN ── */
-  #auth-login-screen{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif}
+  /* ── AUTH SCREEN ── */
+  #auth-login-screen{
+    position:fixed;inset:0;z-index:9999;
+    background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'DM Sans',sans-serif;
+  }
   #auth-login-screen.auth-hidden{display:none!important}
-  .auth-card{background:#fff;border-radius:20px;padding:40px;width:min(420px,90vw);box-shadow:0 24px 64px rgba(0,0,0,0.35);animation:authCardIn 0.35s cubic-bezier(.34,1.2,.64,1)}
+  .auth-card{
+    background:#fff;border-radius:var(--r-2xl);padding:40px;
+    width:min(420px,90vw);
+    box-shadow:0 24px 64px rgba(0,0,0,0.35);
+    animation:authCardIn 0.35s cubic-bezier(.34,1.2,.64,1);
+  }
   @keyframes authCardIn{from{opacity:0;transform:translateY(24px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-  .auth-logo{width:44px;height:44px;background:#6366f1;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
-  .auth-title{font-size:22px;font-weight:700;color:#0f172a;text-align:center;margin-bottom:4px}
-  .auth-subtitle{font-size:13px;color:#94a3b8;text-align:center;margin-bottom:28px}
-  .auth-label{font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;display:block}
-  .auth-input{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;color:#1e293b;outline:none;transition:border 0.15s,box-shadow 0.15s;background:#f8fafc;margin-bottom:16px}
-  .auth-input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.12);background:#fff}
-  .auth-btn{width:100%;padding:11px;background:#6366f1;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background 0.15s,transform 0.1s,box-shadow 0.15s;margin-top:4px}
-  .auth-btn:hover{background:#4f46e5;box-shadow:0 4px 14px rgba(99,102,241,0.35)}
+  .auth-logo{width:44px;height:44px;background:var(--accent);border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+  .auth-title{font-size:22px;font-weight:700;color:var(--text-primary);text-align:center;margin-bottom:4px;letter-spacing:-.02em}
+  .auth-subtitle{font-size:13px;color:var(--text-tertiary);text-align:center;margin-bottom:28px}
+  .auth-label{font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:5px;display:block}
+  .auth-input{
+    width:100%;padding:0 14px;height:40px;
+    border:1.5px solid var(--control-border);border-radius:var(--r-md);
+    font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text-primary);
+    outline:none;transition:border-color 0.15s,box-shadow 0.15s;
+    background:#f8fafc;margin-bottom:14px;
+  }
+  .auth-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring);background:#fff}
+  .auth-btn{
+    width:100%;height:42px;
+    background:var(--accent);color:#fff;border:none;border-radius:var(--r-md);
+    font-size:14.5px;font-weight:700;font-family:'DM Sans',sans-serif;
+    cursor:pointer;transition:background 0.15s,transform 0.1s,box-shadow 0.15s;
+    margin-top:4px;
+  }
+  .auth-btn:hover{background:var(--accent-dark);box-shadow:0 4px 14px rgba(99,102,241,0.35)}
   .auth-btn:active{transform:scale(0.98)}
   .auth-btn:disabled{background:#a5b4fc;cursor:not-allowed;box-shadow:none;transform:none}
-  .auth-error{background:#fee2e2;color:#dc2626;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:500;margin-top:12px;display:none;align-items:center;gap:8px}
+  .auth-error{background:#fee2e2;color:#dc2626;border-radius:var(--r-md);padding:10px 14px;font-size:13px;font-weight:500;margin-top:12px;display:none;align-items:center;gap:8px}
   .auth-error.visible{display:flex}
   .auth-spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:authSpin 0.7s linear infinite;display:none;margin:0 auto}
   .auth-btn.loading .auth-btn-text{display:none}
   .auth-btn.loading .auth-spinner{display:block}
   @keyframes authSpin{to{transform:rotate(360deg)}}
-  /* Topbar user pill */
-  #topbar-user-pill{display:none;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:4px 10px 4px 6px;flex-shrink:0}
+
+  /* ── TOPBAR USER PILL ── */
+  #topbar-user-pill{
+    display:none;align-items:center;gap:8px;
+    background:#f8fafc;border:1px solid var(--card-border);
+    border-radius:var(--r-md);padding:4px 10px 4px 6px;flex-shrink:0;
+  }
   #topbar-user-pill.visible{display:flex}
-  #topbar-user-email{font-size:12px;font-weight:600;color:#475569;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #topbar-logout-btn{font-size:12px;font-weight:700;color:#6366f1;background:none;border:none;cursor:pointer;padding:0;font-family:'DM Sans',sans-serif;transition:color 0.15s;white-space:nowrap}
-  #topbar-logout-btn:hover{color:#4f46e5}
+  #topbar-user-email{font-size:12px;font-weight:600;color:var(--text-secondary);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #topbar-logout-btn{font-size:12px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;font-family:'DM Sans',sans-serif;transition:color 0.15s;white-space:nowrap}
+  #topbar-logout-btn:hover{color:var(--accent-dark)}
 
   /* ── REPORTS HEALTH DOT ── */
-  .rpt-health-dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:background 0.3s}
-  /* ── RBAC STYLES ── */
+  .rpt-health-dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex-shrink:0;transition:background 0.3s}
+
+  /* ── RBAC ── */
   .rbac-hidden{display:none!important}
-  .rbac-access-denied{display:flex;flex-direction:column;align-items:center;justify-content:center;
-    height:calc(100vh - 120px);text-align:center;gap:0}
-  .rbac-denied-icon{width:64px;height:64px;border-radius:16px;background:#fee2e2;
-    display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
-  .rbac-denied-title{font-size:20px;font-weight:700;color:#0f172a;margin-bottom:8px}
-  .rbac-denied-text{font-size:14px;color:#64748b;max-width:320px;line-height:1.6;margin-bottom:24px}
-  .rbac-denied-badge{display:inline-flex;align-items:center;gap:6px;background:#fef3c7;
-    color:#b45309;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600}
+  .rbac-access-denied{display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100vh - 120px);text-align:center;gap:0}
+  .rbac-denied-icon{width:64px;height:64px;border-radius:var(--r-xl);background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+  .rbac-denied-title{font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:8px}
+  .rbac-denied-text{font-size:14px;color:var(--text-secondary);max-width:320px;line-height:1.6;margin-bottom:24px}
+  .rbac-denied-badge{display:inline-flex;align-items:center;gap:6px;background:#fef3c7;color:#b45309;border-radius:var(--r-pill);padding:5px 14px;font-size:12px;font-weight:600}
+
   /* ── REPORTS ADVANCED FILTER PANEL ── */
-  #rpt-adv-filter-panel{position:absolute;top:calc(100% + 8px);left:0;z-index:500;background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);padding:20px;width:480px;max-width:96vw;animation:rptPanelIn 0.18s cubic-bezier(.34,1.2,.64,1)}
+  #rpt-adv-filter-panel{
+    position:absolute;top:calc(100% + 8px);left:0;z-index:500;
+    background:#fff;border:1px solid var(--card-border);
+    border-radius:var(--r-xl);box-shadow:0 8px 32px rgba(0,0,0,0.12);
+    padding:20px;width:480px;max-width:96vw;
+    animation:rptPanelIn 0.18s cubic-bezier(.34,1.2,.64,1);
+  }
   @keyframes rptPanelIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
   #rpt-adv-filter-panel .rpt-filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  #rpt-adv-filter-panel label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-  #rpt-adv-filter-panel select{font-size:13px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;width:100%;outline:none;transition:border 0.15s,box-shadow 0.15s;color:#1e293b}
-  #rpt-adv-filter-panel select:focus{border-color:#6366f1;box-shadow:0 0 0 2px rgba(99,102,241,0.1);background:#fff}
-  .rpt-filter-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#ede9fe;color:#6d28d9;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;transition:background 0.12s}
+  #rpt-adv-filter-panel label{font-size:10.5px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+  #rpt-adv-filter-panel select{
+    font-size:13px;padding:0 10px;height:34px;
+    border:1px solid var(--control-border);border-radius:var(--r-md);
+    background:#f8fafc;width:100%;outline:none;
+    transition:border-color 0.15s,box-shadow 0.15s;color:var(--text-primary);
+  }
+  #rpt-adv-filter-panel select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-ring);background:#fff}
+  .rpt-filter-chip{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:3px 9px;background:#ede9fe;color:#6d28d9;
+    border-radius:var(--r-pill);font-size:11px;font-weight:600;
+    cursor:pointer;transition:background 0.12s;
+  }
   .rpt-filter-chip:hover{background:#ddd6fe}
   .rpt-filter-chip .chip-x{font-size:13px;line-height:1;margin-left:2px;opacity:0.6}
   #rpt-filter-btn-wrap{position:relative;display:inline-block}
-  #rpt-active-badge{display:none;position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#6366f1;color:#fff;font-size:9px;font-weight:800;align-items:center;justify-content:center}
+  #rpt-active-badge{
+    display:none;position:absolute;top:-5px;right:-5px;
+    width:16px;height:16px;border-radius:50%;
+    background:var(--accent);color:#fff;font-size:9px;font-weight:800;
+    align-items:center;justify-content:center;
+  }
   #rpt-active-badge.visible{display:flex}
+
+  /* ── SF-SELECT: STANDARDIZED FILTER SELECTS ── */
+  /* Overrides the global select to be compact & inline for toolbars */
+  .sf-select{
+    width:auto!important;
+    height:var(--control-h)!important;
+    padding:0 28px 0 10px!important;
+    font-size:13px!important;
+    font-weight:500!important;
+    color:var(--text-primary)!important;
+    background:var(--card-bg)!important;
+    border:1px solid var(--control-border)!important;
+    border-radius:var(--r-md)!important;
+    cursor:pointer!important;
+    min-width:120px!important;
+  }
+  .sf-select:hover{border-color:#c4cdd8!important}
+  .sf-select:focus{
+    border-color:var(--accent)!important;
+    box-shadow:0 0 0 3px var(--accent-ring)!important;
+    background:#fff!important;
+  }
+  .sf-select-sm{
+    height:30px!important;
+    padding:0 24px 0 8px!important;
+    font-size:12px!important;
+    min-width:100px!important;
+  }
+
+  /* ── TOPBAR SEARCH ── */
+  #global-search{
+    background:#f8fafc!important;
+    font-family:'DM Sans',sans-serif!important;
+    font-size:13.5px!important;
+    height:var(--control-h)!important;
+    border-radius:var(--r-md)!important;
+    padding:0 32px 0 34px!important;
+  }
+  #global-search:focus{background:#fff!important}
+
+  /* ── TOPBAR HEADER ── */
+  #topbar{
+    background:#fff;
+    border-bottom:1px solid var(--card-border);
+    padding:0 20px;height:52px;
+    display:flex;align-items:center;gap:12px;
+    flex-shrink:0;
+  }
+
+  /* ── TABLE STANDARDIZATION ── */
+  .sf-table{width:100%;border-collapse:collapse;font-size:13px}
+  .sf-table thead tr{border-bottom:1.5px solid #f1f5f9}
+  .sf-table th{
+    padding:8px 12px;font-size:11px;font-weight:700;
+    color:var(--text-secondary);text-transform:uppercase;
+    letter-spacing:.05em;text-align:left;white-space:nowrap;
+  }
+  .sf-table td{padding:10px 12px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+  .sf-table tbody tr:last-child td{border-bottom:none}
+  .sf-table tbody tr:hover td{background:#fafbfc}
+
+  /* ── CARD HEADER PATTERN ── */
+  .card-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .card-title{font-size:14px;font-weight:600;color:var(--text-primary);letter-spacing:-.01em}
+  .card-subtitle{font-size:12px;color:var(--text-tertiary);margin-top:2px}
+
+  /* ── FILTER BAR ── */
+  .filter-bar{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  }
+
+  /* ── METRIC NUMBER ── */
+  .metric-number{font-size:28px;font-weight:700;color:var(--text-primary);letter-spacing:-.03em;line-height:1}
+  .metric-label{font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+  .metric-sub{font-size:12px;color:var(--text-tertiary);margin-top:4px}
+
+  /* ── BACKLOG RESPONSIVE ── */
+  #page-releases>[style*="grid-template-columns:320px"]{display:grid}
+
+  /* ── PRODUCTION TABLE (Reports prod table) ── */
+  #rpt-prod-table{width:100%;border-collapse:collapse;font-size:13px}
+  #rpt-prod-table thead tr{border-bottom:1.5px solid #f1f5f9;text-align:left}
+  #rpt-prod-table th{padding:8px 12px;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;white-space:nowrap}
+  #rpt-prod-table th:not(:first-child){text-align:right}
+  #rpt-prod-table td{padding:10px 12px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+  #rpt-prod-table tbody tr:last-child td{border-bottom:none}
+  #rpt-prod-table tbody tr:hover td{background:#fafbfc}
 </style>
 </head>
 <body class="flex overflow-hidden h-screen">
@@ -433,7 +861,7 @@
 <!-- MAIN -->
 <main id="main" class="flex-1 flex flex-col h-screen overflow-hidden">
   <!-- Topbar -->
-  <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 flex-shrink-0">
+  <header class="flex-shrink-0" id="topbar">
     <!-- Mobile menu -->
     <button id="mobile-menu-btn" class="btn btn-secondary p-2" onclick="toggleSidebar()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -498,10 +926,10 @@
           <div class="page-subtitle" id="dashboard-subtitle">Welcome to SprintFlow</div>
         </div>
         <div class="flex gap-2 items-center" style="flex-wrap:nowrap">
-          <select id="dash-project-filter" class="text-sm" style="width:auto;padding:7px 12px" onchange="renderDashboard()">
+          <select id="dash-project-filter" class="sf-select" onchange="renderDashboard()">
             <option value="all">All Projects</option>
           </select>
-          <select id="dash-sprint-filter" class="text-sm" style="width:auto;padding:7px 12px" onchange="renderDashboard()">
+          <select id="dash-sprint-filter" class="sf-select" onchange="renderDashboard()">
             <option value="all">All Sprints</option>
           </select>
         </div>
@@ -510,46 +938,46 @@
       <!-- Dynamic Stats -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="stat-card">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Total Projects</div>
-          <div class="text-3xl font-bold text-slate-900" id="stat-total-projects">0</div>
-          <div class="text-xs text-slate-500 font-medium mt-1" id="stat-projects-sub">—</div>
+          <div class="metric-label">Total Projects</div>
+          <div class="metric-number" id="stat-total-projects">0</div>
+          <div class="metric-sub" id="stat-projects-sub">—</div>
           <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#6366f1;border-radius:50%;opacity:0.08;transform:translate(15px,-15px)"></div>
         </div>
         <div class="stat-card">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Total Tasks</div>
-          <div class="text-3xl font-bold text-slate-900" id="stat-total-tasks">0</div>
-          <div class="text-xs text-slate-500 font-medium mt-1" id="stat-tasks-sub">—</div>
+          <div class="metric-label">Total Tasks</div>
+          <div class="metric-number" id="stat-total-tasks">0</div>
+          <div class="metric-sub" id="stat-tasks-sub">—</div>
           <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#0ea5e9;border-radius:50%;opacity:0.08;transform:translate(15px,-15px)"></div>
         </div>
         <div class="stat-card">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Active Sprints</div>
-          <div class="text-3xl font-bold text-slate-900" id="stat-active-sprints">0</div>
-          <div class="text-xs text-slate-500 font-medium mt-1" id="stat-sprints-sub">—</div>
+          <div class="metric-label">Active Sprints</div>
+          <div class="metric-number" id="stat-active-sprints">0</div>
+          <div class="metric-sub" id="stat-sprints-sub">—</div>
           <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#10b981;border-radius:50%;opacity:0.08;transform:translate(15px,-15px)"></div>
         </div>
         <div class="stat-card">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Released Tasks</div>
-          <div class="text-3xl font-bold text-slate-900" id="stat-done-tasks">0</div>
-          <div class="text-xs text-slate-500 font-medium mt-1" id="stat-done-sub">—</div>
+          <div class="metric-label">Released Tasks</div>
+          <div class="metric-number" id="stat-done-tasks">0</div>
+          <div class="metric-sub" id="stat-done-sub">—</div>
           <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#10b981;border-radius:50%;opacity:0.08;transform:translate(15px,-15px)"></div>
         </div>
       </div>
       <div class="grid grid-cols-3 gap-4 mb-6">
         <div class="stat-card">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Total Subtasks</div>
-          <div class="text-3xl font-bold text-slate-900" id="stat-total-subtasks">0</div>
-          <div class="text-xs text-slate-500 font-medium mt-1" id="stat-subtasks-sub">Across all tasks</div>
+          <div class="metric-label">Total Subtasks</div>
+          <div class="metric-number" id="stat-total-subtasks">0</div>
+          <div class="metric-sub" id="stat-subtasks-sub">Across all tasks</div>
           <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#8b5cf6;border-radius:50%;opacity:0.08;transform:translate(15px,-15px)"></div>
         </div>
         <div class="stat-card">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Subtasks Done</div>
-          <div class="text-3xl font-bold text-slate-900" id="stat-done-subtasks">0</div>
-          <div class="text-xs text-slate-500 font-medium mt-1" id="stat-done-subtasks-sub">—</div>
+          <div class="metric-label">Subtasks Done</div>
+          <div class="metric-number" id="stat-done-subtasks">0</div>
+          <div class="metric-sub" id="stat-done-subtasks-sub">—</div>
           <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#10b981;border-radius:50%;opacity:0.08;transform:translate(15px,-15px)"></div>
         </div>
         <div class="stat-card">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Subtask Progress</div>
-          <div class="text-3xl font-bold text-slate-900" id="stat-subtask-pct">0%</div>
+          <div class="metric-label">Subtask Progress</div>
+          <div class="metric-number" id="stat-subtask-pct">0%</div>
           <div class="progress-bar mt-2" style="height:8px"><div class="progress-fill" id="stat-subtask-pct-bar" style="width:0%;background:#8b5cf6"></div></div>
           <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#6366f1;border-radius:50%;opacity:0.08;transform:translate(15px,-15px)"></div>
         </div>
@@ -557,19 +985,19 @@
 
       <div class="grid grid-cols-3 gap-4 mb-6" id="epic-stat-row">
         <div class="stat-card">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Active Epics</div>
-          <div class="text-3xl font-bold text-slate-900" id="stat-active-epics">0</div>
-          <div class="text-xs text-slate-500 font-medium mt-1" id="stat-active-epics-sub">—</div>
+          <div class="metric-label">Active Epics</div>
+          <div class="metric-number" id="stat-active-epics">0</div>
+          <div class="metric-sub" id="stat-active-epics-sub">—</div>
           <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#8b5cf6;border-radius:50%;opacity:0.08;transform:translate(15px,-15px)"></div>
         </div>
         <div class="stat-card">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Epic Completion</div>
-          <div class="text-3xl font-bold text-slate-900" id="stat-epic-completion">0%</div>
+          <div class="metric-label">Epic Completion</div>
+          <div class="metric-number" id="stat-epic-completion">0%</div>
           <div class="progress-bar mt-2" style="height:8px"><div class="progress-fill" id="stat-epic-completion-bar" style="width:0%;background:#8b5cf6"></div></div>
           <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#6366f1;border-radius:50%;opacity:0.08;transform:translate(15px,-15px)"></div>
         </div>
         <div class="stat-card">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Top Delayed Epics</div>
+          <div class="metric-label">Top Delayed Epics</div>
           <div id="stat-delayed-epics" class="mt-1 space-y-1 text-xs"></div>
           <div style="position:absolute;top:0;right:0;width:70px;height:70px;background:#ef4444;border-radius:50%;opacity:0.08;transform:translate(15px,-15px)"></div>
         </div>
@@ -585,7 +1013,7 @@
           </div>
         </div>
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-4">Task Status</div>
+          <div class="card-title" style="margin-bottom:16px">Task Status</div>
           <div class="chart-container" style="height:180px">
             <canvas id="taskDistChart"></canvas>
           </div>
@@ -595,7 +1023,7 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-4">Active Sprints</div>
+          <div class="card-title" style="margin-bottom:16px">Active Sprints</div>
           <div id="dashboard-sprints"></div>
         </div>
         <div class="card">
@@ -631,13 +1059,13 @@
           <div class="page-subtitle">Manage and prioritize all tasks</div>
         </div>
         <div class="flex gap-2 flex-wrap">
-          <select id="backlog-project-filter" class="text-sm" style="width:auto;padding:8px 12px" onchange="renderBacklog()">
+          <select id="backlog-project-filter" class="sf-select" onchange="renderBacklog()">
             <option value="all">All Projects</option>
           </select>
-          <select id="backlog-epic-filter" class="text-sm" style="width:auto;padding:8px 12px" onchange="renderBacklog()">
+          <select id="backlog-epic-filter" class="sf-select" onchange="renderBacklog()">
             <option value="all">All Epics</option>
           </select>
-          <select id="backlog-group-by" class="text-sm" style="width:auto;padding:8px 12px" onchange="renderBacklog()">
+          <select id="backlog-group-by" class="sf-select" onchange="renderBacklog()">
             <option value="sprint">Group by Sprint</option>
             <option value="epic">Group by Epic</option>
           </select>
@@ -660,8 +1088,8 @@
         <div class="lg:col-span-2" id="sprint-planning-list"></div>
         <div>
           <div class="card" style="position:sticky;top:24px">
-            <div class="font-semibold text-slate-900 mb-1">Unassigned Tasks</div>
-            <div class="text-xs text-slate-500 mb-4">Drag tasks to a sprint to assign them</div>
+            <div class="card-title" style="margin-bottom:4px">Unassigned Tasks</div>
+            <div class="card-subtitle" style="margin-bottom:16px">Drag tasks to a sprint to assign them</div>
             <div id="unassigned-tasks" class="space-y-2"></div>
           </div>
         </div>
@@ -676,8 +1104,8 @@
           <div class="page-subtitle" id="kanban-sprint-label">Select a sprint</div>
         </div>
         <div class="flex gap-2 items-center flex-wrap">
-          <select id="kanban-sprint-select" class="text-sm" style="width:auto;padding:8px 12px" onchange="renderKanban()"></select>
-          <select id="kanban-epic-filter" class="text-sm" style="width:auto;padding:8px 12px" onchange="renderKanban()">
+          <select id="kanban-sprint-select" class="sf-select" onchange="renderKanban()"></select>
+          <select id="kanban-epic-filter" class="sf-select" onchange="renderKanban()">
             <option value="all">All Epics</option>
           </select>
           <button class="btn btn-primary" onclick="openCreateTaskModal()">+ Task</button>
@@ -771,10 +1199,10 @@
             </div>
           </div>
           <!-- Project and Sprint dropdowns (RIGHT of Filters) -->
-          <select id="rpt-project-filter" class="text-sm" style="width:auto;padding:8px 12px" onchange="renderReports()">
+          <select id="rpt-project-filter" class="sf-select" onchange="renderReports()">
             <option value="all">All Projects</option>
           </select>
-          <select id="rpt-sprint-filter" class="text-sm" style="width:auto;padding:8px 12px" onchange="renderReports()">
+          <select id="rpt-sprint-filter" class="sf-select" onchange="renderReports()">
             <option value="all">All Sprints</option>
           </select>
           <button class="btn btn-secondary text-xs" onclick="renderReports()">
@@ -801,58 +1229,58 @@
 
       <!-- ═══ KPI CARDS ROW 1 ═══ -->
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Total Projects</div><div class="text-3xl font-bold text-slate-900" id="rpt-kpi-projects">0</div><div class="text-xs text-slate-500 mt-1" id="rpt-kpi-projects-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#6366f1;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Active Sprints</div><div class="text-3xl font-bold text-slate-900" id="rpt-kpi-sprints">0</div><div class="text-xs text-slate-500 mt-1" id="rpt-kpi-sprints-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#0ea5e9;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Open Tasks</div><div class="text-3xl font-bold text-slate-900" id="rpt-kpi-open">0</div><div class="text-xs text-slate-500 mt-1" id="rpt-kpi-open-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#f59e0b;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Released Tasks</div><div class="text-3xl font-bold text-slate-900" id="rpt-kpi-released">0</div><div class="text-xs text-slate-500 mt-1" id="rpt-kpi-released-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#10b981;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Open Bugs</div><div class="text-3xl font-bold text-slate-900" id="rpt-kpi-bugs">0</div><div class="text-xs text-slate-500 mt-1" id="rpt-kpi-bugs-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#ef4444;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Total Projects</div><div class="metric-number" id="rpt-kpi-projects">0</div><div class="metric-sub" id="rpt-kpi-projects-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#6366f1;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Active Sprints</div><div class="metric-number" id="rpt-kpi-sprints">0</div><div class="metric-sub" id="rpt-kpi-sprints-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#0ea5e9;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Open Tasks</div><div class="metric-number" id="rpt-kpi-open">0</div><div class="metric-sub" id="rpt-kpi-open-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#f59e0b;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Released Tasks</div><div class="metric-number" id="rpt-kpi-released">0</div><div class="metric-sub" id="rpt-kpi-released-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#10b981;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Open Bugs</div><div class="metric-number" id="rpt-kpi-bugs">0</div><div class="metric-sub" id="rpt-kpi-bugs-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#ef4444;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
       </div>
       <!-- KPI CARDS ROW 2 -->
       <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Sprint Completion</div><div class="text-3xl font-bold text-slate-900" id="rpt-kpi-sprint-comp">0%</div><div class="progress-bar mt-2" style="height:6px"><div class="progress-fill" id="rpt-kpi-sprint-comp-bar" style="width:0%;background:#6366f1"></div></div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#6366f1;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Release Readiness</div><div class="text-3xl font-bold text-slate-900" id="rpt-kpi-release-ready">0%</div><div class="progress-bar mt-2" style="height:6px"><div class="progress-fill" id="rpt-kpi-release-ready-bar" style="width:0%;background:#10b981"></div></div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#10b981;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">QA Reopen Rate</div><div class="text-3xl font-bold text-slate-900" id="rpt-kpi-reopen">0%</div><div class="text-xs text-slate-500 mt-1" id="rpt-kpi-reopen-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#ef4444;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Avg Task Completion</div><div class="text-3xl font-bold text-slate-900" id="rpt-kpi-avg-time">—</div><div class="text-xs text-slate-500 mt-1" id="rpt-kpi-avg-time-sub">story points avg</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#8b5cf6;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Sprint Completion</div><div class="metric-number" id="rpt-kpi-sprint-comp">0%</div><div class="progress-bar mt-2" style="height:6px"><div class="progress-fill" id="rpt-kpi-sprint-comp-bar" style="width:0%;background:#6366f1"></div></div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#6366f1;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Release Readiness</div><div class="metric-number" id="rpt-kpi-release-ready">0%</div><div class="progress-bar mt-2" style="height:6px"><div class="progress-fill" id="rpt-kpi-release-ready-bar" style="width:0%;background:#10b981"></div></div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#10b981;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">QA Reopen Rate</div><div class="metric-number" id="rpt-kpi-reopen">0%</div><div class="metric-sub" id="rpt-kpi-reopen-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#ef4444;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Avg Task Completion</div><div class="metric-number" id="rpt-kpi-avg-time">—</div><div class="metric-sub" id="rpt-kpi-avg-time-sub">story points avg</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#8b5cf6;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
       </div>
 
       <!-- ═══ SPRINT ANALYTICS ═══ -->
-      <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Sprint Analytics</div>
+      <div class="section-label">Sprint Analytics</div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-1">Velocity Trend</div>
-          <div class="text-xs text-slate-500 mb-4">Committed vs completed story points per sprint</div>
+          <div class="card-title" style="margin-bottom:4px">Velocity Trend</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Committed vs completed story points per sprint</div>
           <div class="chart-container"><canvas id="velocityChart"></canvas></div>
         </div>
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-1">Sprint Burndown</div>
-          <div class="text-xs text-slate-500 mb-4">Remaining vs ideal (active sprint)</div>
+          <div class="card-title" style="margin-bottom:4px">Sprint Burndown</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Remaining vs ideal (active sprint)</div>
           <div class="chart-container"><canvas id="burndownChart"></canvas></div>
         </div>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-1">Commitment vs Completion</div>
-          <div class="text-xs text-slate-500 mb-4">How accurately sprints are planned</div>
+          <div class="card-title" style="margin-bottom:4px">Commitment vs Completion</div>
+          <div class="card-subtitle" style="margin-bottom:16px">How accurately sprints are planned</div>
           <div class="chart-container"><canvas id="commitCompChart"></canvas></div>
         </div>
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-1">Sprint Spillover</div>
-          <div class="text-xs text-slate-500 mb-4">Incomplete tasks carried over between sprints</div>
+          <div class="card-title" style="margin-bottom:4px">Sprint Spillover</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Incomplete tasks carried over between sprints</div>
           <div class="chart-container"><canvas id="spilloverChart"></canvas></div>
         </div>
       </div>
 
       <!-- ═══ TEAM PRODUCTIVITY ═══ -->
-      <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Team Productivity</div>
+      <div class="section-label">Team Productivity</div>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="card lg:col-span-2">
-          <div class="font-semibold text-slate-900 mb-1">Workload Distribution</div>
-          <div class="text-xs text-slate-500 mb-4">Story points assigned per member</div>
+          <div class="card-title" style="margin-bottom:4px">Workload Distribution</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Story points assigned per member</div>
           <div class="chart-container"><canvas id="workloadChart"></canvas></div>
         </div>
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-1">Task Types</div>
-          <div class="text-xs text-slate-500 mb-4">Distribution by type</div>
+          <div class="card-title" style="margin-bottom:4px">Task Types</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Distribution by type</div>
           <div class="chart-container" style="height:180px"><canvas id="typeChart"></canvas></div>
           <div class="mt-3 space-y-2" id="type-chart-legend"></div>
         </div>
@@ -865,7 +1293,7 @@
             <div class="text-xs text-slate-500">Per-member performance breakdown</div>
           </div>
           <div class="flex gap-2">
-            <select id="rpt-prod-sort" class="text-xs" style="width:auto;padding:5px 8px;font-size:12px" onchange="renderProductivityTable()">
+            <select id="rpt-prod-sort" class="sf-select sf-select-sm" onchange="renderProductivityTable()">
               <option value="completed">Sort: Completed</option>
               <option value="active">Sort: Active Tasks</option>
               <option value="points">Sort: Story Points</option>
@@ -891,22 +1319,22 @@
       </div>
 
       <!-- ═══ PROJECT ANALYTICS ═══ -->
-      <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Project Analytics</div>
+      <div class="section-label">Project Analytics</div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-1">Task Distribution by Project</div>
-          <div class="text-xs text-slate-500 mb-4">Open, in-progress & released tasks per project</div>
+          <div class="card-title" style="margin-bottom:4px">Task Distribution by Project</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Open, in-progress & released tasks per project</div>
           <div class="chart-container"><canvas id="projDistChart"></canvas></div>
         </div>
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-1">Sprint Health per Project</div>
-          <div class="text-xs text-slate-500 mb-4">Completion % of active sprints</div>
+          <div class="card-title" style="margin-bottom:4px">Sprint Health per Project</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Completion % of active sprints</div>
           <div class="chart-container"><canvas id="sprintHealthChart"></canvas></div>
         </div>
       </div>
       <!-- Per-project detail table -->
       <div class="card mb-6">
-        <div class="font-semibold text-slate-900 mb-4">Project Details</div>
+        <div class="card-title" style="margin-bottom:16px">Project Details</div>
         <div id="rpt-project-detail-table" style="overflow-x:auto">
           <table style="width:100%;border-collapse:collapse;font-size:13px">
             <thead>
@@ -926,42 +1354,42 @@
       </div>
 
       <!-- ═══ RELEASE ANALYTICS ═══ -->
-      <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Release Analytics</div>
+      <div class="section-label">Release Analytics</div>
       <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Release Completion</div><div class="text-3xl font-bold text-slate-900" id="rpt-rel-comp">0%</div><div class="progress-bar mt-2" style="height:6px"><div class="progress-fill" id="rpt-rel-comp-bar" style="width:0%;background:#6366f1"></div></div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#6366f1;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Pending Tasks</div><div class="text-3xl font-bold text-slate-900" id="rpt-rel-pending">0</div><div class="text-xs text-slate-500 mt-1" id="rpt-rel-pending-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#f59e0b;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Release Throughput</div><div class="text-3xl font-bold text-slate-900" id="rpt-rel-throughput">0</div><div class="text-xs text-slate-500 mt-1">releases total</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#10b981;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Release Blockers</div><div class="text-3xl font-bold text-slate-900" id="rpt-rel-blockers">0</div><div class="text-xs text-slate-500 mt-1" id="rpt-rel-blockers-sub">missing notes/tasks</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#ef4444;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Release Completion</div><div class="metric-number" id="rpt-rel-comp">0%</div><div class="progress-bar mt-2" style="height:6px"><div class="progress-fill" id="rpt-rel-comp-bar" style="width:0%;background:#6366f1"></div></div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#6366f1;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Pending Tasks</div><div class="metric-number" id="rpt-rel-pending">0</div><div class="metric-sub" id="rpt-rel-pending-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#f59e0b;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Release Throughput</div><div class="metric-number" id="rpt-rel-throughput">0</div><div class="metric-sub">releases total</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#10b981;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Release Blockers</div><div class="metric-number" id="rpt-rel-blockers">0</div><div class="metric-sub" id="rpt-rel-blockers-sub">missing notes/tasks</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#ef4444;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-1">Release Completion %</div>
-          <div class="text-xs text-slate-500 mb-4">Task completion per release</div>
+          <div class="card-title" style="margin-bottom:4px">Release Completion %</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Task completion per release</div>
           <div class="chart-container"><canvas id="relCompChart"></canvas></div>
         </div>
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-1">Release Aging</div>
-          <div class="text-xs text-slate-500 mb-4">Days since creation by release</div>
+          <div class="card-title" style="margin-bottom:4px">Release Aging</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Days since creation by release</div>
           <div class="chart-container"><canvas id="relAgingChart"></canvas></div>
         </div>
       </div>
 
       <!-- ═══ EPIC ANALYTICS ═══ -->
-      <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Epic Analytics</div>
+      <div class="section-label">Epic Analytics</div>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-1">Epic Completion</div>
-          <div class="text-xs text-slate-500 mb-4">Completed vs total tasks per epic</div>
+          <div class="card-title" style="margin-bottom:4px">Epic Completion</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Completed vs total tasks per epic</div>
           <div class="chart-container"><canvas id="epicCompletionChart"></canvas></div>
         </div>
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-1">Epic Workload</div>
-          <div class="text-xs text-slate-500 mb-4">Story points per epic</div>
+          <div class="card-title" style="margin-bottom:4px">Epic Workload</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Story points per epic</div>
           <div class="chart-container"><canvas id="epicWorkloadChart"></canvas></div>
         </div>
         <div class="card">
-          <div class="font-semibold text-slate-900 mb-1">Epic Velocity</div>
-          <div class="text-xs text-slate-500 mb-4">Done vs remaining points per epic</div>
+          <div class="card-title" style="margin-bottom:4px">Epic Velocity</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Done vs remaining points per epic</div>
           <div class="chart-container"><canvas id="epicVelocityChart"></canvas></div>
         </div>
       </div>
@@ -974,10 +1402,10 @@
           <div class="page-subtitle" id="epics-subtitle">Track large initiatives across projects</div>
         </div>
         <div class="flex gap-2 flex-wrap">
-          <select id="epics-project-filter" class="text-sm" style="width:auto;padding:8px 12px" onchange="renderEpics()">
+          <select id="epics-project-filter" class="sf-select" onchange="renderEpics()">
             <option value="all">All Projects</option>
           </select>
-          <select id="epics-status-filter" class="text-sm" style="width:auto;padding:8px 12px" onchange="renderEpics()">
+          <select id="epics-status-filter" class="sf-select" onchange="renderEpics()">
             <option value="all">All Statuses</option>
             <option value="Planned">Planned</option>
             <option value="Active">Active</option>
@@ -4189,7 +4617,7 @@ function openTaskModal(taskId){
           ${Object.entries(STATUS_META).map(([v,m])=>`<option value="${v}" ${t.status===v?'selected':''}>${m.label}</option>`).join('')}
         </select>
         <div class="flex gap-2">
-          <button class="btn btn-secondary" onclick="openEditTaskModal('${t.id}')">Edit</button>
+          <button class="btn btn-secondary" onclick="closeModal();setTimeout(()=>openEditTaskModal('${t.id}'),220)">Edit</button>
           <button class="btn btn-danger" onclick="deleteTask('${t.id}')">Delete</button>
         </div>
       </div>
@@ -4497,7 +4925,52 @@ function deleteSubtask(parentTaskId,subtaskId){
 }
 
 // ─── CREATE TASK ──────────────────────────────────────────────────
+// Helper: build sprint options filtered by projectId
+function _sprintOptionsForProject(projectId, selectedSprintId){
+  const filtered = state.sprints.filter(s => !projectId || s.project === projectId);
+  return `<option value="">Backlog</option>` + filtered.map(s=>`<option value="${s.id}"${s.id===selectedSprintId?' selected':''}>${s.name}</option>`).join('');
+}
+
+// Helper: build assignee options filtered to project members
+// Uses project.memberIds; falls back to all users if project has no memberIds defined.
+function _assigneeOptionsForProject(projectId, selectedAssigneeId){
+  const proj = projectId ? state.projects.find(p=>p.id===projectId) : null;
+  const memberIds = proj && Array.isArray(proj.memberIds) && proj.memberIds.length
+    ? proj.memberIds
+    : null; // null = no restriction
+  const eligible = memberIds
+    ? state.users.filter(u => memberIds.includes(u.id))
+    : state.users;
+  return `<option value="">Unassigned</option>` +
+    eligible.map(u=>`<option value="${u.id}"${u.id===selectedAssigneeId?' selected':''}>${u.name}</option>`).join('');
+}
+
+// Inline validation error helper
+function _ctFieldError(id, msg){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.style.borderColor = 'var(--danger)';
+  el.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.12)';
+  let errEl = document.getElementById(id+'-err');
+  if(!errEl){
+    errEl = document.createElement('div');
+    errEl.id = id+'-err';
+    errEl.style.cssText = 'color:var(--danger);font-size:11px;font-weight:600;margin-top:3px';
+    el.parentNode.appendChild(errEl);
+  }
+  errEl.textContent = msg;
+  el.focus();
+}
+function _ctClearErrors(){
+  document.querySelectorAll('#modal-box [id$="-err"]').forEach(e=>e.remove());
+  document.querySelectorAll('#modal-box input,#modal-box select,#modal-box textarea').forEach(el=>{
+    el.style.borderColor=''; el.style.boxShadow='';
+  });
+}
+
 function openCreateTaskModal(){
+  const firstProjectId = state.projects.length ? state.projects[0].id : '';
+  const sprintOptsHtml = _sprintOptionsForProject(firstProjectId, '');
   openModal(`
     <div class="p-6">
       <div class="flex items-center justify-between mb-5">
@@ -4511,52 +4984,68 @@ function openCreateTaskModal(){
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label>Type</label>
+            <label>Type *</label>
             <select id="ct-type">
+              <option value="">— Select type —</option>
               <option value="story">Story</option>
-              <option value="task" selected>Task</option>
+              <option value="task">Task</option>
               <option value="bug">Bug</option>
             </select>
           </div>
           <div>
-            <label>Priority</label>
+            <label>Priority *</label>
             <select id="ct-priority">
-              <option value="medium" selected>Medium</option>
-              <option value="high">High</option>
+              <option value="">— Select priority —</option>
               <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
               <option value="low">Low</option>
             </select>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label>Project</label>
-            <select id="ct-project">
-              ${state.projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
+            <label>Project *</label>
+            <select id="ct-project" onchange="ctOnProjectChange(this.value)">
+              <option value="">— Select project —</option>
+              ${state.projects.map(p=>`<option value="${p.id}"${p.id===firstProjectId?' selected':''}>${p.name}</option>`).join('')}
             </select>
           </div>
           <div>
-            <label>Assignee</label>
-            <select id="ct-assignee">
-              <option value="">Unassigned</option>
-              ${state.users.map(u=>`<option value="${u.id}">${u.name}</option>`).join('')}
+            <label>Sprint / Backlog *</label>
+            <select id="ct-sprint" onchange="ctOnSprintChange(this.value)">
+              ${sprintOptsHtml}
             </select>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label>Sprint</label>
-            <select id="ct-sprint">
-              <option value="">Backlog</option>
-              ${state.sprints.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+            <label id="ct-assignee-label">Assignee</label>
+            <select id="ct-assignee">
+              ${_assigneeOptionsForProject(firstProjectId, '')}
             </select>
           </div>
           <div>
-            <label>Epic</label>
-            <select id="ct-epic">
-              <option value="">No Epic</option>
-              ${(state.epics||[]).map(e=>`<option value="${e.id}">◈ ${e.title}</option>`).join('')}
+            <label>Story Points *</label>
+            <select id="ct-points">
+              <option value="">— Select —</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="5" selected>5</option>
+              <option value="8">8</option>
+              <option value="13">13</option>
             </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4" id="ct-date-row">
+          <div>
+            <label id="ct-start-label">Start Date</label>
+            <input type="date" id="ct-start"/>
+          </div>
+          <div>
+            <label id="ct-end-label">End Date</label>
+            <input type="date" id="ct-end"/>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
@@ -4566,17 +5055,11 @@ function openCreateTaskModal(){
               ${Object.entries(STATUS_META).map(([v,m])=>`<option value="${v}"${v==='open'?' selected':''}>${m.label}</option>`).join('')}
             </select>
           </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
           <div>
-            <label>Story Points</label>
-            <select id="ct-points">
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="5" selected>5</option>
-              <option value="8">8</option>
-              <option value="13">13</option>
+            <label>Epic</label>
+            <select id="ct-epic">
+              <option value="">No Epic</option>
+              ${(state.epics||[]).map(e=>`<option value="${e.id}">◈ ${e.title}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -4595,26 +5078,125 @@ function openCreateTaskModal(){
       </div>
     </div>
   `);
+  // Initialize label states
+  ctOnSprintChange(document.getElementById('ct-sprint').value);
+  ctOnProjectChange(firstProjectId);
+}
+
+// Called when project changes — refresh sprint dropdown to matching sprints only
+function ctOnProjectChange(projectId){
+  const sprintSel = document.getElementById('ct-sprint');
+  if(!sprintSel) return;
+  const currentSprint = sprintSel.value;
+  sprintSel.innerHTML = _sprintOptionsForProject(projectId, currentSprint);
+  // If previously selected sprint no longer valid, reset to Backlog
+  const stillValid = projectId && state.sprints.some(s=>s.id===currentSprint&&s.project===projectId);
+  if(!stillValid) sprintSel.value = '';
+  // Refresh assignee dropdown to project members only; reset if current selection not a member
+  const assigneeSel = document.getElementById('ct-assignee');
+  if(assigneeSel){
+    const prevAssignee = assigneeSel.value;
+    assigneeSel.innerHTML = _assigneeOptionsForProject(projectId, prevAssignee);
+    // If previously selected user is not in the new project's members, reset to Unassigned
+    const proj = projectId ? state.projects.find(p=>p.id===projectId) : null;
+    const memberIds = proj && Array.isArray(proj.memberIds) && proj.memberIds.length ? proj.memberIds : null;
+    if(prevAssignee && memberIds && !memberIds.includes(prevAssignee)){
+      assigneeSel.value = '';
+    }
+  }
+  // Also refresh epic filter to project's epics
+  const epicSel = document.getElementById('ct-epic');
+  if(epicSel){
+    const prevEpic = epicSel.value;
+    const projectEpics = (state.epics||[]).filter(e=>!projectId||e.projectId===projectId);
+    epicSel.innerHTML = `<option value="">No Epic</option>` + projectEpics.map(e=>`<option value="${e.id}"${e.id===prevEpic?' selected':''}>◈ ${e.title}</option>`).join('');
+  }
+  ctOnSprintChange(sprintSel.value);
+}
+
+// Called when sprint changes — toggle mandatory asterisks on assignee + dates
+function ctOnSprintChange(sprintVal){
+  const isBacklog = !sprintVal;
+  const assigneeLabel = document.getElementById('ct-assignee-label');
+  const startLabel = document.getElementById('ct-start-label');
+  const endLabel = document.getElementById('ct-end-label');
+  if(assigneeLabel) assigneeLabel.textContent = isBacklog ? 'Assignee' : 'Assignee *';
+  if(startLabel) startLabel.textContent = isBacklog ? 'Start Date' : 'Start Date *';
+  if(endLabel) endLabel.textContent = isBacklog ? 'End Date' : 'End Date *';
 }
 
 function createTask(){
-  const title=document.getElementById('ct-title').value.trim();
-  if(!title){showNotif('⚠ Task title is required','error');return;}
-  const projectId=document.getElementById('ct-project').value;
-  if(!projectId){showNotif('⚠ Select a project','error');return;}
-  const tags=document.getElementById('ct-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
-  const task={
+  _ctClearErrors();
+  let firstError = null;
+
+  const title = document.getElementById('ct-title').value.trim();
+  const type = document.getElementById('ct-type').value;
+  const priority = document.getElementById('ct-priority').value;
+  const projectId = document.getElementById('ct-project').value;
+  const sprintId = document.getElementById('ct-sprint').value || null;
+  const assigneeId = document.getElementById('ct-assignee').value || null;
+  const points = document.getElementById('ct-points').value;
+  const startDate = document.getElementById('ct-start').value;
+  const endDate = document.getElementById('ct-end').value;
+  const isBacklog = !sprintId;
+
+  // ── Mandatory field checks ──
+  if(!title){
+    if(!firstError){_ctFieldError('ct-title','Title is required');firstError='ct-title';}
+  }
+  if(!type){
+    if(!firstError){_ctFieldError('ct-type','Type is required');firstError='ct-type';}
+    else _ctFieldError('ct-type','Type is required');
+  }
+  if(!priority){
+    if(!firstError){_ctFieldError('ct-priority','Priority is required');firstError='ct-priority';}
+    else _ctFieldError('ct-priority','Priority is required');
+  }
+  if(!projectId){
+    if(!firstError){_ctFieldError('ct-project','Project is required');firstError='ct-project';}
+    else _ctFieldError('ct-project','Project is required');
+  }
+  if(!points){
+    if(!firstError){_ctFieldError('ct-points','Story points required');firstError='ct-points';}
+    else _ctFieldError('ct-points','Story points required');
+  }
+  // ── Conditional: assignee mandatory for sprint tasks ──
+  if(!isBacklog && !assigneeId){
+    if(!firstError){_ctFieldError('ct-assignee','Assignee required for sprint tasks');firstError='ct-assignee';}
+    else _ctFieldError('ct-assignee','Assignee required for sprint tasks');
+  }
+  // ── Conditional: dates mandatory for sprint tasks ──
+  if(!isBacklog && !startDate){
+    if(!firstError){_ctFieldError('ct-start','Start date required for sprint tasks');firstError='ct-start';}
+    else _ctFieldError('ct-start','Start date required for sprint tasks');
+  }
+  if(!isBacklog && !endDate){
+    if(!firstError){_ctFieldError('ct-end','End date required for sprint tasks');firstError='ct-end';}
+    else _ctFieldError('ct-end','End date required for sprint tasks');
+  }
+  // ── Date order validation ──
+  if(startDate && endDate && endDate < startDate){
+    if(!firstError){_ctFieldError('ct-end','End date cannot be before start date');firstError='ct-end';}
+    else _ctFieldError('ct-end','End date cannot be before start date');
+  }
+
+  if(firstError){ document.getElementById(firstError)?.focus(); return; }
+
+  const tags = document.getElementById('ct-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const task = {
     id:uid(),
     title,
-    type:document.getElementById('ct-type').value,
-    priority:document.getElementById('ct-priority').value,
+    type,
+    priority,
     project:projectId,
-    assignee:document.getElementById('ct-assignee').value||null,
-    sprint:document.getElementById('ct-sprint').value||null,
+    assignee:assigneeId,
+    sprint:sprintId,
     epicId:document.getElementById('ct-epic')?document.getElementById('ct-epic').value||null:null,
-    points:parseInt(document.getElementById('ct-points').value)||5,
+    points:parseInt(points)||5,
     description:document.getElementById('ct-desc').value.trim(),
     status:document.getElementById('ct-status').value||'open',
+    startDate:startDate||null,
+    endDate:endDate||null,
     tags,
     subtasks:[]
   };
@@ -4641,6 +5223,9 @@ function createTask(){
 function openEditTaskModal(taskId){
   const t=getTask(taskId);
   if(!t)return;
+  const sprintOptsHtml = _sprintOptionsForProject(t.project, t.sprint||'');
+  const projectEpics = (state.epics||[]).filter(e=>!t.project||e.projectId===t.project);
+  const isBacklog = !t.sprint;
   openModal(`
     <div class="p-6">
       <div class="flex items-center justify-between mb-5">
@@ -4654,16 +5239,18 @@ function openEditTaskModal(taskId){
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label>Type</label>
+            <label>Type *</label>
             <select id="et-type">
+              <option value="">— Select type —</option>
               <option value="story" ${t.type==='story'?'selected':''}>Story</option>
               <option value="task" ${t.type==='task'?'selected':''}>Task</option>
               <option value="bug" ${t.type==='bug'?'selected':''}>Bug</option>
             </select>
           </div>
           <div>
-            <label>Priority</label>
+            <label>Priority *</label>
             <select id="et-priority">
+              <option value="">— Select priority —</option>
               <option value="critical" ${t.priority==='critical'?'selected':''}>Critical</option>
               <option value="high" ${t.priority==='high'?'selected':''}>High</option>
               <option value="medium" ${t.priority==='medium'?'selected':''}>Medium</option>
@@ -4679,35 +5266,51 @@ function openEditTaskModal(taskId){
             </select>
           </div>
           <div>
-            <label>Story Points</label>
+            <label>Story Points *</label>
             <select id="et-points">
+              <option value="">— Select —</option>
               ${[1,2,3,5,8,13].map(p=>`<option value="${p}" ${t.points===p?'selected':''}>${p}</option>`).join('')}
             </select>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label>Assignee</label>
-            <select id="et-assignee">
-              <option value="" ${!t.assignee?'selected':''}>Unassigned</option>
-              ${state.users.map(u=>`<option value="${u.id}" ${t.assignee===u.id?'selected':''}>${u.name}</option>`).join('')}
+            <label>Project *</label>
+            <select id="et-project" onchange="etOnProjectChange(this.value)">
+              <option value="">— Select project —</option>
+              ${state.projects.map(p=>`<option value="${p.id}" ${t.project===p.id?'selected':''}>${p.name}</option>`).join('')}
             </select>
           </div>
           <div>
-            <label>Sprint</label>
-            <select id="et-sprint">
-              <option value="" ${!t.sprint?'selected':''}>Backlog</option>
-              ${state.sprints.map(s=>`<option value="${s.id}" ${t.sprint===s.id?'selected':''}>${s.name}</option>`).join('')}
+            <label>Sprint / Backlog *</label>
+            <select id="et-sprint" onchange="etOnSprintChange(this.value)">
+              ${sprintOptsHtml}
             </select>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
+            <label id="et-assignee-label">${isBacklog?'Assignee':'Assignee *'}</label>
+            <select id="et-assignee">
+              ${_assigneeOptionsForProject(t.project, t.assignee||'')}
+            </select>
+          </div>
+          <div>
             <label>Epic</label>
             <select id="et-epic">
               <option value="" ${!t.epicId?'selected':''}>No Epic</option>
-              ${(state.epics||[]).map(e=>`<option value="${e.id}" ${t.epicId===e.id?'selected':''}>◈ ${e.title}</option>`).join('')}
+              ${projectEpics.map(e=>`<option value="${e.id}" ${t.epicId===e.id?'selected':''}>◈ ${e.title}</option>`).join('')}
             </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4" id="et-date-row">
+          <div>
+            <label id="et-start-label">${isBacklog?'Start Date':'Start Date *'}</label>
+            <input type="date" id="et-start" value="${t.startDate||''}"/>
+          </div>
+          <div>
+            <label id="et-end-label">${isBacklog?'End Date':'End Date *'}</label>
+            <input type="date" id="et-end" value="${t.endDate||''}"/>
           </div>
         </div>
         <div>
@@ -4727,19 +5330,115 @@ function openEditTaskModal(taskId){
   `);
 }
 
+// Edit task modal — project change handler
+function etOnProjectChange(projectId){
+  const sprintSel = document.getElementById('et-sprint');
+  if(!sprintSel) return;
+  const currentSprint = sprintSel.value;
+  sprintSel.innerHTML = _sprintOptionsForProject(projectId, currentSprint);
+  const stillValid = projectId && state.sprints.some(s=>s.id===currentSprint&&s.project===projectId);
+  if(!stillValid) sprintSel.value = '';
+  // Refresh assignee dropdown to project members only; reset if current selection not a member
+  const assigneeSel = document.getElementById('et-assignee');
+  if(assigneeSel){
+    const prevAssignee = assigneeSel.value;
+    assigneeSel.innerHTML = _assigneeOptionsForProject(projectId, prevAssignee);
+    const proj = projectId ? state.projects.find(p=>p.id===projectId) : null;
+    const memberIds = proj && Array.isArray(proj.memberIds) && proj.memberIds.length ? proj.memberIds : null;
+    if(prevAssignee && memberIds && !memberIds.includes(prevAssignee)){
+      assigneeSel.value = '';
+    }
+  }
+  const epicSel = document.getElementById('et-epic');
+  if(epicSel){
+    const prevEpic = epicSel.value;
+    const projectEpics = (state.epics||[]).filter(e=>!projectId||e.projectId===projectId);
+    epicSel.innerHTML = `<option value="">No Epic</option>` + projectEpics.map(e=>`<option value="${e.id}"${e.id===prevEpic?' selected':''}>◈ ${e.title}</option>`).join('');
+  }
+  etOnSprintChange(sprintSel.value);
+}
+
+// Edit task modal — sprint change handler
+function etOnSprintChange(sprintVal){
+  const isBacklog = !sprintVal;
+  const assigneeLabel = document.getElementById('et-assignee-label');
+  const startLabel = document.getElementById('et-start-label');
+  const endLabel = document.getElementById('et-end-label');
+  if(assigneeLabel) assigneeLabel.textContent = isBacklog ? 'Assignee' : 'Assignee *';
+  if(startLabel) startLabel.textContent = isBacklog ? 'Start Date' : 'Start Date *';
+  if(endLabel) endLabel.textContent = isBacklog ? 'End Date' : 'End Date *';
+}
+
 function saveTask(taskId){
   const t=getTask(taskId);
   if(!t)return;
-  const title=document.getElementById('et-title').value.trim();
-  if(!title){showNotif('⚠ Title required','error');return;}
+  _ctClearErrors();
+  let firstError = null;
+
+  const title = document.getElementById('et-title').value.trim();
+  const type = document.getElementById('et-type').value;
+  const priority = document.getElementById('et-priority').value;
+  const projectId = document.getElementById('et-project') ? document.getElementById('et-project').value : t.project;
+  const sprintId = document.getElementById('et-sprint') ? document.getElementById('et-sprint').value || null : t.sprint;
+  const assigneeId = document.getElementById('et-assignee').value || null;
+  const points = document.getElementById('et-points').value;
+  const startDate = document.getElementById('et-start') ? document.getElementById('et-start').value : (t.startDate||'');
+  const endDate = document.getElementById('et-end') ? document.getElementById('et-end').value : (t.endDate||'');
+  const isBacklog = !sprintId;
+
+  // ── Mandatory fields ──
+  if(!title){
+    if(!firstError){_ctFieldError('et-title','Title is required');firstError='et-title';}
+  }
+  if(!type){
+    if(!firstError){_ctFieldError('et-type','Type is required');firstError='et-type';}
+    else _ctFieldError('et-type','Type is required');
+  }
+  if(!priority){
+    if(!firstError){_ctFieldError('et-priority','Priority is required');firstError='et-priority';}
+    else _ctFieldError('et-priority','Priority is required');
+  }
+  if(!projectId){
+    if(!firstError){_ctFieldError('et-project','Project is required');firstError='et-project';}
+    else _ctFieldError('et-project','Project is required');
+  }
+  if(!points){
+    if(!firstError){_ctFieldError('et-points','Story points required');firstError='et-points';}
+    else _ctFieldError('et-points','Story points required');
+  }
+  // ── Conditional: assignee mandatory for sprint tasks ──
+  if(!isBacklog && !assigneeId){
+    if(!firstError){_ctFieldError('et-assignee','Assignee required for sprint tasks');firstError='et-assignee';}
+    else _ctFieldError('et-assignee','Assignee required for sprint tasks');
+  }
+  // ── Conditional: dates mandatory for sprint tasks ──
+  if(!isBacklog && !startDate){
+    if(!firstError){_ctFieldError('et-start','Start date required for sprint tasks');firstError='et-start';}
+    else _ctFieldError('et-start','Start date required for sprint tasks');
+  }
+  if(!isBacklog && !endDate){
+    if(!firstError){_ctFieldError('et-end','End date required for sprint tasks');firstError='et-end';}
+    else _ctFieldError('et-end','End date required for sprint tasks');
+  }
+  // ── Date order ──
+  if(startDate && endDate && endDate < startDate){
+    if(!firstError){_ctFieldError('et-end','End date cannot be before start date');firstError='et-end';}
+    else _ctFieldError('et-end','End date cannot be before start date');
+  }
+
+  if(firstError){ document.getElementById(firstError)?.focus(); return; }
+
   t.title=title;
-  t.type=document.getElementById('et-type').value;
-  t.priority=document.getElementById('et-priority').value;
+  t.type=type;
+  t.priority=priority;
+  t.project=projectId;
   t.status=document.getElementById('et-status').value;
-  t.points=parseInt(document.getElementById('et-points').value);
-  t.assignee=document.getElementById('et-assignee').value||null;
-  t.sprint=document.getElementById('et-sprint').value||null;
+  t.points=parseInt(points);
+  t.assignee=assigneeId;
+  t.sprint=sprintId;
   t.epicId=document.getElementById('et-epic')?document.getElementById('et-epic').value||null:t.epicId;
+  t.startDate=startDate||null;
+  t.endDate=endDate||null;
   t.description=document.getElementById('et-desc').value.trim();
   t.tags=document.getElementById('et-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
   // ── Debounced Firebase write — protects against rapid save sequences ──
