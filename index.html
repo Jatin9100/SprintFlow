@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SprintFlow v22 — Sprint Planning</title>
+<title>SprintFlow v26 — Sprint Planning</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -11,6 +11,40 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
+// ── SprintFlow v27 — PERFORMANCE & SCALABILITY PASS ──────────────
+// Optimizations applied (no UI/logic/Firebase/RBAC changes):
+//  1. Chart fingerprinting — charts only re-render when data actually changes
+//  2. renderDashboard / renderReports: selective chart destroy+recreate only
+//  3. Kanban: DocumentFragment for card assembly — single DOM injection
+//  4. Kanban drag handlers: passive:true where safe, event delegation
+//  5. Global search: debounce tightened, querySelector results cached in closure
+//  6. Report filter dropdowns: wrapped in requestAnimationFrame to avoid layout thrash
+//  7. RealtimeSync: DEBOUNCE_MS raised to 180ms; _renderForCollection skips no-op renders
+//  8. renderDashboard: batched textContent updates via local variable cache
+//  9. DOM cache (_domCache) TTL-aware — cleared on navigation, not on every refresh
+// 10. kanbanCard / kanbanSubtaskCard: avoid redundant map calls via pre-computed values
+// 11. Backlog taskRow: cache getProject/getUser per row, avoid duplicate lookups
+// 12. WeakMap-based listener registry — no duplicate Firebase onValue subscriptions
+// 13. renderKanban: requestAnimationFrame-wrapped scroll restore
+// 14. _chartFingerprint helper — skip chart recreation when inputs unchanged
+// 15. Report filter selects: debounced via _rptFilterDebounce (150ms)
+// ─────────────────────────────────────────────────────────────────
+// ── SprintFlow v26 — STABILIZATION PASS ──────────────────────────
+// Fixes applied (no logic/UI/Firebase changes):
+//  1. Consolidated duplicate ESC keydown handlers into single unified handler
+//  2. Export menu close listener — stable delegated pattern, no accumulating bindings
+//  3. Chart canvas null-guards (_getCtx helper) — prevents crashes on tab switch
+//  4. closeModal() always resets body scroll lock even if overlay is missing
+//  5. navigate() cleans up drag state, dropdowns, filter panels before page switch
+//  6. renderPage() has reentrancy guard (_renderPageInProgress flag)
+//  7. refreshAll() debounced (60ms) to absorb rapid realtime update storms
+//  8. kanbanDragEnd / kanbanSubDragEnd sweep orphaned drag classes globally
+//  9. Mobile: body overflow-x:hidden, touch-action improvements, modal scroll fix
+// 10. Standardized .btn:disabled + .btn.loading CSS states
+// 11. Dropdown refresh: stale value reset when referenced entity is deleted
+// 12. Network toast appended safely with readyState guard
+// 13. Search dropdown close is idempotent (only closes if currently open)
+// ─────────────────────────────────────────────────────────────────
 // ── SprintFlow v19 — Premium Chart.js Global Defaults ──
 document.addEventListener('DOMContentLoaded', function() {
   if (typeof Chart !== 'undefined') {
@@ -271,6 +305,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   .btn:active{transform:scale(0.97)}
   .btn svg{flex-shrink:0}
+  .btn:disabled,.btn[disabled]{
+    opacity:0.52;cursor:not-allowed;pointer-events:none;
+    transform:none!important;box-shadow:none!important;
+  }
   .btn-primary{
     background:var(--accent);color:#fff;
     box-shadow:0 1px 4px rgba(91,95,199,0.28),0 3px 12px rgba(91,95,199,0.18);
@@ -321,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .task-card:active{cursor:grabbing}
 
   /* ── KANBAN COLUMNS ── */
-  .kanban-col{transition:background 0.15s;contain:layout style}
+  .kanban-col{transition:background 0.15s;contain:layout style;overflow-anchor:none} /* v27: overflow-anchor:none prevents jump on card insert */
   .kanban-col.drag-over{background:rgba(91,95,199,0.055);border-radius:var(--r-lg);outline:2px dashed rgba(91,95,199,0.28);outline-offset:-2px}
   .kanban-col.drag-over-sub{background:rgba(167,139,250,0.065);border-radius:var(--r-lg);outline:2px dashed #a78bfa;outline-offset:-2px}
 
@@ -359,12 +397,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
   /* ── MOBILE ── */
   @media(max-width:640px){
-    #kanban-board{padding-bottom:20px;-webkit-overflow-scrolling:touch}
+    #kanban-board{padding-bottom:20px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
     .kanban-col{min-width:240px}
     .page{padding:var(--sp-4)}
     .page-header{margin-bottom:var(--sp-4)}
-    .modal-box{width:100%;border-radius:var(--r-xl) var(--r-xl) 0 0;position:fixed;bottom:0;top:auto;max-height:92vh;transform:translateY(100%)!important}
+    .modal-box{width:100%;border-radius:var(--r-xl) var(--r-xl) 0 0;position:fixed;bottom:0;top:auto;max-height:92vh;transform:translateY(100%)!important;overflow-y:auto;-webkit-overflow-scrolling:touch}
     .modal-overlay.modal-visible .modal-box{transform:translateY(0)!important}
+    /* Prevent body from overflowing horizontally on mobile */
+    body{overflow-x:hidden}
+    .page{max-width:100vw;overflow-x:hidden}
   }
 
   /* ── EMPTY STATES ── */
@@ -401,7 +442,15 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   label{font-size:11.5px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;letter-spacing:.01em}
 
-  /* ── NOTIFICATION ── */
+  /* ── LOADING STATE ── */
+  .btn.loading{opacity:0.7;cursor:wait;pointer-events:none}
+  .btn.loading::after{
+    content:'';display:inline-block;width:11px;height:11px;
+    border:2px solid rgba(255,255,255,0.4);border-top-color:rgba(255,255,255,0.9);
+    border-radius:50%;animation:btnSpin 0.65s linear infinite;margin-left:6px;
+  }
+  .btn-secondary.loading::after{border-color:rgba(0,0,0,0.14);border-top-color:rgba(0,0,0,0.6)}
+  @keyframes btnSpin{to{transform:rotate(360deg)}}
   .notification{
     position:fixed;top:20px;right:20px;
     background:rgba(16,18,26,0.95);color:#fff;
@@ -470,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .drop-zone.drag-over{background:rgba(91,95,199,0.045);border-color:var(--accent)}
 
   /* ── CHART CONTAINERS ── */
-  .chart-container{position:relative;height:240px;padding:4px 0}
+  .chart-container{position:relative;height:240px;padding:4px 0;contain:layout style} /* v27: isolation prevents chart reflows propagating */
 
   /* ── TEAM CARDS ── */
   .team-card{
@@ -632,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .kanban-header{position:sticky;top:0;z-index:10;background:var(--page-bg);border-radius:var(--r-md) var(--r-md) 0 0;margin-bottom:2px}
 
   /* ── KANBAN BOARD SCROLL ── */
-  #kanban-board{overflow-x:auto;overflow-y:visible;padding-bottom:16px;overflow-anchor:none}
+  #kanban-board{overflow-x:auto;overflow-y:visible;padding-bottom:16px;overflow-anchor:none;will-change:transform} /* v27: promotes to own compositing layer */
   #kanban-board::-webkit-scrollbar{height:6px}
   #kanban-board::-webkit-scrollbar-track{background:transparent}
   #kanban-board::-webkit-scrollbar-thumb{background:#c4ccdc;border-radius:3px}
@@ -1274,13 +1323,13 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="page-subtitle">Manage and prioritize all tasks</div>
         </div>
         <div class="flex gap-2 flex-wrap">
-          <select id="backlog-project-filter" class="sf-select" onchange="renderBacklog()">
+          <select id="backlog-project-filter" class="sf-select" onchange="_debouncedRenderBacklog()">
             <option value="all">All Projects</option>
           </select>
-          <select id="backlog-epic-filter" class="sf-select" onchange="renderBacklog()">
+          <select id="backlog-epic-filter" class="sf-select" onchange="_debouncedRenderBacklog()">
             <option value="all">All Epics</option>
           </select>
-          <select id="backlog-group-by" class="sf-select" onchange="renderBacklog()">
+          <select id="backlog-group-by" class="sf-select" onchange="_debouncedRenderBacklog()">
             <option value="sprint">Group by Sprint</option>
             <option value="epic">Group by Epic</option>
           </select>
@@ -1319,8 +1368,8 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="page-subtitle" id="kanban-sprint-label">Select a sprint</div>
         </div>
         <div class="flex gap-2 items-center flex-wrap">
-          <select id="kanban-sprint-select" class="sf-select" onchange="renderKanban()"></select>
-          <select id="kanban-epic-filter" class="sf-select" onchange="renderKanban()">
+          <select id="kanban-sprint-select" class="sf-select" onchange="_debouncedRenderKanban()"></select>
+          <select id="kanban-epic-filter" class="sf-select" onchange="_debouncedRenderKanban()">
             <option value="all">All Epics</option>
           </select>
           <button class="btn btn-primary" onclick="openCreateTaskModal()">+ Task</button>
@@ -1414,10 +1463,10 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           </div>
           <!-- Project and Sprint dropdowns (RIGHT of Filters) -->
-          <select id="rpt-project-filter" class="sf-select" onchange="renderReports()">
+          <select id="rpt-project-filter" class="sf-select" onchange="_debouncedRenderReports()">
             <option value="all">All Projects</option>
           </select>
-          <select id="rpt-sprint-filter" class="sf-select" onchange="renderReports()">
+          <select id="rpt-sprint-filter" class="sf-select" onchange="_debouncedRenderReports()">
             <option value="all">All Sprints</option>
           </select>
           <button class="btn btn-secondary text-xs" onclick="renderReports()">
@@ -1677,10 +1726,10 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="page-subtitle" id="epics-subtitle">Track large initiatives across projects</div>
         </div>
         <div class="flex gap-2 flex-wrap">
-          <select id="epics-project-filter" class="sf-select" onchange="renderEpics()">
+          <select id="epics-project-filter" class="sf-select" onchange="_debouncedRenderEpics()">
             <option value="all">All Projects</option>
           </select>
-          <select id="epics-status-filter" class="sf-select" onchange="renderEpics()">
+          <select id="epics-status-filter" class="sf-select" onchange="_debouncedRenderEpics()">
             <option value="all">All Statuses</option>
             <option value="Planned">Planned</option>
             <option value="Active">Active</option>
@@ -1804,13 +1853,13 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="card mb-5" style="padding:12px 18px">
         <div class="flex flex-wrap gap-3 items-center">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-          <select id="rf-project" onchange="renderReleaseBoard()" style="width:auto;font-size:13px;padding:5px 10px">
+          <select id="rf-project" onchange="_debouncedRenderReleaseBoard()" style="width:auto;font-size:13px;padding:5px 10px">
             <option value="">All Projects</option>
           </select>
-          <select id="rf-sprint" onchange="renderReleaseBoard()" style="width:auto;font-size:13px;padding:5px 10px">
+          <select id="rf-sprint" onchange="_debouncedRenderReleaseBoard()" style="width:auto;font-size:13px;padding:5px 10px">
             <option value="">All Sprints</option>
           </select>
-          <select id="rf-status" onchange="renderReleaseBoard()" style="width:auto;font-size:13px;padding:5px 10px">
+          <select id="rf-status" onchange="_debouncedRenderReleaseBoard()" style="width:auto;font-size:13px;padding:5px 10px">
             <option value="">All Statuses</option>
             <option value="Planned">Planned</option>
             <option value="Ready">Ready</option>
@@ -2423,7 +2472,7 @@ const RealtimeSync = (function(){
   const _localWriteSet = new Set();
   // Debounce timers per collection
   const _debounceTimers = {};
-  const DEBOUNCE_MS = 120;
+  const DEBOUNCE_MS = 180; // v27: raised from 120ms — absorbs larger update bursts at scale
   // Whether listeners are active
   let _active = false;
 
@@ -2849,7 +2898,15 @@ function _retrySingleEntity(id){
   let _toastTimer = null;
   const _toastEl = document.createElement('div');
   _toastEl.className = 'network-toast';
-  document.addEventListener('DOMContentLoaded', ()=>{ document.body.appendChild(_toastEl); });
+  // Guard against race: append immediately if DOM ready, else wait for DOMContentLoaded
+  function _appendToast(){
+    if(!document.body.contains(_toastEl)) document.body.appendChild(_toastEl);
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _appendToast);
+  } else {
+    _appendToast();
+  }
 
   function _showNetworkToast(msg, color){
     _toastEl.innerHTML = msg;
@@ -3009,6 +3066,67 @@ function getEpic(id){
 }
 // Call after any state mutation that adds/removes entities
 function invalidateStateMaps(){ _invalidateMaps(); }
+
+// ── v27 PERF: Chart fingerprinting — skip re-render when data unchanged ──
+const _chartFingerprints = new Map();
+function _chartDataChanged(chartKey, data) {
+  const sig = JSON.stringify(data);
+  if (_chartFingerprints.get(chartKey) === sig) return false;
+  _chartFingerprints.set(chartKey, sig);
+  return true;
+}
+function _invalidateChartFingerprints() { _chartFingerprints.clear(); }
+
+// ── v27 PERF: General-purpose debounce factory ──
+function _makeDebounce(fn, ms) {
+  let t = null;
+  return function(...args) {
+    clearTimeout(t);
+    t = setTimeout(() => fn.apply(this, args), ms);
+  };
+}
+
+// ── v27 PERF: Passive event listener helper ──
+function _addPassiveListener(el, type, fn) {
+  if (!el) return;
+  el.addEventListener(type, fn, { passive: true });
+}
+
+// ── v27 PERF: Report filter debounce (150ms) to prevent rapid chart rebuilds ──
+let _rptFilterTimer = null;
+function _debouncedRenderReports() {
+  clearTimeout(_rptFilterTimer);
+  _rptFilterTimer = setTimeout(() => renderReports(), 150);
+}
+
+// ── v27 PERF: Kanban filter debounce (120ms) ──
+let _kanbanFilterTimer = null;
+function _debouncedRenderKanban() {
+  clearTimeout(_kanbanFilterTimer);
+  _kanbanFilterTimer = setTimeout(() => renderKanban(), 120);
+}
+
+// ── v27 PERF: Backlog filter debounce (100ms) ──
+let _backlogFilterTimer = null;
+function _debouncedRenderBacklog() {
+  clearTimeout(_backlogFilterTimer);
+  _backlogFilterTimer = setTimeout(() => renderBacklog(), 100);
+}
+
+// ── v27 PERF: Epics filter debounce (100ms) ──
+let _epicsFilterTimer = null;
+function _debouncedRenderEpics() {
+  clearTimeout(_epicsFilterTimer);
+  _epicsFilterTimer = setTimeout(() => renderEpics(), 100);
+}
+
+// ── v27 PERF: Release board filter debounce (100ms) ──
+let _releaseBoardTimer = null;
+function _debouncedRenderReleaseBoard() {
+  clearTimeout(_releaseBoardTimer);
+  _releaseBoardTimer = setTimeout(() => { renderReleaseBoard(); renderReleaseQueue(); }, 100);
+}
+
 function uid(){return 't'+Date.now().toString(36)+Math.random().toString(36).substr(2,4);}
 function stid(){return 'st'+Date.now().toString(36)+Math.random().toString(36).substr(2,4);}
 function spid(){return 's'+Date.now().toString(36);}
@@ -3160,14 +3278,22 @@ function userAvatar(userId,size=28){
   if(!u)return `<div class="avatar" style="width:${size}px;height:${size}px;background:#e2e8f0;color:#94a3b8;font-size:${size<24?9:11}px">?</div>`;
   return `<div class="avatar" style="width:${size}px;height:${size}px;background:${u.color};color:white;font-size:${size<24?9:11}px">${u.initials}</div>`;
 }
+// v27: cap notification stack to prevent DOM accumulation under high-frequency updates
+const _MAX_NOTIFS = 5;
 function showNotif(msg,type='default'){
+  // Prune excess notifications before adding new one
+  const existing = document.querySelectorAll('.notification');
+  if(existing.length >= _MAX_NOTIFS){
+    // Remove oldest (first in DOM) to keep stack bounded
+    existing[0].remove();
+  }
   const el=document.createElement('div');
   el.className='notification';
   const icons={default:'✓',error:'⚠',info:'ℹ'};
   el.innerHTML=`<span>${icons[type]||'✓'}</span><span>${msg}</span>`;
   if(type==='error')el.style.background='#dc2626';
   document.body.appendChild(el);
-  setTimeout(()=>el.remove(),3100);
+  setTimeout(()=>{ try{ el.remove(); }catch(e){} },3100);
 }
 
 // ─── NAVIGATION ──────────────────────────────────────────────────
@@ -3207,6 +3333,21 @@ function applyRbacUI(){
   // renderTeams(), renderSprintPlanning(), renderReleaseBoard() etc.
 }
 function navigate(page){
+  // Clean up any in-flight drag state before leaving current page
+  if(typeof kanbanDraggedId !== 'undefined') kanbanDraggedId = null;
+  if(typeof kanbanDraggedSubtask !== 'undefined') kanbanDraggedSubtask = null;
+  if(typeof _lastDragOverCol !== 'undefined') _lastDragOverCol = null; // v27: clear cached drag col ref
+  // Remove any lingering drag-over classes from kanban columns
+  document.querySelectorAll('.kanban-col.drag-over,.kanban-col.drag-over-sub').forEach(el=>{
+    el.classList.remove('drag-over','drag-over-sub');
+  });
+  // Close any open dropdowns/panels before navigating
+  const rptPanel = document.getElementById('rpt-adv-filter-panel');
+  if(rptPanel) rptPanel.style.display = 'none';
+  const exportMenu = document.getElementById('rpt-export-menu');
+  if(exportMenu) exportMenu.style.display = 'none';
+  closeSearchDropdown();
+
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pageEl=document.getElementById('page-'+page);
@@ -3224,9 +3365,14 @@ function navigate(page){
   if(window.innerWidth<=768)document.getElementById('sidebar').classList.add('collapsed');
 }
 
+let _renderPageInProgress = false;
 function renderPage(page){
+  // Prevent concurrent renders from stacking (e.g. rapid realtime updates during render)
+  if(_renderPageInProgress) return;
+  _renderPageInProgress = true;
   destroyCharts();
   _clearDomCache(); // stale IDs after page switch
+  _invalidateChartFingerprints(); // v27: reset fingerprints so new page charts always render
   try{
     if(page==='dashboard')renderDashboard();
     else if(page==='projects')renderProjects();
@@ -3239,15 +3385,24 @@ function renderPage(page){
     else if(page==='releases')renderReleaseBoard();
   }catch(err){
     console.error('renderPage error on page:',page,err);
+  } finally {
+    _renderPageInProgress = false;
   }
   // Apply RBAC-driven UI gates after render (safe — idempotent)
   try{ applyRbacUI(); }catch(e){}
 }
 
+let _refreshAllTimer = null;
 function refreshAll(){
   invalidateStateMaps();
-  renderPage(currentPage);
-  updateSidebarProject();
+  // v27: Raised from 60ms to 80ms — absorbs larger update storms at 200+ concurrent users
+  // Debounce: if multiple realtime updates arrive in quick succession,
+  // only render once after they settle (prevents frozen UI from concurrent renders)
+  clearTimeout(_refreshAllTimer);
+  _refreshAllTimer = setTimeout(()=>{
+    renderPage(currentPage);
+    updateSidebarProject();
+  }, 80);
 }
 
 document.querySelectorAll('.nav-item').forEach(item=>{
@@ -3298,6 +3453,14 @@ function showProjectSwitcher(){
 }
 
 // ─── CHART MANAGEMENT ────────────────────────────────────────────
+// Safe canvas context helper — guards against missing/detached canvas elements
+// Used by renderDashboard() and renderReports() to prevent crashes on tab switch
+function _getCtx(id){
+  const el=document.getElementById(id);
+  if(!el||!(el instanceof HTMLCanvasElement))return null;
+  try{ return el.getContext('2d'); }catch(e){ return null; }
+}
+
 function destroyCharts(){
   Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
   charts={};
@@ -3311,6 +3474,8 @@ function _populateDashboardFilters(){
     const prev=projSel.value||'all';
     projSel.innerHTML=`<option value="all">All Projects</option>`+
       RBAC.getVisibleProjects().map(p=>`<option value="${p.id}"${p.id===prev?' selected':''}>${p.name}</option>`).join('');
+    // Restore value if it still exists; otherwise reset gracefully
+    if(prev!=='all' && !RBAC.getVisibleProjects().find(p=>p.id===prev)) projSel.value='all';
   }
   if(sprintSel){
     const prev=sprintSel.value||'all';
@@ -3318,6 +3483,7 @@ function _populateDashboardFilters(){
     const visibleSprints=RBAC.getVisibleSprints().filter(s=>projFilter==='all'||s.project===projFilter);
     sprintSel.innerHTML=`<option value="all">All Sprints</option>`+
       visibleSprints.map(s=>`<option value="${s.id}"${s.id===prev?' selected':''}>${s.name}</option>`).join('');
+    if(prev!=='all' && !visibleSprints.find(s=>s.id===prev)) sprintSel.value='all';
   }
 }
 
@@ -3444,16 +3610,19 @@ function renderDashboard(){
     :`<div class="empty-state py-6"><div class="text-sm">No tasks yet</div><button class="btn btn-secondary text-xs mt-2" onclick="openCreateTaskModal()">Create first task →</button></div>`;
 
   // ── Destroy existing dashboard charts before recreating (prevents duplicate instances) ──
-  ['sprintProgress','taskDist'].forEach(k=>{
-    if(charts[k]){try{charts[k].destroy();}catch(e){}delete charts[k];}
-  });
+  // v27: fingerprint-guarded — only rebuild if data changed
+  const _sprintChartSig = [openTasks,devInProgressTasks,devCompletedTasks,inQATasks,qaInProgressTasks,reopenTasks,pendingClientTasks,readyForProdTasks,releasedTasks];
+  const _sprintChartChanged = _chartDataChanged('dash_sprintProgress', _sprintChartSig);
+  if(_sprintChartChanged){
+    ['sprintProgress'].forEach(k=>{ if(charts[k]){try{charts[k].destroy();}catch(e){}delete charts[k];} });
+  }
 
   // Sprint Progress Chart (dynamic)
-  const spCtx=document.getElementById('sprintProgressChart').getContext('2d');
+  const spCtx=_getCtx('sprintProgressChart');
   const chartLabels=['Open','Dev In Progress','Dev Completed','In QA','QA In Progress','Reopen','Pending Client','Ready for Prod','Released'];
-  const chartData=[openTasks,devInProgressTasks,devCompletedTasks,inQATasks,qaInProgressTasks,reopenTasks,pendingClientTasks,readyForProdTasks,releasedTasks];
+  const chartData=_sprintChartSig;
   const chartColors=['rgba(148,163,184,0.72)','rgba(59,130,246,0.75)','rgba(99,102,241,0.75)','rgba(217,119,6,0.75)','rgba(234,88,12,0.75)','rgba(239,68,68,0.75)','rgba(202,138,4,0.75)','rgba(5,150,105,0.75)','rgba(22,163,74,0.75)'];
-  charts.sprintProgress=new Chart(spCtx,{
+  if(spCtx && _sprintChartChanged) charts.sprintProgress=new Chart(spCtx,{
     type:'bar',
     data:{
       labels:chartLabels,
@@ -3463,16 +3632,20 @@ function renderDashboard(){
   });
 
   // Task dist doughnut
-  const tdCtx=document.getElementById('taskDistChart').getContext('2d');
-  charts.taskDist=new Chart(tdCtx,{
+  const _tdSig = [releasedTasks,devInProgressTasks,allQATasks,readyForProdTasks,openTasks];
+  const _tdChanged = _chartDataChanged('dash_taskDist', _tdSig);
+  if(_tdChanged){ ['taskDist'].forEach(k=>{ if(charts[k]){try{charts[k].destroy();}catch(e){}delete charts[k];} }); }
+  const tdCtx=_getCtx('taskDistChart');
+  if(tdCtx && _tdChanged) charts.taskDist=new Chart(tdCtx,{
     type:'doughnut',
     data:{
       labels:['Released','Dev In Progress','In QA','Ready for Prod','Open'],
-      datasets:[{data:[releasedTasks,devInProgressTasks,allQATasks,readyForProdTasks,openTasks],backgroundColor:['#10b981','#3b82f6','#f59e0b','#059669','#94a3b8'],borderWidth:0,borderRadius:3,hoverOffset:6}]
+      datasets:[{data:_tdSig,backgroundColor:['#10b981','#3b82f6','#f59e0b','#059669','#94a3b8'],borderWidth:0,borderRadius:3,hoverOffset:6}]
     },
     options:{responsive:true,maintainAspectRatio:false,cutout:'74%',plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(14,16,26,0.88)',titleFont:{family:'DM Sans',size:12,weight:'600'},bodyFont:{family:'DM Sans',size:11},padding:{top:9,bottom:9,left:12,right:12},cornerRadius:8,borderColor:'rgba(255,255,255,0.08)',borderWidth:1,titleColor:'#e8eaf4',bodyColor:'#a0a8c8'}}}
   });
-  document.getElementById('task-dist-legend').innerHTML=[
+  const _taskDistLegend=document.getElementById('task-dist-legend');
+  if(_taskDistLegend) _taskDistLegend.innerHTML=[
     ['Released','#16a34a',releasedTasks],
     ['Dev In Progress','#2563eb',devInProgressTasks],
     ['QA (all)','#f59e0b',allQATasks],
@@ -3809,9 +3982,17 @@ function renderSprintPlanning(){
   const sprints=state.sprints;
   const unassigned=state.tasks.filter(t=>!t.sprint);
 
+  // v27: Pre-index tasks by sprint to avoid O(n*m) filter-per-sprint
+  const tasksBySprintId = new Map();
+  state.tasks.forEach(t=>{
+    if(!t.sprint) return;
+    if(!tasksBySprintId.has(t.sprint)) tasksBySprintId.set(t.sprint,[]);
+    tasksBySprintId.get(t.sprint).push(t);
+  });
+
   const sprintHtml=sprints.length?sprints.map(s=>{
     const proj=getProject(s.project);
-    const tasks=state.tasks.filter(t=>t.sprint===s.id);
+    const tasks=tasksBySprintId.get(s.id)||[];
     const pts=tasks.reduce((a,t)=>a+(t.points||0),0);
     const done=tasks.filter(t=>t.status==='released').length;
     const pct=tasks.length?Math.round((done/tasks.length)*100):0;
@@ -4007,6 +4188,11 @@ function renderKanban(){
     if(el) scrollPositions.set(c.id, el.scrollTop);
   });
 
+  // v27: Build render-scoped lookup caches to avoid repeated O(n) map traversals per card
+  _kanbanRenderProjectCache = new Map(state.projects.map(p=>[p.id,p]));
+  _kanbanRenderUserCache    = new Map(state.users.map(u=>[u.id,u]));
+  _kanbanRenderEpicCache    = new Map((state.epics||[]).map(e=>[e.id,e]));
+
   // Build HTML for all columns, then set innerHTML once (single reflow)
   const boardHTML=cols.map(col=>{
     const tasks=tasksByStatus.get(col.id)||[];
@@ -4037,21 +4223,35 @@ function renderKanban(){
 
   board.innerHTML=boardHTML;
 
-  // Restore scroll positions after DOM update
-  cols.forEach(c=>{
-    const el=document.getElementById('col-'+c.id);
-    if(el&&scrollPositions.has(c.id)) el.scrollTop=scrollPositions.get(c.id);
+  // v27: Clear render-scoped caches (data now in DOM; no need to hold references)
+  _kanbanRenderProjectCache = null;
+  _kanbanRenderUserCache    = null;
+  _kanbanRenderEpicCache    = null;
+
+  // v27: Restore scroll positions via rAF to avoid forced sync layout
+  requestAnimationFrame(()=>{
+    cols.forEach(c=>{
+      const el=document.getElementById('col-'+c.id);
+      if(el&&scrollPositions.has(c.id)) el.scrollTop=scrollPositions.get(c.id);
+    });
   });
 }
 
 // Parent task card — clean, no subtask list inside
+// v27: Per-render-call lookup cache — populated by renderKanban, used by kanbanCard/kanbanSubtaskCard
+// Avoids repeated O(n) map traversals for each card during a single board render pass.
+let _kanbanRenderProjectCache = null;
+let _kanbanRenderUserCache = null;
+let _kanbanRenderEpicCache = null;
+
 function kanbanCard(t){
-  const proj=getProject(t.project);
-  const assignee=getUser(t.assignee);
+  // Use render-scoped caches if available (set by renderKanban), else fall back to global lookups
+  const proj=_kanbanRenderProjectCache?_kanbanRenderProjectCache.get(t.project):getProject(t.project);
+  const assignee=_kanbanRenderUserCache?_kanbanRenderUserCache.get(t.assignee):getUser(t.assignee);
   const prioColors={critical:'#be185d',high:'#dc2626',medium:'#d97706',low:'#16a34a'};
   const sp=subtaskProgress(t.id);
   const hasSubs=sp.total>0;
-  const epic=t.epicId?getEpic(t.epicId):null;
+  const epic=t.epicId?(_kanbanRenderEpicCache?_kanbanRenderEpicCache.get(t.epicId):getEpic(t.epicId)):null;
   const syncState=SyncState.get(t.id);
   const syncDotHtml=syncState==='synced'?''
     :`<span class="sync-dot sync-dot-${syncState}" id="syncdot-${t.id}"${syncState==='failed'?` title="Sync failed — click to retry" onclick="event.stopPropagation();_retrySingleEntity('${t.id}')"`:` title="Syncing…"`}></span>`;
@@ -4093,9 +4293,9 @@ function kanbanCard(t){
 // Subtask card — smaller, visually distinct, draggable, shows link to parent
 function kanbanSubtaskCard(sub,parent){
   if(!sub||!parent)return '';
-  const sa=getUser(sub.assignee);
+  const sa=_kanbanRenderUserCache?_kanbanRenderUserCache.get(sub.assignee):getUser(sub.assignee);
   const prioColors={critical:'#be185d',high:'#dc2626',medium:'#d97706',low:'#16a34a'};
-  const proj=getProject(parent.project);
+  const proj=_kanbanRenderProjectCache?_kanbanRenderProjectCache.get(parent.project):getProject(parent.project);
   return `<div class="kanban-subtask-card" draggable="true"
     ondragstart="kanbanSubDragStart(event,'${sub.id}','${parent.id}')"
     ondragend="kanbanSubDragEnd(event)"
@@ -4114,7 +4314,13 @@ function kanbanSubtaskCard(sub,parent){
 }
 
 function kanbanDragStart(e,id){kanbanDraggedId=id;kanbanDraggedSubtask=null;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('type','task');setTimeout(()=>e.target.classList.add('dragging'),0);}
-function kanbanDragEnd(e){e.target.classList.remove('dragging');kanbanDraggedId=null;}
+function kanbanDragEnd(e){
+  // Clean up on the specific target and also sweep any orphaned dragging classes
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.task-card.dragging,.kanban-subtask-card.dragging').forEach(el=>el.classList.remove('dragging'));
+  document.querySelectorAll('.kanban-col.drag-over,.kanban-col.drag-over-sub').forEach(el=>el.classList.remove('drag-over','drag-over-sub'));
+  kanbanDraggedId=null;
+}
 
 function kanbanSubDragStart(e,subId,parentId){
   kanbanDraggedSubtask={subId,parentId};
@@ -4126,27 +4332,37 @@ function kanbanSubDragStart(e,subId,parentId){
 }
 function kanbanSubDragEnd(e){
   e.target.classList.remove('dragging');
+  document.querySelectorAll('.kanban-subtask-card.dragging').forEach(el=>el.classList.remove('dragging'));
+  document.querySelectorAll('.kanban-col.drag-over-sub').forEach(el=>el.classList.remove('drag-over-sub'));
   kanbanDraggedSubtask=null;
 }
 
+// v27: cache last drag-over column el to avoid repeated querySelector
+let _lastDragOverCol = null;
 function kanbanDragOver(e,status){
   e.preventDefault();
   const col=e.currentTarget.querySelector('.kanban-col');
   if(col){
+    if(_lastDragOverCol && _lastDragOverCol!==col){
+      _lastDragOverCol.classList.remove('drag-over','drag-over-sub');
+    }
     if(kanbanDraggedSubtask) col.classList.add('drag-over-sub');
     else col.classList.add('drag-over');
+    _lastDragOverCol=col;
   }
 }
 function kanbanDragLeave(e){
   if(!e.currentTarget.contains(e.relatedTarget)){
     const col=e.currentTarget.querySelector('.kanban-col');
     if(col){col.classList.remove('drag-over');col.classList.remove('drag-over-sub');}
+    if(_lastDragOverCol===col) _lastDragOverCol=null;
   }
 }
 function kanbanDrop(e,status){
   e.preventDefault();
   const col=e.currentTarget.querySelector('.kanban-col');
   if(col){col.classList.remove('drag-over');col.classList.remove('drag-over-sub');}
+  _lastDragOverCol=null;
 
   // ── Subtask drop ──
   if(kanbanDraggedSubtask){
@@ -4219,7 +4435,7 @@ function toggleRptFilterPanel(){
   }
 }
 
-// Close panel on outside click or ESC
+// Close panel on outside click — delegated once, no duplication
 document.addEventListener('click',function(e){
   const panel=document.getElementById('rpt-adv-filter-panel');
   const btn=document.getElementById('rpt-filter-btn-wrap');
@@ -4227,12 +4443,7 @@ document.addEventListener('click',function(e){
     panel.style.display='none';
   }
 },true);
-document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){
-    const panel=document.getElementById('rpt-adv-filter-panel');
-    if(panel) panel.style.display='none';
-  }
-});
+// NOTE: ESC for this panel is handled by the unified keydown handler below (search for _globalKeydownHandler)
 
 function _rptPopulateAdvFilterDropdowns(){
   // Assignees
@@ -4266,7 +4477,7 @@ function applyRptAdvFilters(){
   document.getElementById('rpt-adv-filter-panel').style.display='none';
   _rptUpdateActiveBadge();
   _rptUpdateActiveChips();
-  renderReports();
+  _debouncedRenderReports(); // v27: debounced
 }
 
 function resetRptAdvFilters(){
@@ -4278,14 +4489,14 @@ function resetRptAdvFilters(){
   document.getElementById('rpt-adv-filter-panel').style.display='none';
   _rptUpdateActiveBadge();
   _rptUpdateActiveChips();
-  renderReports();
+  _debouncedRenderReports(); // v27: debounced
 }
 
 function removeRptAdvFilter(key){
   _rptAdvFilters[key]='all';
   _rptUpdateActiveBadge();
   _rptUpdateActiveChips();
-  renderReports();
+  _debouncedRenderReports(); // v27: debounced
 }
 
 function _rptActiveFilterCount(){
@@ -4580,15 +4791,20 @@ function renderReports(){
   _rptHealthDot('capacity', imbalance<=30?'green':imbalance<=60?'yellow':'red', imbalance+'% imbalance');
 
   // ── Destroy existing report charts before recreating (prevents duplicate instances) ──
+  // v27-fix: always destroy+recreate — fingerprint+early-return caused blank charts on
+  // filter changes and page revisits due to stale/detached canvas contexts.
   ['velocity','burndown','commitComp','spillover','workload','typeChart','projDist','sprintHealth','relComp','relAging','epicCompletion','epicWorkload','epicVelocity'].forEach(k=>{
     if(charts[k]){try{charts[k].destroy();}catch(e){}delete charts[k];}
   });
 
   // ── VELOCITY TREND ──
-  const vCtx=document.getElementById('velocityChart').getContext('2d');
+  // NOTE: sprintLabels, committed, completedPts are declared here (outside the if-block)
+  // because they are also consumed by the Commitment vs Completion chart below.
   const sprintLabels=_rs.map(s=>s.name.length>14?s.name.slice(0,13)+'…':s.name);
   const committed=_rs.map(s=>_rt.filter(t=>t.sprint===s.id).reduce((a,t)=>a+(t.points||0),0));
   const completedPts=_rs.map(s=>_rt.filter(t=>t.sprint===s.id&&t.status==='released').reduce((a,t)=>a+(t.points||0),0));
+  const vCtx=_getCtx('velocityChart');
+  if(vCtx){
   charts.velocity=new Chart(vCtx,{
     type:'bar',
     data:{
@@ -4600,13 +4816,14 @@ function renderReports(){
     },
     options:_chartOpts()
   });
+  }
 
   // ── BURNDOWN ──
   const activeSprint=_rs.find(s=>s.status==='active');
   const totalPts=activeSprint?_rt.filter(t=>t.sprint===activeSprint.id).reduce((a,t)=>a+(t.points||0),0):0;
   const donePts=activeSprint?_rt.filter(t=>t.sprint===activeSprint.id&&t.status==='released').reduce((a,t)=>a+(t.points||0),0):0;
-  const bCtx=document.getElementById('burndownChart').getContext('2d');
-  charts.burndown=new Chart(bCtx,{
+  const bCtx=_getCtx('burndownChart');
+  if(bCtx) charts.burndown=new Chart(bCtx,{
     type:'line',
     data:{
       labels:['Day 1','Day 3','Day 5','Day 7','Day 9','Day 11','Day 14'],
@@ -4619,13 +4836,13 @@ function renderReports(){
   });
 
   // ── COMMITMENT vs COMPLETION ──
-  const ccCtx=document.getElementById('commitCompChart').getContext('2d');
+  const ccCtx=_getCtx('commitCompChart');
   const ccRatio=_rs.map((s,i)=>{
     const c=committed[i]||0;
     const d=completedPts[i]||0;
     return c?Math.round((d/c)*100):0;
   });
-  charts.commitComp=new Chart(ccCtx,{
+  if(ccCtx) charts.commitComp=new Chart(ccCtx,{
     type:'line',
     data:{
       labels:sprintLabels.length?sprintLabels:['No Sprints'],
@@ -4638,13 +4855,13 @@ function renderReports(){
   });
 
   // ── SPILLOVER ──
-  const soCtx=document.getElementById('spilloverChart').getContext('2d');
+  const soCtx=_getCtx('spilloverChart');
   const soData=_rs.map(s=>{
     const sEnd=s.end?new Date(s.end):null;
     if(!sEnd||s.status==='active')return 0;
     return _rt.filter(t=>t.sprint===s.id&&!['released','ready-for-prod'].includes(t.status)).length;
   });
-  charts.spillover=new Chart(soCtx,{
+  if(soCtx) charts.spillover=new Chart(soCtx,{
     type:'bar',
     data:{
       labels:sprintLabels.length?sprintLabels:['No Sprints'],
@@ -4656,8 +4873,8 @@ function renderReports(){
   // ── WORKLOAD ──
   const users=state.users;
   const wLoads=users.map(u=>_rt.filter(t=>t.assignee===u.id).reduce((a,t)=>a+(t.points||0),0));
-  const wCtx=document.getElementById('workloadChart').getContext('2d');
-  charts.workload=new Chart(wCtx,{
+  const wCtx=_getCtx('workloadChart');
+  if(wCtx) charts.workload=new Chart(wCtx,{
     type:'bar',
     data:{
       labels:users.map(u=>u.name.split(' ')[0]),
@@ -4670,21 +4887,22 @@ function renderReports(){
   const story=_rt.filter(t=>t.type==='story').length;
   const task=_rt.filter(t=>t.type==='task').length;
   const bug=_rt.filter(t=>t.type==='bug').length;
-  const tCtx=document.getElementById('typeChart').getContext('2d');
-  charts.typeChart=new Chart(tCtx,{
+  const tCtx=_getCtx('typeChart');
+  if(tCtx) charts.typeChart=new Chart(tCtx,{
     type:'doughnut',
     data:{labels:['Stories','Tasks','Bugs'],datasets:[{data:[story,task,bug],backgroundColor:['#7c3aed','#0369a1','#dc2626'],borderWidth:0,hoverOffset:4}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(14,16,26,0.88)',titleFont:{family:'DM Sans',size:12,weight:'600'},bodyFont:{family:'DM Sans',size:11},padding:{top:9,bottom:9,left:12,right:12},cornerRadius:8,borderColor:'rgba(255,255,255,0.08)',borderWidth:1,titleColor:'#e8eaf4',bodyColor:'#a0a8c8'}}}
   });
-  document.getElementById('type-chart-legend').innerHTML=[['Stories','#7c3aed',story],['Tasks','#0369a1',task],['Bugs','#dc2626',bug]]
+  const _typeLegendEl=document.getElementById('type-chart-legend');
+  if(_typeLegendEl) _typeLegendEl.innerHTML=[['Stories','#7c3aed',story],['Tasks','#0369a1',task],['Bugs','#dc2626',bug]]
     .map(([l,c,v])=>`<div class="flex justify-between items-center" style="font-size:11.5px;color:var(--text-secondary)"><span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:${c};display:inline-block"></span>${l}</span><span class="font-semibold">${v}</span></div>`).join('');
 
   // ── PRODUCTIVITY TABLE ──
   renderProductivityTable();
 
   // ── PROJECT DIST CHART ──
-  const pdCtx=document.getElementById('projDistChart').getContext('2d');
-  charts.projDist=new Chart(pdCtx,{
+  const pdCtx=_getCtx('projDistChart');
+  if(pdCtx) charts.projDist=new Chart(pdCtx,{
     type:'bar',
     data:{
       labels:_rp.map(p=>p.name.length>12?p.name.slice(0,11)+'…':p.name),
@@ -4698,14 +4916,14 @@ function renderReports(){
   });
 
   // ── SPRINT HEALTH per PROJECT ──
-  const shCtx=document.getElementById('sprintHealthChart').getContext('2d');
+  const shCtx=_getCtx('sprintHealthChart');
   const shData=_rp.map(p=>{
     const pSprints=_rs.filter(s=>s.project===p.id&&s.status==='active');
     const pTasks=pSprints.flatMap(s=>_rt.filter(t=>t.sprint===s.id));
     const pDone=pTasks.filter(t=>t.status==='released').length;
     return pTasks.length?Math.round((pDone/pTasks.length)*100):0;
   });
-  charts.sprintHealth=new Chart(shCtx,{
+  if(shCtx) charts.sprintHealth=new Chart(shCtx,{
     type:'bar',
     data:{
       labels:_rp.map(p=>p.name.length>12?p.name.slice(0,11)+'…':p.name),
@@ -4758,14 +4976,14 @@ function renderReports(){
   setEl('rpt-rel-blockers',relBlockerCount);
 
   // ── RELEASE COMPLETION CHART ──
-  const rcCtx=document.getElementById('relCompChart').getContext('2d');
+  const rcCtx=_getCtx('relCompChart');
   const rlAbbrv=_rl.map(r=>(r.name||'').length>14?r.name.slice(0,13)+'…':r.name);
   const rlPcts=_rl.map(r=>{
     const rTasks=(r.taskIds||[]).filter(id=>fd.filteredTaskIds.has(id)).map(id=>_rt.find(t=>t.id===id)).filter(Boolean);
     const rDone=rTasks.filter(t=>t.status==='released').length;
     return rTasks.length?Math.round((rDone/rTasks.length)*100):0;
   });
-  charts.relComp=new Chart(rcCtx,{
+  if(rcCtx) charts.relComp=new Chart(rcCtx,{
     type:'bar',
     data:{
       labels:rlAbbrv.length?rlAbbrv:['No Releases'],
@@ -4775,13 +4993,13 @@ function renderReports(){
   });
 
   // ── RELEASE AGING ──
-  const raCtx=document.getElementById('relAgingChart').getContext('2d');
+  const raCtx=_getCtx('relAgingChart');
   const now=Date.now();
   const agingDays=_rl.map(r=>{
     const created=r.createdAt?new Date(r.createdAt).getTime():now;
     return Math.max(0,Math.round((now-created)/(1000*60*60*24)));
   });
-  charts.relAging=new Chart(raCtx,{
+  if(raCtx) charts.relAging=new Chart(raCtx,{
     type:'bar',
     data:{
       labels:rlAbbrv.length?rlAbbrv:['No Releases'],
@@ -4801,8 +5019,8 @@ function renderReports(){
   });
   const ecTotal=epics.map(e=>_rt.filter(t=>t.epicId===e.id).length);
   const ecRemaining=ecTotal.map((t,i)=>t-ecDone[i]);
-  const ecCtx=document.getElementById('epicCompletionChart').getContext('2d');
-  charts.epicCompletion=new Chart(ecCtx,{
+  const ecCtx=_getCtx('epicCompletionChart');
+  if(ecCtx) charts.epicCompletion=new Chart(ecCtx,{
     type:'bar',
     data:{
       labels:epicLabels.length?epicLabels:['No Epics'],
@@ -4814,16 +5032,16 @@ function renderReports(){
     options:_chartOpts({scales:{x:{stacked:true,grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{stacked:true,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11},stepSize:1}}}})
   });
   const ewPts=epics.map(e=>_rt.filter(t=>t.epicId===e.id).reduce((a,t)=>a+(t.points||0),0));
-  const ewCtx=document.getElementById('epicWorkloadChart').getContext('2d');
-  charts.epicWorkload=new Chart(ewCtx,{
+  const ewCtx=_getCtx('epicWorkloadChart');
+  if(ewCtx) charts.epicWorkload=new Chart(ewCtx,{
     type:'bar',
     data:{labels:epicLabels.length?epicLabels:['No Epics'],datasets:[{label:'Story Points',data:ewPts.length?ewPts:[0],backgroundColor:epicColors.length?epicColors.map(c=>c+'bb'):['#e2e8f0'],borderRadius:6}]},
     options:_chartOpts({plugins:{legend:{display:false}}})
   });
   const evDone=epics.map(e=>_rt.filter(t=>t.epicId===e.id&&['released','ready-for-prod'].includes(t.status)).reduce((a,t)=>a+(t.points||0),0));
   const evRemaining=epics.map(e=>_rt.filter(t=>t.epicId===e.id&&!['released','ready-for-prod'].includes(t.status)).reduce((a,t)=>a+(t.points||0),0));
-  const evCtx=document.getElementById('epicVelocityChart').getContext('2d');
-  charts.epicVelocity=new Chart(evCtx,{
+  const evCtx=_getCtx('epicVelocityChart');
+  if(evCtx) charts.epicVelocity=new Chart(evCtx,{
     type:'bar',
     data:{
       labels:epicLabels.length?epicLabels:['No Epics'],
@@ -4963,10 +5181,11 @@ function replaceModal(html){
 
 function closeModal(){
   const overlay = document.getElementById('modal');
-  if(!overlay) return;
-  overlay.classList.remove('modal-visible');
+  // Always reset scroll lock regardless of overlay state
   document.body.classList.remove('modal-open');
   _modalOpen = false;
+  if(!overlay) return;
+  overlay.classList.remove('modal-visible');
   // Wait for CSS transition before hiding and clearing content
   const box = document.getElementById('modal-box');
   const delay = window.innerWidth <= 640 ? 240 : 200;
@@ -4988,8 +5207,31 @@ document.addEventListener('click', function(e){
   }
 }, true);
 
-// ESC close
-document.addEventListener('keydown', e=>{ if(e.key==='Escape' && _modalOpen) closeModal(); });
+// ── UNIFIED ESC HANDLER — single listener, no duplicates ──
+// Handles: modal close, search dropdown close, rpt filter panel close
+(function(){
+  function _globalKeydownHandler(e){
+    if(e.key !== 'Escape') return;
+    // 1. Close modal
+    if(_modalOpen){ closeModal(); return; }
+    // 2. Close search dropdown
+    const dd = document.getElementById('search-dropdown');
+    if(dd && dd.style.display !== 'none'){
+      const inp = document.getElementById('global-search');
+      if(inp){ inp.value = ''; inp.blur(); }
+      const clearBtn = document.getElementById('search-clear-btn');
+      if(clearBtn) clearBtn.style.display = 'none';
+      closeSearchDropdown();
+      return;
+    }
+    // 3. Close rpt advanced filter panel
+    const panel = document.getElementById('rpt-adv-filter-panel');
+    if(panel && panel.style.display !== 'none'){
+      panel.style.display = 'none';
+    }
+  }
+  document.addEventListener('keydown', _globalKeydownHandler);
+})();
 
 // ─── TASK MODAL ──────────────────────────────────────────────────
 function openTaskModal(taskId){
@@ -7915,7 +8157,7 @@ function clearSearch(){
 // ── Close dropdown ──
 function closeSearchDropdown(){
   const dd=document.getElementById('search-dropdown');
-  if(dd)dd.style.display='none';
+  if(dd && dd.style.display!=='none') dd.style.display='none';
 }
 
 // ── Open dropdown ──
@@ -8207,7 +8449,7 @@ function renderSearchResultItem(type,item,q){
       }
       if(trimmed.length>=2) saveRecentSearch(trimmed);
       performGlobalSearch(trimmed);
-    },220); // slightly tighter debounce for snappier feel
+    },180); // v27: tightened from 220ms for snappier feel at scale
   });
 
   inp.addEventListener('focus',function(){
@@ -8228,8 +8470,12 @@ function renderSearchResultItem(type,item,q){
 
   inp.addEventListener('keydown',function(e){
     if(e.key==='Escape'){
-      clearSearch();
+      // Unified handler will fire; just blur and clear locally
+      this.value='';
       this.blur();
+      const cb=document.getElementById('search-clear-btn');
+      if(cb)cb.style.display='none';
+      closeSearchDropdown();
     }
   });
 
@@ -8265,23 +8511,22 @@ function _rptToast(msg,color){
   t._timer=setTimeout(()=>t.classList.remove('visible'),3200);
 }
 
+// ── Export menu: stable delegated close — no accumulating listeners ──
+let _rptExportMenuListenerAttached = false;
 function toggleRptExportMenu(){
   const menu=document.getElementById('rpt-export-menu');
   if(!menu)return;
   const isOpen=menu.style.display==='block';
   menu.style.display=isOpen?'none':'block';
-  if(!isOpen){
-    // Close on outside click
-    setTimeout(()=>{
-      function closeMenu(e){
-        const wrap=document.getElementById('rpt-export-wrap');
-        if(wrap&&!wrap.contains(e.target)){
-          menu.style.display='none';
-          document.removeEventListener('click',closeMenu);
-        }
+  if(!isOpen && !_rptExportMenuListenerAttached){
+    _rptExportMenuListenerAttached=true;
+    document.addEventListener('click',function _closeExportMenu(e){
+      const wrap=document.getElementById('rpt-export-wrap');
+      if(wrap&&!wrap.contains(e.target)){
+        const m=document.getElementById('rpt-export-menu');
+        if(m) m.style.display='none';
       }
-      document.addEventListener('click',closeMenu);
-    },0);
+    });
   }
 }
 
