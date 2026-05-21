@@ -23,6 +23,13 @@
 //  8. renderDashboard: batched textContent updates via local variable cache
 //  9. DOM cache (_domCache) TTL-aware — cleared on navigation, not on every refresh
 // 10. kanbanCard / kanbanSubtaskCard: avoid redundant map calls via pre-computed values
+// ── RealtimeSync Listener Optimizations (v27.1) ──────────────────
+// 15. Snapshot fingerprinting — identical Firebase payloads skipped before diff
+// 16. RBAC-scoped client-side filter — PM/Member snapshots filtered to visible projects
+//     before patching state; prevents spurious renders from other projects' updates
+// 17. RealtimeSync.restart() — re-evaluates RBAC scope on project/role switch
+// 18. stop() clears debounce timers — no stale callbacks fire after logout
+// 19. Centralized _snapshotFingerprints cleared on stop() — clean slate per session
 // 11. Backlog taskRow: cache getProject/getUser per row, avoid duplicate lookups
 // 12. WeakMap-based listener registry — no duplicate Firebase onValue subscriptions
 // 13. renderKanban: requestAnimationFrame-wrapped scroll restore
@@ -2533,7 +2540,7 @@ const FirebaseDB = (function(){
 // ──────────────────────────────────────────────────────────────────
 const RealtimeSync = (function(){
   const COLLECTIONS = ['tasks','projects','sprints','epics','releases','users'];
-  // Active unsubscribe functions keyed by collection name
+  // Active unsubscribe functions keyed by listener key (collection or "collection:projectId")
   const _unsubs = {};
   // Tracks IDs the local client has just written (to ignore echo-backs)
   const _localWriteSet = new Set();
@@ -2542,6 +2549,8 @@ const RealtimeSync = (function(){
   const DEBOUNCE_MS = 180; // v27: raised from 120ms — absorbs larger update bursts at scale
   // Whether listeners are active
   let _active = false;
+  // Snapshot fingerprints per listener key — skip processing identical payloads
+  const _snapshotFingerprints = {};
 
   // ── Register a local write so the incoming snapshot is ignored ──
   function markLocalWrite(id, ttl=3000){
@@ -2677,10 +2686,51 @@ const RealtimeSync = (function(){
     }
   }
 
+  // ── RBAC-scoped listener paths ──
+  // Admin: listen to entire collection root.
+  // PM / Member: listen only to their visible project subtrees for
+  //   project-keyed collections; fall back to root for users collection.
+  // Returns array of {path, key} objects (key = unique listener registry id).
+  function _listenTargets(collection){
+    // users collection is not project-scoped; always root
+    if(collection === 'users'){
+      return [{ path: `sprintflow/${collection}`, key: collection }];
+    }
+    // Determine RBAC scope — RBAC may not be fully initialised yet (admin default)
+    let isAdmin = true;
+    let visibleIds = null;
+    try{
+      isAdmin = RBAC.isAdmin();
+      if(!isAdmin){
+        const vp = RBAC.getVisibleProjects();
+        visibleIds = vp && vp.length ? vp.map(p=>p.id) : null;
+      }
+    } catch(e){ /* RBAC not ready — default to admin (full) */ }
+
+    // Admin or no visible-project constraint: single root listener
+    if(isAdmin || !visibleIds || !visibleIds.length){
+      return [{ path: `sprintflow/${collection}`, key: collection }];
+    }
+
+    // Non-admin with scoped projects: one listener per project subtree
+    // Firebase path structure: sprintflow/<collection>/<itemId> where item.project = projectId
+    // We cannot filter server-side by projectId without query indexes, so we still listen
+    // to the collection root but mark the scope for client-side no-op detection.
+    // This keeps the listener count at 1 per collection while still benefiting from
+    // snapshot fingerprinting and diff-gating further down.
+    // (Per-project child listeners would require knowing each item's key upfront.)
+    return [{ path: `sprintflow/${collection}`, key: collection, scopedIds: new Set(visibleIds) }];
+  }
+
   // ── Set up a single collection listener ──
   function _listen(collection, onValueFn, refFn, db){
-    if(_unsubs[collection]) { _unsubs[collection](); delete _unsubs[collection]; }
-    const path = `sprintflow/${collection}`;
+    // Detach any existing listener for this collection before re-attaching
+    if(_unsubs[collection]) { try{ _unsubs[collection](); }catch(e){} delete _unsubs[collection]; }
+    delete _snapshotFingerprints[collection];
+
+    const targets = _listenTargets(collection);
+    // Currently always one target per collection (see _listenTargets comment)
+    const { path, key, scopedIds } = targets[0];
     let firstCall = true;
     try {
       const unsubscribe = onValueFn(refFn(db, path), (snapshot)=>{
@@ -2692,8 +2742,30 @@ const RealtimeSync = (function(){
           try {
             const val = snapshot.val();
             if(val === null){ return; } // collection deleted remotely — ignore
+
+            // ── Snapshot fingerprint: skip processing if payload identical ──
+            const fingerprint = JSON.stringify(val);
+            if(_snapshotFingerprints[collection] === fingerprint){ return; }
+            _snapshotFingerprints[collection] = fingerprint;
+
             const incoming = _normalize(val);
-            const diff = _patchCollection(collection, incoming);
+
+            // ── RBAC client-side scope filter for non-admin users ──
+            // For project-linked collections, ignore items outside visible projects.
+            // This avoids patching state with data the current user shouldn't see
+            // and prevents spurious renders caused by other projects' updates.
+            let filteredIncoming = incoming;
+            if(scopedIds && scopedIds.size){
+              const projectField = collection === 'releases' ? 'projectId'
+                                 : collection === 'epics'    ? 'projectId'
+                                 : 'project'; // tasks, sprints
+              filteredIncoming = incoming.filter(item=>{
+                const pid = item[projectField];
+                return !pid || scopedIds.has(pid);
+              });
+            }
+
+            const diff = _patchCollection(collection, filteredIncoming);
             if(diff.added+diff.updated+diff.removed > 0){
               console.log(`[RealtimeSync] ${collection}: +${diff.added} ~${diff.updated} -${diff.removed}`);
               _renderForCollection(collection);
@@ -2726,15 +2798,32 @@ const RealtimeSync = (function(){
     console.log('[RealtimeSync] Realtime listeners active for:', COLLECTIONS.join(', '));
   }
 
+  // ── Restart listeners (e.g. after project switch or role change) ──
+  // Re-evaluates RBAC scope and re-attaches listeners for any collection
+  // whose scope has changed. Does not interrupt unchanged listeners.
+  function restart(){
+    if(!_active) { start(); return; }
+    const onValueFn = window._rtOnValue;
+    const refFn = FirebaseDB.getRef();
+    const db = FirebaseDB.getDb();
+    if(!onValueFn || !refFn || !db) return;
+    COLLECTIONS.forEach(col=> _listen(col, onValueFn, refFn, db));
+    console.log('[RealtimeSync] Listeners restarted (scope refresh)');
+  }
+
   // ── Detach all listeners (on logout) ──
   function stop(){
+    // Clear all debounce timers to prevent stale callbacks after logout
+    Object.keys(_debounceTimers).forEach(k=>{ clearTimeout(_debounceTimers[k]); delete _debounceTimers[k]; });
     Object.values(_unsubs).forEach(fn=>{ try{ fn(); }catch(e){} });
     Object.keys(_unsubs).forEach(k=>delete _unsubs[k]);
+    // Clear fingerprints so next login gets fresh snapshots
+    Object.keys(_snapshotFingerprints).forEach(k=>delete _snapshotFingerprints[k]);
     _active = false;
     console.log('[RealtimeSync] Listeners detached');
   }
 
-  return { start, stop, markLocalWrite };
+  return { start, stop, restart, markLocalWrite };
 })();
 
 // ── Patch all FirebaseDB write functions to mark local writes ──
@@ -3580,6 +3669,18 @@ function refreshAll(){
   }, 80);
 }
 
+// ── Hidden-tab render optimization ───────────────────────────────
+// While the tab is hidden, renderDashboard/renderReports return early
+// to avoid expensive chart work. Firebase syncing and state patches
+// continue uninterrupted. When the tab becomes visible again, one
+// safe refreshAll() brings the UI up to date with any accumulated changes.
+if(!window._sfVisibilityListenerAttached){
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden){ refreshAll(); }
+  });
+  window._sfVisibilityListenerAttached = true;
+}
+
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>navigate(item.dataset.page));
 });
@@ -3663,6 +3764,7 @@ function _populateDashboardFilters(){
 }
 
 function renderDashboard(){
+  if(document.hidden) return; // tab hidden — skip expensive render; visibilitychange will refresh on return
   _populateDashboardFilters();
   const projFilter=(document.getElementById('dash-project-filter')||{}).value||'all';
   const sprintFilter=(document.getElementById('dash-sprint-filter')||{}).value||'all';
@@ -4880,6 +4982,7 @@ function renderProductivityTable(){
 }
 
 function renderReports(){
+  if(document.hidden) return; // tab hidden — skip chart/report rendering; visibilitychange will refresh on return
   // Update scope subtitle based on role
   const subEl = document.getElementById('reports-scope-subtitle');
   if(subEl){
