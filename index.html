@@ -808,10 +808,35 @@ document.addEventListener('DOMContentLoaded', function() {
   .network-toast.visible{transform:translateX(-50%) translateY(0);opacity:1}
 
   /* ── PERFORMANCE HINTS ── */
-  #search-dropdown{contain:layout}
   #backlog-content{overflow-anchor:none}
 
-  /* ── SEARCH RESULTS ── */
+  /* ── SEARCH DROPDOWN STACKING & LAYOUT ── */
+  /* Topbar sits above all page content. z-index:400 clears kanban sticky
+     headers (z-index:10) and mobile sidebar (z-index:200).
+     No position:relative needed here — search-container handles that.       */
+  #topbar{z-index:400}
+
+  /* search-container is position:relative (set inline on the element).
+     The dropdown is position:absolute inside it — no JS rect math needed.   */
+  #search-container{position:relative}
+
+  /* Dropdown: absolute, anchored to search-container bottom edge.
+     z-index:9500 ensures it paints above everything inside the topbar
+     stacking context and above any page content below.                       */
+  #search-dropdown{
+    box-sizing:border-box;
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0;
+    right:0;
+    flex-direction:column;
+    overflow:hidden;   /* clips contents to border-radius; scroll is on results panel */
+  }
+  #search-results-panel{
+    flex:1 1 auto;
+    overflow-y:auto;
+    min-height:0;
+  }
   #search-results-panel::-webkit-scrollbar{width:4px}
   #search-results-panel::-webkit-scrollbar-thumb{background:#cdd2e4;border-radius:2px}
   @media(max-width:640px){
@@ -1185,7 +1210,7 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
 
       <!-- Search dropdown (results + recent) -->
-      <div id="search-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:rgba(255,255,255,0.97);border:1px solid rgba(255,255,255,0.8);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.12),0 4px 16px rgba(0,0,0,0.06);z-index:999;max-height:420px;overflow:hidden;flex-direction:column;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)">
+      <div id="search-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:rgba(255,255,255,0.97);border:1px solid rgba(255,255,255,0.8);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.12),0 4px 16px rgba(0,0,0,0.06);z-index:9500;max-height:420px;overflow:hidden;flex-direction:column;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)">
         <!-- Recent searches -->
         <div id="search-recent-panel" style="padding:10px 12px 6px">
           <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Recent Searches</div>
@@ -8313,13 +8338,16 @@ function clearSearch(){
 // ── Close dropdown ──
 function closeSearchDropdown(){
   const dd=document.getElementById('search-dropdown');
-  if(dd && dd.style.display!=='none') dd.style.display='none';
+  if(!dd||dd.style.display==='none') return;
+  dd.style.display='none';
 }
 
 // ── Open dropdown ──
+// Dropdown is position:absolute inside #search-container (position:relative),
+// so it anchors automatically — no getBoundingClientRect needed.
 function openSearchDropdown(){
   const dd=document.getElementById('search-dropdown');
-  if(dd)dd.style.display='flex';
+  if(dd) dd.style.display='flex';
 }
 
 // ── Render recent searches ──
