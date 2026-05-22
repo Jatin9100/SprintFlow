@@ -2014,7 +2014,16 @@ const DEFAULT_DATA = {
 };
 
 // ─── STATE ────────────────────────────────────────────────────────
+// Production Hardened: state loaded from localStorage with Firebase override on auth
 let state = loadState();
+// Production Hardened: ensure all state arrays are always defined, never undefined
+state.tasks    = state.tasks    || [];
+state.projects = state.projects || [];
+state.sprints  = state.sprints  || [];
+state.users    = state.users    || [];
+state.releases = state.releases || [];
+state.epics    = state.epics    || [];
+state.comments = state.comments || [];
 state.currentUser = null; // set by RBAC.init() after auth
 let currentPage = 'dashboard';
 // ─── ROLE-BASED ACCESS CONTROL ───────────────────────────────────
@@ -2332,6 +2341,7 @@ const FirebaseDB = (function(){
   // Loads ALL app data from Firebase and merges it into the in-memory
   // state object. Falls back to the existing in-memory state on error.
   // Returns a Promise that resolves when state is populated.
+  // Production Hardened: safe snapshot.val(), full try/catch, array guards
   // ─────────────────────────────────────────────────────────────────
   async function loadAppData(){
     if(!isReady()){
@@ -2346,7 +2356,7 @@ const FirebaseDB = (function(){
         await syncAppState();   // push defaults up
         return state;
       }
-      const data = snapshot.val();
+      const data = snapshot.val() || {}; // Production Hardened: safe null fallback
       if(!data || typeof data !== 'object'){
         console.warn('[FirebaseDB] loadAppData: invalid data shape from Firebase');
         return state;
@@ -2393,6 +2403,14 @@ const FirebaseDB = (function(){
       merged.users.forEach(u=>{ if(u.role==='member') u.role='team_member'; });
       // Apply to global state (keep reference stable so all closures see changes)
       Object.assign(state, merged);
+      // Production Hardened: re-ensure all arrays defined after merge
+      state.tasks    = state.tasks    || [];
+      state.projects = state.projects || [];
+      state.sprints  = state.sprints  || [];
+      state.users    = state.users    || [];
+      state.releases = state.releases || [];
+      state.epics    = state.epics    || [];
+      state.comments = state.comments || [];
       invalidateStateMaps();
       console.info('[FirebaseDB] loadAppData: state populated from Firebase');
       return state;
@@ -2653,35 +2671,37 @@ const RealtimeSync = (function(){
         else if(page==='sprints')  { renderSprintPlanning(); }
         else if(page==='releases') { renderReleaseBoard(); renderReleaseQueue(); }
         else if(page==='reports')  { renderReports(); }
-        else if(page==='dashboard'){ renderDashboard(); }
+        else if(page==='dashboard'){ _invalidateChartFingerprints(); renderDashboard(); }
         else if(page==='epics')    { renderEpics(); }
         break;
       case 'projects':
         if(page==='kanban')        { if(!_modalOpen) renderKanban(); }
         else if(page==='backlog')  { renderBacklog(); }
         else if(page==='sprints')  { renderSprintPlanning(); }
-        else if(page==='dashboard'){ renderDashboard(); }
+        else if(page==='dashboard'){ _invalidateChartFingerprints(); renderDashboard(); }
         else if(page==='epics')    { renderEpics(); }
         updateSidebarProject();
         break;
       case 'sprints':
         if(page==='kanban')        { if(!_modalOpen) renderKanban(); }
         else if(page==='backlog')  { renderBacklog(); }
-        else if(page==='sprints')  { renderSprintPlanning(); }
-        else if(page==='dashboard'){ renderDashboard(); }
+        else if(page==='sprint-planning')  { renderSprintPlanning(); }
+        else if(page==='dashboard'){ _invalidateChartFingerprints(); renderDashboard(); }
         break;
       case 'epics':
         if(page==='epics')         { renderEpics(); }
         else if(page==='backlog')  { renderBacklog(); }
         else if(page==='kanban')   { if(!_modalOpen) renderKanban(); }
+        else if(page==='dashboard'){ _invalidateChartFingerprints(); renderDashboard(); }
         break;
       case 'releases':
         if(page==='releases')      { renderReleaseBoard(); renderReleaseQueue(); }
-        else if(page==='dashboard'){ renderDashboard(); }
+        else if(page==='dashboard'){ _invalidateChartFingerprints(); renderDashboard(); }
         break;
       case 'users':
         if(page==='teams')         { renderTeams(); }
-        else if(page==='dashboard'){ renderDashboard(); }
+        else if(page==='dashboard'){ _invalidateChartFingerprints(); renderDashboard(); }
+        else if(page==='reports')  { renderReports(); }
         break;
     }
   }
@@ -2724,7 +2744,7 @@ const RealtimeSync = (function(){
 
   // ── Set up a single collection listener ──
   function _listen(collection, onValueFn, refFn, db){
-    // Detach any existing listener for this collection before re-attaching
+    // Listener Protected: detach existing listener before re-attaching to prevent duplicates
     if(_unsubs[collection]) { try{ _unsubs[collection](); }catch(e){} delete _unsubs[collection]; }
     delete _snapshotFingerprints[collection];
 
@@ -2740,8 +2760,8 @@ const RealtimeSync = (function(){
         clearTimeout(_debounceTimers[collection]);
         _debounceTimers[collection] = setTimeout(()=>{
           try {
-            const val = snapshot.val();
-            if(val === null){ return; } // collection deleted remotely — ignore
+            const val = snapshot.val() || {}; // Production Hardened: safe null fallback
+            if(val === null || (typeof val === 'object' && Object.keys(val).length === 0 && !snapshot.exists())){ return; } // collection deleted remotely — ignore
 
             // ── Snapshot fingerprint: skip processing if payload identical ──
             const fingerprint = JSON.stringify(val);
@@ -2766,7 +2786,7 @@ const RealtimeSync = (function(){
             }
 
             const diff = _patchCollection(collection, filteredIncoming);
-            if(diff.added+diff.updated+diff.removed > 0){
+            if(diff.added+diff.updated+diff.removed+diff.loopSkipped > 0){
               console.log(`[RealtimeSync] ${collection}: +${diff.added} ~${diff.updated} -${diff.removed}`);
               _renderForCollection(collection);
             }
@@ -2812,6 +2832,7 @@ const RealtimeSync = (function(){
   }
 
   // ── Detach all listeners (on logout) ──
+  // Memory Safe: clears all debounce timers and unsubscribes before logout
   function stop(){
     // Clear all debounce timers to prevent stale callbacks after logout
     Object.keys(_debounceTimers).forEach(k=>{ clearTimeout(_debounceTimers[k]); delete _debounceTimers[k]; });
@@ -2974,6 +2995,7 @@ const SyncState = (function(){
 
 // ─── DEBOUNCE WRITE MANAGER ──────────────────────────────────────
 // Per-entity debounced Firebase write to absorb rapid kanban drags / edits.
+// Memory Safe: clearTimeout on every reschedule prevents timer accumulation
 const DebounceWrite = (function(){
   const _timers = new Map();
   const DELAY = 600; // ms — absorbs rapid drag/edit sequences
@@ -3050,7 +3072,10 @@ function _retrySingleEntity(id){
 }
 
 // ─── NETWORK EVENT HANDLING ──────────────────────────────────────
+// Listener Protected: guarded by _sfNetworkListenerAttached flag
 (function(){
+  if(window._sfNetworkListenerAttached) return;
+  window._sfNetworkListenerAttached = true;
   let _toastTimer = null;
   const _toastEl = document.createElement('div');
   _toastEl.className = 'network-toast';
@@ -3387,7 +3412,7 @@ function getEpicProgress(epicId){
   const done=tasks.filter(t=>DONE_STATUSES.includes(t.status)).length;
   const subtaskTotal=tasks.reduce((a,t)=>a+(t.subtasks||[]).length,0);
   const subtaskDone=tasks.reduce((a,t)=>a+(t.subtasks||[]).filter(s=>DONE_STATUSES.includes(s.status)).length,0);
-  return{total:tasks.length,done,pct:Math.round((done/tasks.length)*100),subtaskTotal,subtaskDone};
+  return{total:tasks.length,done,pct:tasks.length?Math.round((done/tasks.length)*100):0,subtaskTotal,subtaskDone};
 }
 function getEpicStoryPoints(epicId){
   const tasks=getEpicTasks(epicId);
@@ -3427,7 +3452,10 @@ function sprintDaysLeft(sprint){
 function sprintProgress(sprint){
   const tasks=state.tasks.filter(t=>t.sprint===sprint.id);
   if(!tasks.length)return 0;
-  return Math.round((tasks.filter(t=>t.status==='released').length/tasks.length)*100);
+  const allSubs=(tasks).flatMap(t=>t.subtasks||[]);
+  const total=tasks.length+allSubs.length;
+  const done=tasks.filter(t=>DONE_STATUSES.includes(t.status)).length+allSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
+  return Math.round((done/total)*100);
 }
 function userAvatar(userId,size=28){
   const u=getUser(userId);
@@ -3657,6 +3685,7 @@ function renderPage(page){
 }
 
 let _refreshAllTimer = null;
+// Production Hardened: debounced to absorb rapid realtime update storms
 function refreshAll(){
   invalidateStateMaps();
   // v27: Raised from 60ms to 80ms — absorbs larger update storms at 200+ concurrent users
@@ -3737,6 +3766,7 @@ function _getCtx(id){
   try{ return el.getContext('2d'); }catch(e){ return null; }
 }
 
+// Memory Safe: all chart instances destroyed and registry cleared before recreation
 function destroyCharts(){
   Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
   charts={};
@@ -3765,9 +3795,12 @@ function _populateDashboardFilters(){
 
 function renderDashboard(){
   if(document.hidden) return; // tab hidden — skip expensive render; visibilitychange will refresh on return
+  try{
   _populateDashboardFilters();
-  const projFilter=(document.getElementById('dash-project-filter')||{}).value||'all';
-  const sprintFilter=(document.getElementById('dash-sprint-filter')||{}).value||'all';
+  let projFilter=(document.getElementById('dash-project-filter')||{}).value||'all';
+  let sprintFilter=(document.getElementById('dash-sprint-filter')||{}).value||'all';
+  if(!projFilter) projFilter='all';
+  if(!sprintFilter) sprintFilter='all';
 
   // Filtered data sets
   let _tasks=RBAC.getVisibleTasks(state.tasks);
@@ -3798,15 +3831,19 @@ function renderDashboard(){
   const readyForProdTasks=_tasks.filter(t=>t.status==='ready-for-prod').length;
   const releasedTasks=_tasks.filter(t=>t.status==='released').length;
   const allQATasks=inQATasks+qaInProgressTasks;
+  // Metric aggregation: include subtasks in total count and done count
+  const _dashAllSubs=(_tasks).flatMap(t=>t.subtasks||[]);
+  const _dashTotalWithSubs=totalTasks+_dashAllSubs.length;
+  const _dashDoneWithSubs=_tasks.filter(t=>DONE_STATUSES.includes(t.status)).length+_dashAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
 
   document.getElementById('stat-total-projects').textContent=totalProjects;
   document.getElementById('stat-projects-sub').textContent=totalProjects===1?'1 active project':`${totalProjects} projects`;
-  document.getElementById('stat-total-tasks').textContent=totalTasks;
+  document.getElementById('stat-total-tasks').textContent=_dashTotalWithSubs;
   document.getElementById('stat-tasks-sub').textContent=`${devInProgressTasks} dev in progress`;
   document.getElementById('stat-active-sprints').textContent=activeSprints.length;
   document.getElementById('stat-sprints-sub').textContent=activeSprints.length?'Currently running':'No active sprints';
-  document.getElementById('stat-done-tasks').textContent=releasedTasks;
-  document.getElementById('stat-done-sub').textContent=totalTasks?`${Math.round((releasedTasks/totalTasks)*100)}% released`:'No tasks yet';
+  document.getElementById('stat-done-tasks').textContent=_dashDoneWithSubs;
+  document.getElementById('stat-done-sub').textContent=_dashTotalWithSubs?`${Math.round((_dashDoneWithSubs/_dashTotalWithSubs)*100)}% done`:'No tasks yet';
 
   // Subtask stats
   const allSubs=_tasks.flatMap(t=>t.subtasks||[]);
@@ -3844,8 +3881,10 @@ function renderDashboard(){
     ?activeSprints.map(s=>{
         const proj=getProject(s.project);
         const sprintTasks=_tasks.filter(t=>t.sprint===s.id);
-        const pct=sprintTasks.length?Math.round((sprintTasks.filter(t=>t.status==='released').length/sprintTasks.length)*100):0;
-        const done=sprintTasks.filter(t=>t.status==='released').length;
+        const sprintAllSubs=(sprintTasks).flatMap(t=>t.subtasks||[]);
+        const sprintTotalWithSubs=sprintTasks.length+sprintAllSubs.length;
+        const pct=sprintProgress(s);
+        const done=sprintTasks.filter(t=>DONE_STATUSES.includes(t.status)).length+sprintAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
         return `<div class="mb-4 last:mb-0">
           <div class="flex items-center justify-between mb-1">
             <div class="flex items-center gap-2">
@@ -3859,7 +3898,7 @@ function renderDashboard(){
             <div class="progress-fill" style="width:${pct}%;background:${proj?proj.color:'#6366f1'}"></div>
           </div>
           <div class="flex justify-between text-xs text-slate-500">
-            <span>${done}/${sprintTasks.length} tasks · ${sprintDaysLeft(s)}</span>
+            <span>${done}/${sprintTotalWithSubs} tasks · ${sprintDaysLeft(s)}</span>
             <span>${formatDate(s.start)} – ${formatDate(s.end)}</span>
           </div>
         </div>`;
@@ -3932,6 +3971,7 @@ function renderDashboard(){
     <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block"></span>${label}</span>
     <span class="font-semibold">${count} tasks</span>
   </div>`).join('');
+  }catch(e){console.warn('[Render] renderDashboard error:',e);}
 }
 
 // ─── PROJECTS ─────────────────────────────────────────────────────
@@ -3949,8 +3989,10 @@ function renderProjects(){
   }
   grid.innerHTML=visibleProjects.map(p=>{
     const tasks=state.tasks.filter(t=>t.project===p.id);
-    const done=tasks.filter(t=>t.status==='released').length;
-    const pct=tasks.length?Math.round((done/tasks.length)*100):0;
+    const allSubs=(tasks).flatMap(t=>t.subtasks||[]);
+    const totalWithSubs=tasks.length+allSubs.length;
+    const done=tasks.filter(t=>DONE_STATUSES.includes(t.status)).length+allSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
+    const pct=totalWithSubs?Math.round((done/totalWithSubs)*100):0;
     const lead=getUser(p.lead);
     const activeSprints=state.sprints.filter(s=>s.project===p.id&&s.status==='active').length;
     return `<div class="card hover:shadow-md transition-shadow">
@@ -3967,7 +4009,7 @@ function renderProjects(){
       <p class="text-sm text-slate-600 mb-4 leading-relaxed">${p.description||'No description.'}</p>
       <div class="flex gap-2 mb-3 text-center">
         <div class="flex-1 rounded-lg py-2" style="background:rgba(91,95,199,0.05);border:1px solid rgba(91,95,199,0.07)">
-          <div class="text-lg font-bold text-slate-900">${tasks.length}</div>
+          <div class="text-lg font-bold text-slate-900">${totalWithSubs}</div>
           <div class="text-xs text-slate-500">Tasks</div>
         </div>
         <div class="flex-1 rounded-lg py-2" style="background:rgba(91,95,199,0.05);border:1px solid rgba(91,95,199,0.07)">
@@ -4111,8 +4153,10 @@ function renderBacklog(){
     [...activeSprints,...plannedSprints].forEach(s=>{
       const sTasks=groups[s.id]||[];
       const proj=getProject(s.project);
-      const done=sTasks.filter(t=>t.status==='released').length;
-      const pts=sTasks.reduce((a,t)=>a+(t.points||0),0);
+      const sAllSubs=(sTasks).flatMap(t=>t.subtasks||[]);
+      const sTotalWithSubs=sTasks.length+sAllSubs.length;
+      const done=sTasks.filter(t=>DONE_STATUSES.includes(t.status)).length+sAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
+      const pts=sTasks.reduce((a,t)=>a+(t.points||0),0)+sAllSubs.reduce((a,s)=>a+(s.points||0),0);
       parts.push(`<div class="card mb-4">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div class="flex items-center gap-3">
@@ -4124,7 +4168,7 @@ function renderBacklog(){
             <span class="badge badge-${s.status}">${s.status}</span>
           </div>
           <div class="flex items-center gap-3 text-xs text-slate-500">
-            <span>${done}/${sTasks.length} done</span>
+            <span>${done}/${sTotalWithSubs} done</span>
             <span>${pts} pts</span>
             <span>${formatDate(s.start)} – ${formatDate(s.end)}</span>
           </div>
@@ -4271,7 +4315,7 @@ function renderSprintPlanning(){
     const proj=getProject(s.project);
     const tasks=tasksBySprintId.get(s.id)||[];
     const pts=tasks.reduce((a,t)=>a+(t.points||0),0);
-    const done=tasks.filter(t=>t.status==='released').length;
+    const done=tasks.filter(t=>DONE_STATUSES.includes(t.status)).length;
     const pct=tasks.length?Math.round((done/tasks.length)*100):0;
     return `<div class="sprint-card mb-4 ${s.status==='active'?'active-sprint':''}"
       ondragover="sprintDragOver(event,'${s.id}')"
@@ -4713,13 +4757,17 @@ function toggleRptFilterPanel(){
 }
 
 // Close panel on outside click — delegated once, no duplication
-document.addEventListener('click',function(e){
-  const panel=document.getElementById('rpt-adv-filter-panel');
-  const btn=document.getElementById('rpt-filter-btn-wrap');
-  if(panel&&panel.style.display!=='none'&&btn&&!btn.contains(e.target)){
-    panel.style.display='none';
-  }
-},true);
+// Listener Protected: guarded by _sfRptPanelClickAttached flag
+if(!window._sfRptPanelClickAttached){
+  window._sfRptPanelClickAttached = true;
+  document.addEventListener('click',function(e){
+    const panel=document.getElementById('rpt-adv-filter-panel');
+    const btn=document.getElementById('rpt-filter-btn-wrap');
+    if(panel&&panel.style.display!=='none'&&btn&&!btn.contains(e.target)){
+      panel.style.display='none';
+    }
+  },true);
+}
 // NOTE: ESC for this panel is handled by the unified keydown handler below (search for _globalKeydownHandler)
 
 function _rptPopulateAdvFilterDropdowns(){
@@ -4952,15 +5000,17 @@ function _chartOpts(extra){
 }
 
 function renderProductivityTable(){
+  try{
   const _rt=_rptFilteredTasks(RBAC.getVisibleTasks(state.tasks));
   const tbody=document.getElementById('rpt-prod-tbody');
   if(!tbody)return;
   const rows=state.users.map(u=>{
     const allTasks=_rt.filter(t=>t.assignee===u.id);
-    const completed=allTasks.filter(t=>t.status==='released').length;
+    const allTaskSubs=(allTasks).flatMap(t=>t.subtasks||[]);
+    const completed=allTasks.filter(t=>DONE_STATUSES.includes(t.status)).length;
     const active=allTasks.filter(t=>['dev-in-progress','qa-in-progress','in-qa'].includes(t.status)).length;
-    const points=allTasks.filter(t=>t.status==='released').reduce((a,t)=>a+(t.points||0),0);
-    const totalPts=allTasks.reduce((a,t)=>a+(t.points||0),0);
+    const points=allTasks.filter(t=>DONE_STATUSES.includes(t.status)).reduce((a,t)=>a+(t.points||0),0)+allTaskSubs.filter(s=>DONE_STATUSES.includes(s.status)).reduce((a,s)=>a+(s.points||0),0);
+    const totalPts=allTasks.reduce((a,t)=>a+(t.points||0),0)+allTaskSubs.reduce((a,s)=>a+(s.points||0),0);
     const reopen=allTasks.filter(t=>t.status==='reopen').length;
     const pct=allTasks.length?Math.round((completed/allTasks.length)*100):0;
     return {u,completed,active,points,totalPts,reopen,pct,total:allTasks.length};
@@ -4979,10 +5029,12 @@ function renderProductivityTable(){
       <span style="font-size:11px;font-weight:600;color:#64748b;white-space:nowrap">${r.totalPts}sp</span>
     </div></td>
   </tr>`).join('')||`<tr><td colspan="6" style="padding:24px;text-align:center;color:#94a3b8;font-size:13px">No team members</td></tr>`;
+  }catch(e){console.warn('[Render] renderProductivityTable error:',e);}
 }
 
 function renderReports(){
   if(document.hidden) return; // tab hidden — skip chart/report rendering; visibilitychange will refresh on return
+  try{
   // Update scope subtitle based on role
   const subEl = document.getElementById('reports-scope-subtitle');
   if(subEl){
@@ -5000,7 +5052,8 @@ function renderReports(){
   const sprintSel=document.getElementById('rpt-sprint-filter');
   if(sprintSel){
     const prevSprint=sprintSel.value;
-    const projFilter=projSel?projSel.value:'all';
+    let projFilter=projSel?projSel.value:'all';
+    if(!projFilter) projFilter='all';
     const visibleSprints=RBAC.getVisibleSprints().filter(s=>projFilter==='all'||s.project===projFilter);
     sprintSel.innerHTML=`<option value="all">All Sprints</option>`+
       visibleSprints.map(s=>`<option value="${s.id}"${s.id===prevSprint?' selected':''}>${s.name}</option>`).join('');
@@ -5021,8 +5074,8 @@ function renderReports(){
   // ── KPI: row 1 ──
   const activeSprints=_rs.filter(s=>s.status==='active');
   const openTasks=_rt.filter(t=>t.status==='open').length;
-  const releasedTasks=_rt.filter(t=>t.status==='released').length;
-  const openBugs=_rt.filter(t=>t.type==='bug'&&!['released'].includes(t.status)).length;
+  const releasedTasks=_rt.filter(t=>DONE_STATUSES.includes(t.status)).length;
+  const openBugs=_rt.filter(t=>t.type==='bug'&&!DONE_STATUSES.includes(t.status)).length;
   const setEl=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   setEl('rpt-kpi-projects',_rp.length);
   setEl('rpt-kpi-projects-sub',`${_rp.filter(p=>p.status==='active').length} active`);
@@ -5031,19 +5084,25 @@ function renderReports(){
   setEl('rpt-kpi-open',openTasks);
   setEl('rpt-kpi-open-sub',`${_rt.filter(t=>t.status==='dev-in-progress').length} in dev`);
   setEl('rpt-kpi-released',releasedTasks);
-  setEl('rpt-kpi-released-sub',_rt.length?`${Math.round((releasedTasks/_rt.length)*100)}% of total`:'—');
+  const _rptAllSubs=(_rt).flatMap(t=>t.subtasks||[]);
+  const _rptTotalWithSubs=_rt.length+_rptAllSubs.length;
+  const _rptDoneWithSubs=releasedTasks+_rptAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
+  setEl('rpt-kpi-released-sub',_rptTotalWithSubs?`${Math.round((_rptDoneWithSubs/_rptTotalWithSubs)*100)}% of total`:'—');
   setEl('rpt-kpi-bugs',openBugs);
   setEl('rpt-kpi-bugs-sub',`${_rt.filter(t=>t.type==='bug'&&t.priority==='critical').length} critical`);
 
   // ── KPI: row 2 ──
+  // Sprint completion — reuse sprintProgress() for consistency, include subtasks
   const sprintTasks=activeSprints.flatMap(s=>_rt.filter(t=>t.sprint===s.id));
-  const sprintDone=sprintTasks.filter(t=>t.status==='released').length;
-  const sprintComp=sprintTasks.length?Math.round((sprintDone/sprintTasks.length)*100):0;
+  const sprintAllSubs=(sprintTasks).flatMap(t=>t.subtasks||[]);
+  const sprintTotalWithSubs=sprintTasks.length+sprintAllSubs.length;
+  const sprintDone=sprintTasks.filter(t=>DONE_STATUSES.includes(t.status)).length+sprintAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
+  const sprintComp=sprintTotalWithSubs?Math.round((sprintDone/sprintTotalWithSubs)*100):0;
   setEl('rpt-kpi-sprint-comp',sprintComp+'%');
   const scBar=document.getElementById('rpt-kpi-sprint-comp-bar');if(scBar)scBar.style.width=sprintComp+'%';
 
   const relTasks=_rl.flatMap(r=>r.taskIds||[]).map(id=>_rt.find(t=>t.id===id)).filter(Boolean);
-  const relDone=relTasks.filter(t=>t&&t.status==='released').length;
+  const relDone=relTasks.filter(t=>t&&DONE_STATUSES.includes(t.status)).length;
   const relReady=relTasks.length?Math.round((relDone/relTasks.length)*100):0;
   setEl('rpt-kpi-release-ready',relReady+'%');
   const rrBar=document.getElementById('rpt-kpi-release-ready-bar');if(rrBar)rrBar.style.width=relReady+'%';
@@ -5063,9 +5122,10 @@ function renderReports(){
   _rptHealthDot('qa', reopenRate<=10?'green':reopenRate<=25?'yellow':'red', reopenRate+'% reopen rate');
   const relBlockers=_rl.filter(r=>!r.releaseNotes||!r.taskIds||!r.taskIds.length).length;
   _rptHealthDot('release', relBlockers===0?'green':relBlockers<=2?'yellow':'red', relBlockers+' blocker'+(relBlockers!==1?'s':''));
-  const maxLoad=Math.max(1,...state.users.map(u=>_rt.filter(t=>t.assignee===u.id).reduce((a,t)=>a+(t.points||0),0)));
-  const minLoad=Math.min(...state.users.map(u=>_rt.filter(t=>t.assignee===u.id).reduce((a,t)=>a+(t.points||0),0)));
-  const imbalance=state.users.length>1?Math.round(((maxLoad-minLoad)/maxLoad)*100):0;
+  const _userLoadArr=(state.users||[]).map(u=>(_rt||[]).filter(t=>t.assignee===u.id).reduce((a,t)=>a+(t.points||0),0));
+  const maxLoad=_userLoadArr.length?Math.max(1,..._userLoadArr):1;
+  const minLoad=_userLoadArr.length?Math.min(..._userLoadArr):0;
+  const imbalance=(state.users||[]).length>1?Math.round(((maxLoad-minLoad)/maxLoad)*100):0;
   _rptHealthDot('capacity', imbalance<=30?'green':imbalance<=60?'yellow':'red', imbalance+'% imbalance');
 
   // ── Destroy existing report charts before recreating (prevents duplicate instances) ──
@@ -5079,8 +5139,8 @@ function renderReports(){
   // NOTE: sprintLabels, committed, completedPts are declared here (outside the if-block)
   // because they are also consumed by the Commitment vs Completion chart below.
   const sprintLabels=_rs.map(s=>s.name.length>14?s.name.slice(0,13)+'…':s.name);
-  const committed=_rs.map(s=>_rt.filter(t=>t.sprint===s.id).reduce((a,t)=>a+(t.points||0),0));
-  const completedPts=_rs.map(s=>_rt.filter(t=>t.sprint===s.id&&t.status==='released').reduce((a,t)=>a+(t.points||0),0));
+  const committed=_rs.map(s=>{const sTsks=_rt.filter(t=>t.sprint===s.id);return sTsks.reduce((a,t)=>a+(t.points||0),0)+(sTsks).flatMap(t=>t.subtasks||[]).reduce((a,s)=>a+(s.points||0),0);});
+  const completedPts=_rs.map(s=>{const sTsks=_rt.filter(t=>t.sprint===s.id);return sTsks.filter(t=>DONE_STATUSES.includes(t.status)).reduce((a,t)=>a+(t.points||0),0)+(sTsks).flatMap(t=>t.subtasks||[]).filter(s=>DONE_STATUSES.includes(s.status)).reduce((a,s)=>a+(s.points||0),0);});
   const vCtx=_getCtx('velocityChart');
   if(vCtx){
   charts.velocity=new Chart(vCtx,{
@@ -5098,8 +5158,10 @@ function renderReports(){
 
   // ── BURNDOWN ──
   const activeSprint=_rs.find(s=>s.status==='active');
-  const totalPts=activeSprint?_rt.filter(t=>t.sprint===activeSprint.id).reduce((a,t)=>a+(t.points||0),0):0;
-  const donePts=activeSprint?_rt.filter(t=>t.sprint===activeSprint.id&&t.status==='released').reduce((a,t)=>a+(t.points||0),0):0;
+  const _bsTasks=activeSprint?_rt.filter(t=>t.sprint===activeSprint.id):[];
+  const _bsAllSubs=(_bsTasks).flatMap(t=>t.subtasks||[]);
+  const totalPts=_bsTasks.reduce((a,t)=>a+(t.points||0),0)+_bsAllSubs.reduce((a,s)=>a+(s.points||0),0);
+  const donePts=_bsTasks.filter(t=>DONE_STATUSES.includes(t.status)).reduce((a,t)=>a+(t.points||0),0)+_bsAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).reduce((a,s)=>a+(s.points||0),0);
   const bCtx=_getCtx('burndownChart');
   if(bCtx) charts.burndown=new Chart(bCtx,{
     type:'line',
@@ -5149,8 +5211,12 @@ function renderReports(){
   });
 
   // ── WORKLOAD ──
-  const users=state.users;
-  const wLoads=users.map(u=>_rt.filter(t=>t.assignee===u.id).reduce((a,t)=>a+(t.points||0),0));
+  const users=(state.users||[]);
+  const wLoads=users.map(u=>{
+    const uTasks=_rt.filter(t=>t.assignee===u.id);
+    const uSubs=(uTasks).flatMap(t=>t.subtasks||[]).filter(s=>s.assignee===u.id||(s.assignee==null&&t.assignee===u.id));
+    return uTasks.reduce((a,t)=>a+(t.points||0),0)+uSubs.reduce((a,s)=>a+(s.points||0),0);
+  });
   const wCtx=_getCtx('workloadChart');
   if(wCtx) charts.workload=new Chart(wCtx,{
     type:'bar',
@@ -5187,7 +5253,7 @@ function renderReports(){
       datasets:[
         {label:'Open',data:_rp.map(p=>_rt.filter(t=>t.project===p.id&&t.status==='open').length),backgroundColor:'rgba(245,158,11,0.7)',borderRadius:4},
         {label:'In Progress',data:_rp.map(p=>_rt.filter(t=>t.project===p.id&&['dev-in-progress','in-qa','qa-in-progress'].includes(t.status)).length),backgroundColor:'rgba(99,102,241,0.7)',borderRadius:4},
-        {label:'Released',data:_rp.map(p=>_rt.filter(t=>t.project===p.id&&t.status==='released').length),backgroundColor:'rgba(16,185,129,0.7)',borderRadius:4}
+        {label:'Released',data:_rp.map(p=>_rt.filter(t=>t.project===p.id&&DONE_STATUSES.includes(t.status)).length),backgroundColor:'rgba(16,185,129,0.7)',borderRadius:4}
       ]
     },
     options:_chartOpts()
@@ -5198,8 +5264,10 @@ function renderReports(){
   const shData=_rp.map(p=>{
     const pSprints=_rs.filter(s=>s.project===p.id&&s.status==='active');
     const pTasks=pSprints.flatMap(s=>_rt.filter(t=>t.sprint===s.id));
-    const pDone=pTasks.filter(t=>t.status==='released').length;
-    return pTasks.length?Math.round((pDone/pTasks.length)*100):0;
+    const pAllSubs=(pTasks).flatMap(t=>t.subtasks||[]);
+    const pTotalWithSubs=pTasks.length+pAllSubs.length;
+    const pDone=pTasks.filter(t=>DONE_STATUSES.includes(t.status)).length+pAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
+    return pTotalWithSubs?Math.round((pDone/pTotalWithSubs)*100):0;
   });
   if(shCtx) charts.sprintHealth=new Chart(shCtx,{
     type:'bar',
@@ -5217,17 +5285,19 @@ function renderReports(){
       const pTasks=_rt.filter(t=>t.project===p.id);
       const pEpics=(state.epics||[]).filter(e=>e.projectId===p.id);
       const pRels=_rl.filter(r=>r.projectId===p.id);
-      const overdueCount=pTasks.filter(t=>t.dueDate&&new Date(t.dueDate)<new Date()&&!['released'].includes(t.status)).length;
+      const overdueCount=pTasks.filter(t=>t.dueDate&&new Date(t.dueDate)<new Date()&&!DONE_STATUSES.includes(t.status)).length;
       const blockedReopen=pTasks.filter(t=>t.status==='reopen').length;
       const epicDone=pEpics.filter(e=>e.status==='Completed').length;
       const epicComp=pEpics.length?Math.round((epicDone/pEpics.length)*100):0;
-      const relDone2=pRels.flatMap(r=>r.taskIds||[]).map(id=>pTasks.find(t=>t.id===id)).filter(t=>t&&t.status==='released').length;
+      const relDone2=pRels.flatMap(r=>r.taskIds||[]).map(id=>pTasks.find(t=>t.id===id)).filter(t=>t&&DONE_STATUSES.includes(t.status)).length;
       const relTotal2=pRels.flatMap(r=>r.taskIds||[]).length;
       const relPct=relTotal2?Math.round((relDone2/relTotal2)*100):0;
       const pActiveSprints=_rs.filter(s=>s.project===p.id&&s.status==='active');
       const pSpTasks=pActiveSprints.flatMap(s=>pTasks.filter(t=>t.sprint===s.id));
-      const pSpDone=pSpTasks.filter(t=>t.status==='released').length;
-      const pSpPct=pSpTasks.length?Math.round((pSpDone/pSpTasks.length)*100):0;
+      const pSpAllSubs=(pSpTasks).flatMap(t=>t.subtasks||[]);
+      const pSpTotalWithSubs=pSpTasks.length+pSpAllSubs.length;
+      const pSpDone=pSpTasks.filter(t=>DONE_STATUSES.includes(t.status)).length+pSpAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
+      const pSpPct=pSpTotalWithSubs?Math.round((pSpDone/pSpTotalWithSubs)*100):0;
       return `<tr style="border-bottom:1px solid rgba(0,0,0,0.04)">
         <td style="padding:10px 12px"><div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:${p.color};flex-shrink:0"></div><span style="font-weight:600;color:#1e293b">${p.name}</span></div></td>
         <td style="padding:10px 12px;text-align:right;color:#64748b;font-size:13px">${pTasks.length}</td>
@@ -5242,7 +5312,7 @@ function renderReports(){
 
   // ── RELEASE KPIs — use fd.filteredTaskIds for task-level filter awareness ──
   const totalRelTasks=_rl.flatMap(r=>(r.taskIds||[]).filter(id=>fd.filteredTaskIds.has(id))).length;
-  const totalRelDone=_rl.flatMap(r=>(r.taskIds||[]).filter(id=>fd.filteredTaskIds.has(id))).map(id=>_rt.find(t=>t.id===id)).filter(t=>t&&t.status==='released').length;
+  const totalRelDone=_rl.flatMap(r=>(r.taskIds||[]).filter(id=>fd.filteredTaskIds.has(id))).map(id=>_rt.find(t=>t.id===id)).filter(t=>t&&DONE_STATUSES.includes(t.status)).length;
   const relCompPct=totalRelTasks?Math.round((totalRelDone/totalRelTasks)*100):0;
   setEl('rpt-rel-comp',relCompPct+'%');
   const rcBar=document.getElementById('rpt-rel-comp-bar');if(rcBar)rcBar.style.width=relCompPct+'%';
@@ -5258,7 +5328,7 @@ function renderReports(){
   const rlAbbrv=_rl.map(r=>(r.name||'').length>14?r.name.slice(0,13)+'…':r.name);
   const rlPcts=_rl.map(r=>{
     const rTasks=(r.taskIds||[]).filter(id=>fd.filteredTaskIds.has(id)).map(id=>_rt.find(t=>t.id===id)).filter(Boolean);
-    const rDone=rTasks.filter(t=>t.status==='released').length;
+    const rDone=rTasks.filter(t=>DONE_STATUSES.includes(t.status)).length;
     return rTasks.length?Math.round((rDone/rTasks.length)*100):0;
   });
   if(rcCtx) charts.relComp=new Chart(rcCtx,{
@@ -5330,6 +5400,7 @@ function renderReports(){
     },
     options:_chartOpts({scales:{x:{stacked:true,grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{stacked:true,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11}}}}})
   });
+  }catch(e){console.warn('[Render] renderReports error:',e);}
 }
 
 // ─── TEAMS ────────────────────────────────────────────────────────
@@ -5354,8 +5425,9 @@ function renderTeams(){
   if(_teamSubtitle) _teamSubtitle.textContent=`${visibleUsers.length} member${visibleUsers.length!==1?'s':''}`;
   grid.innerHTML=visibleUsers.map(u=>{
     const tasks=state.tasks.filter(t=>t.assignee===u.id);
-    const done=tasks.filter(t=>t.status==='released').length;
-    const pts=tasks.reduce((a,t)=>a+(t.points||0),0);
+    const taskAllSubs=(tasks).flatMap(t=>t.subtasks||[]);
+    const done=tasks.filter(t=>DONE_STATUSES.includes(t.status)).length+taskAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
+    const pts=tasks.reduce((a,t)=>a+(t.points||0),0)+taskAllSubs.reduce((a,s)=>a+(s.points||0),0);
     const activeTasks=tasks.filter(t=>t.status==='dev-in-progress');
     const mappedProjects=state.projects.filter(p=>p.memberIds&&p.memberIds.includes(u.id));
     return `<div class="team-card">
@@ -5478,16 +5550,23 @@ function closeModal(){
 }
 
 // Outside-click close (delegated, once)
-document.addEventListener('click', function(e){
-  const overlay = document.getElementById('modal');
-  if(overlay && overlay.classList.contains('modal-visible') && e.target === overlay){
-    closeModal();
-  }
-}, true);
+// Listener Protected: guarded by _sfModalClickAttached flag
+if(!window._sfModalClickAttached){
+  window._sfModalClickAttached = true;
+  document.addEventListener('click', function(e){
+    const overlay = document.getElementById('modal');
+    if(overlay && overlay.classList.contains('modal-visible') && e.target === overlay){
+      closeModal();
+    }
+  }, true);
+}
 
 // ── UNIFIED ESC HANDLER — single listener, no duplicates ──
 // Handles: modal close, search dropdown close, rpt filter panel close
+// Listener Protected: guarded by _sfKeydownAttached flag
 (function(){
+  if(window._sfKeydownAttached) return;
+  window._sfKeydownAttached = true;
   function _globalKeydownHandler(e){
     if(e.key !== 'Escape') return;
     // 1. Close modal
@@ -8115,7 +8194,7 @@ function releaseCard(r){
   const tasks=getReleaseTasks(r.id);
   const stripColor=releaseStatusColor(r.status);
   const badgeCls=releaseStatusBadge(r.status);
-  const releasedCount=tasks.filter(t=>t.status==='released').length;
+  const releasedCount=tasks.filter(t=>DONE_STATUSES.includes(t.status)).length;
   const readinessPct=tasks.length?Math.round((releasedCount/tasks.length)*100):0;
   const warnMissingNotes=!r.releaseNotes||!r.releaseNotes.trim();
   const warnNoTasks=!tasks.length;
@@ -8710,7 +8789,10 @@ function renderSearchResultItem(type,item,q){
 }
 
 // ── Wire up the search input ──
+// Listener Protected: guarded by _sfSearchInputAttached flag
 (function(){
+  if(window._sfSearchInputAttached) return;
+  window._sfSearchInputAttached = true;
   const inp=document.getElementById('global-search');
   const clearBtn=document.getElementById('search-clear-btn');
   if(!inp)return;
@@ -8783,7 +8865,6 @@ function renderSearchResultItem(type,item,q){
 // Initialize the sync queue — loads persisted items and schedules replay
 PendingSyncQueue.init();
 updateSidebarProject();
-renderDashboard();
 
 // ─── REPORTS EXPORT HELPERS ────────────────────────────────────────
 
@@ -8831,22 +8912,24 @@ function _getReportExportData(){
   // KPI summary
   const activeSprints=_rs.filter(s=>s.status==='active').length;
   const openTasks=_rt.filter(t=>t.status==='open').length;
-  const releasedTasks=_rt.filter(t=>t.status==='released').length;
-  const openBugs=_rt.filter(t=>t.type==='bug'&&t.status!=='released').length;
-  const totalTasks=_rt.length;
+  const _expAllSubs=(_rt).flatMap(t=>t.subtasks||[]);
+  const releasedTasks=_rt.filter(t=>DONE_STATUSES.includes(t.status)).length+_expAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
+  const openBugs=_rt.filter(t=>t.type==='bug'&&!DONE_STATUSES.includes(t.status)).length;
+  const totalTasks=_rt.length+_expAllSubs.length;
   const sprintComp=totalTasks?Math.round((releasedTasks/totalTasks)*100):0;
   const reopenCount=_rt.filter(t=>t.status==='reopen').length;
   const reopenRate=totalTasks?Math.round((reopenCount/totalTasks)*100):0;
-  const readyForProd=_rt.filter(t=>t.status==='ready-for-prod').length;
+  const readyForProd=_rt.filter(t=>t.status==='ready-for-prod').length+_expAllSubs.filter(s=>s.status==='ready-for-prod').length;
   const releaseReady=totalTasks?Math.round((readyForProd/totalTasks)*100):0;
 
   // Productivity rows
   const prodRows=state.users.map(u=>{
     const uTasks=_rt.filter(t=>t.assignee===u.id);
-    const completed=uTasks.filter(t=>t.status==='released').length;
+    const uTaskSubs=(uTasks).flatMap(t=>t.subtasks||[]);
+    const completed=uTasks.filter(t=>DONE_STATUSES.includes(t.status)).length;
     const active=uTasks.filter(t=>['dev-in-progress','qa-in-progress','in-qa'].includes(t.status)).length;
-    const points=uTasks.filter(t=>t.status==='released').reduce((a,t)=>a+(t.points||0),0);
-    const totalPts=uTasks.reduce((a,t)=>a+(t.points||0),0);
+    const points=uTasks.filter(t=>DONE_STATUSES.includes(t.status)).reduce((a,t)=>a+(t.points||0),0)+uTaskSubs.filter(s=>DONE_STATUSES.includes(s.status)).reduce((a,s)=>a+(s.points||0),0);
+    const totalPts=uTasks.reduce((a,t)=>a+(t.points||0),0)+uTaskSubs.reduce((a,s)=>a+(s.points||0),0);
     const reopen=uTasks.filter(t=>t.status==='reopen').length;
     const pct=uTasks.length?Math.round((completed/uTasks.length)*100):0;
     return [u.name,uTasks.length,completed,active,points,totalPts,reopen,pct+'%'];
@@ -8855,10 +8938,12 @@ function _getReportExportData(){
   // Project breakdown rows
   const projRows=_rp.map(p=>{
     const pTasks=_rt.filter(t=>t.project===p.id);
-    const done=pTasks.filter(t=>t.status==='released').length;
-    const bugs=pTasks.filter(t=>t.type==='bug'&&t.status!=='released').length;
-    const pct=pTasks.length?Math.round((done/pTasks.length)*100):0;
-    return [p.name,pTasks.length,done,bugs,pct+'%',p.status||'—'];
+    const pAllSubs=(pTasks).flatMap(t=>t.subtasks||[]);
+    const done=pTasks.filter(t=>DONE_STATUSES.includes(t.status)).length+pAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
+    const bugs=pTasks.filter(t=>t.type==='bug'&&!DONE_STATUSES.includes(t.status)).length;
+    const pTotalWithSubs=pTasks.length+pAllSubs.length;
+    const pct=pTotalWithSubs?Math.round((done/pTotalWithSubs)*100):0;
+    return [p.name,pTotalWithSubs,done,bugs,pct+'%',p.status||'—'];
   });
 
   // Task list rows
@@ -10394,18 +10479,20 @@ function _xlSheetSummary(data) {
   const activeSprints  = sprints.filter(s => s.status === 'active').length;
   const openTasks      = tasks.filter(t => t.status === 'open').length;
   const inProgress     = tasks.filter(t => ['dev-in-progress','dev-completed','in-qa','qa-in-progress'].includes(t.status)).length;
-  const releasedTasks  = tasks.filter(t => t.status === 'released').length;
+  const _expSubs2      = tasks.flatMap(t => t.subtasks || []);
+  const releasedTasks  = tasks.filter(t => DONE_STATUSES.includes(t.status)).length + _expSubs2.filter(s => DONE_STATUSES.includes(s.status)).length;
   const reopenTasks    = tasks.filter(t => t.status === 'reopen').length;
-  const readyForProd   = tasks.filter(t => t.status === 'ready-for-prod').length;
-  const openBugs       = tasks.filter(t => t.type === 'bug' && t.status !== 'released').length;
+  const readyForProd   = tasks.filter(t => t.status === 'ready-for-prod').length + _expSubs2.filter(s => s.status === 'ready-for-prod').length;
+  const openBugs       = tasks.filter(t => t.type === 'bug' && !DONE_STATUSES.includes(t.status)).length;
   const critBugs       = tasks.filter(t => t.type === 'bug' && t.priority === 'critical').length;
-  const totalPts       = tasks.reduce((a, t) => a + (t.points || 0), 0);
-  const donePts        = tasks.filter(t => t.status === 'released').reduce((a, t) => a + (t.points || 0), 0);
-  const sprintComp     = tasks.length ? Math.round((releasedTasks / tasks.length) * 100) : 0;
-  const qaTotal        = tasks.filter(t => ['in-qa','qa-in-progress','reopen','released'].includes(t.status)).length;
+  const totalPts       = tasks.reduce((a, t) => a + (t.points || 0), 0) + _expSubs2.reduce((a, s) => a + (s.points || 0), 0);
+  const donePts        = tasks.filter(t => DONE_STATUSES.includes(t.status)).reduce((a, t) => a + (t.points || 0), 0) + _expSubs2.filter(s => DONE_STATUSES.includes(s.status)).reduce((a, s) => a + (s.points || 0), 0);
+  const totalWithSubs  = tasks.length + _expSubs2.length;
+  const sprintComp     = totalWithSubs ? Math.round((releasedTasks / totalWithSubs) * 100) : 0;
+  const qaTotal        = tasks.filter(t => ['in-qa','qa-in-progress','reopen'].includes(t.status)).length + tasks.filter(t => DONE_STATUSES.includes(t.status)).length;
   const reopenRate     = qaTotal ? Math.round((reopenTasks / qaTotal) * 100) : 0;
   const relTaskIds     = releases.flatMap(r => r.taskIds || []);
-  const relDone        = relTaskIds.filter(id => { const t = tasks.find(x => x.id === id); return t && t.status === 'released'; }).length;
+  const relDone        = relTaskIds.filter(id => { const t = tasks.find(x => x.id === id); return t && DONE_STATUSES.includes(t.status); }).length;
   const releaseReady   = relTaskIds.length ? Math.round((relDone / relTaskIds.length) * 100) : 0;
 
   const headers = ['Category', 'Metric', 'Value', 'Notes'];
