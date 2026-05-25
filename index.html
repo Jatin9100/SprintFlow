@@ -1094,6 +1094,149 @@ document.addEventListener('DOMContentLoaded', function() {
   @keyframes _drModalIn{from{opacity:0;transform:translateY(28px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
   ._dr_quick{transition:all 0.13s ease!important}
   ._dr_quick:hover{background:rgba(91,95,199,0.07)!important;border-color:rgba(91,95,199,0.24)!important;color:#3730a3!important}
+
+  /* ── SPRINT SPILLOVER MODAL — ISOLATED CSS ── */
+  .spillover-ui{
+    padding:20px 24px 24px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .spillover-alert{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:13px 15px;
+    background:#fffbf0;
+    border:1px solid #fde9a2;
+    border-radius:10px;
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--text-primary);
+  }
+  .spillover-alert-icon{
+    flex-shrink:0;
+    width:18px;height:18px;
+    margin-top:1px;
+  }
+  .spillover-alert-body{
+    min-width:0;
+  }
+  .spillover-sub{
+    font-size:12.5px;
+    color:#64748b;
+    margin-top:3px;
+  }
+  .spillover-title{
+    font-size:11px;
+    font-weight:700;
+    color:var(--text-tertiary);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    padding-bottom:2px;
+  }
+  /* Hide the native radio — we use a custom dot */
+  .spillover-option input[type="radio"]{
+    position:absolute;
+    opacity:0;
+    width:0;height:0;
+    pointer-events:none;
+  }
+  .spillover-option{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:14px 16px;
+    border:1.5px solid rgba(0,0,0,.07);
+    border-radius:12px;
+    cursor:pointer;
+    width:100%;
+    background:#fff;
+    transition:border-color .15s,background .15s,box-shadow .15s;
+    box-shadow:0 1px 2px rgba(0,0,0,.04);
+    position:relative;
+  }
+  .spillover-option:hover{
+    border-color:var(--accent-light);
+    background:#fafafe;
+    box-shadow:0 2px 8px rgba(91,95,199,.08);
+  }
+  /* Custom radio dot */
+  .spillover-radio-dot{
+    flex-shrink:0;
+    width:18px;height:18px;
+    border-radius:50%;
+    border:2px solid #d1d5db;
+    background:#fff;
+    margin-top:1px;
+    display:flex;align-items:center;justify-content:center;
+    transition:border-color .15s,background .15s;
+  }
+  .spillover-radio-dot::after{
+    content:'';
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--accent);
+    opacity:0;
+    transform:scale(0.4);
+    transition:opacity .15s,transform .15s;
+  }
+  /* Selected state — applied via JS _scUpdateUI */
+  .spillover-option.is-selected{
+    border-color:var(--accent);
+    background:rgba(91,95,199,.04);
+    box-shadow:0 0 0 3px rgba(91,95,199,.1);
+  }
+  .spillover-option.is-selected .spillover-radio-dot{
+    border-color:var(--accent);
+    background:var(--accent);
+  }
+  .spillover-option.is-selected .spillover-radio-dot::after{
+    background:#fff;
+    opacity:1;
+    transform:scale(1);
+  }
+  .spillover-option-body{
+    flex:1;
+    min-width:0;
+  }
+  .spillover-option-title{
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--text-primary);
+    line-height:1.3;
+  }
+  .spillover-option-desc{
+    font-size:12px;
+    color:#64748b;
+    margin-top:3px;
+    line-height:1.45;
+  }
+  #_sc-target-sprint{
+    width:100%;
+    margin-top:10px;
+    height:34px;
+    padding:0 10px;
+    border-radius:8px;
+    border:1px solid var(--control-border);
+    background:var(--control-bg-focus);
+    font-size:13px;
+    color:var(--text-primary);
+    font-family:inherit;
+  }
+  #_sc-target-sprint:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+  }
+  .spillover-footer{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    padding-top:14px;
+    border-top:1px solid rgba(0,0,0,.06);
+    margin-top:4px;
+  }
+  /* ── END SPILLOVER CSS ── */
 </style>
 </head>
 <body class="flex overflow-hidden h-screen">
@@ -1448,6 +1591,9 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="page-subtitle" id="kanban-sprint-label">Select a sprint</div>
         </div>
         <div class="flex gap-2 items-center flex-wrap">
+          <select id="kanban-project-filter" class="sf-select" onchange="_debouncedRenderKanban()">
+            <option value="all">All Projects</option>
+          </select>
           <select id="kanban-sprint-select" class="sf-select" onchange="_debouncedRenderKanban()"></select>
           <select id="kanban-epic-filter" class="sf-select" onchange="_debouncedRenderKanban()">
             <option value="all">All Epics</option>
@@ -2335,16 +2481,27 @@ const FirebaseDB = (function(){
       return state;
     }
     try {
-      const rootRef = _safeRef('sprintflow');
-      const snapshot = await _get(rootRef);
-      if(!snapshot.exists()){
+      const [
+        tasksSnap,
+        projectsSnap,
+        sprintsSnap,
+        epicsSnap,
+        usersSnap,
+        releasesSnap
+      ] = await Promise.all([
+        _get(_safeRef('sprintflow/tasks')),
+        _get(_safeRef('sprintflow/projects')),
+        _get(_safeRef('sprintflow/sprints')),
+        _get(_safeRef('sprintflow/epics')),
+        _get(_safeRef('sprintflow/users')),
+        _get(_safeRef('sprintflow/releases'))
+      ]);
+      // If every collection is empty the database has not been seeded yet
+      const anyExists = tasksSnap.exists()    || projectsSnap.exists() || sprintsSnap.exists()
+                     || epicsSnap.exists()    || usersSnap.exists()    || releasesSnap.exists();
+      if(!anyExists){
         console.info('[FirebaseDB] No data in Firebase — seeding with DEFAULT_DATA');
         await syncAppState();   // push defaults up
-        return state;
-      }
-      const data = snapshot.val() || {}; // Production Hardened: safe null fallback
-      if(!data || typeof data !== 'object'){
-        console.warn('[FirebaseDB] loadAppData: invalid data shape from Firebase');
         return state;
       }
       // Merge Firebase data → state (preserve shape, migrate legacy statuses)
@@ -2356,12 +2513,12 @@ const FirebaseDB = (function(){
         return arr.filter(Boolean);
       }
       const merged = {
-        projects : _mergeArr(data.projects, state.projects),
-        users    : _mergeArr(data.users,    state.users),
-        sprints  : _mergeArr(data.sprints,  state.sprints),
-        epics    : _mergeArr(data.epics,    state.epics),
-        tasks    : _mergeArr(data.tasks,    state.tasks),
-        releases : _mergeArr(data.releases, state.releases),
+        projects : _mergeArr(projectsSnap.val(), state.projects),
+        users    : _mergeArr(usersSnap.val(),    state.users),
+        sprints  : _mergeArr(sprintsSnap.val(),  state.sprints),
+        epics    : _mergeArr(epicsSnap.val(),    state.epics),
+        tasks    : _mergeArr(tasksSnap.val(),    state.tasks),
+        releases : _mergeArr(releasesSnap.val(), state.releases),
       };
       // Normalise projects
       merged.projects.forEach(p=>{ if(!p.memberIds) p.memberIds=[]; });
@@ -2503,6 +2660,14 @@ const FirebaseDB = (function(){
   // Use sparingly (e.g. on reset, seed, or full migration).
   // ─────────────────────────────────────────────────────────────────
   async function syncAppState(){
+    if(
+      !window._isSeedingMode
+      &&
+      !RBAC.isAdmin()
+    ){
+      console.warn('[FirebaseDB] sync blocked');
+      return false;
+    }
     SaveManager.save();
     SaveManager.saveReleases();
     if(!isReady()){
@@ -2533,7 +2698,7 @@ const FirebaseDB = (function(){
   }
 
   // Expose public API
-  return { init, onReady, isReady, loadAppData, saveEntity, updateEntity, deleteEntity, syncAppState, setOnValue, getRef, getDb };
+  return { init, onReady, isReady, loadAppData, saveEntity, updateEntity, deleteEntity, _seedOnly_syncAppState:syncAppState, setOnValue, getRef, getDb };
 })();
 
 // ─── REALTIME SYNC ────────────────────────────────────────────────
@@ -3167,23 +3332,15 @@ const SaveManager = (function(){
   };
 })();
 
-// saveState() — preserved for all existing callers; now also queues a Firebase sync.
-// Firebase sync is intentionally non-blocking (fire-and-forget via syncAppState).
+// saveState() — preserved for all existing callers.
 function saveState(){
   SaveManager.save();
   SaveManager.saveReleases();
-  // Non-blocking Firebase sync: doesn't affect any existing rendering flow.
-  if(FirebaseDB.isReady()){
-    FirebaseDB.syncAppState().catch(e=>console.warn('[saveState] Firebase sync error:',e));
-  }
 }
 // Alias for immediate saves (page unload / critical ops)
 function saveStateImmediate(){
   SaveManager.saveImmediate();
   SaveManager.saveReleasesImmediate();
-  if(FirebaseDB.isReady()){
-    FirebaseDB.syncAppState().catch(e=>console.warn('[saveStateImmediate] Firebase sync error:',e));
-  }
 }
 
 function resetData(){
@@ -4284,13 +4441,84 @@ const STATUS_META={
   'reopen':{label:'Reopen',cls:'reopen'},
   'pending-with-client':{label:'Pending With Client',cls:'pending-with-client'},
   'ready-for-prod':{label:'Ready for Prod',cls:'ready-for-prod'},
-  'released':{label:'Released',cls:'released'}
+  'released':{label:'Released',cls:'released'},
+  'rollback':{label:'Rollback',cls:'reopen'}
 };
 function statusLabel(s){return (STATUS_META[s]||{label:s}).label;}
 function statusBadgeClass(s){return (STATUS_META[s]||{cls:s.replace(/[^a-z-]/g,'')}).cls;}
 
 // ─── SUBTASK HELPERS ─────────────────────────────────────────────
 const DONE_STATUSES=['ready-for-prod','released'];
+
+// ─── TASK STATE TRANSITION RULES ────────────────────────────────
+// Tasks at Ready for Prod or Released are frozen.
+// Released tasks may only transition to Rollback (resolves to dev-completed).
+const LOCKED_TASK_STATUSES=['ready-for-prod','released'];
+
+function isTaskLocked(task){
+  return !!(task && LOCKED_TASK_STATUSES.includes(task.status));
+}
+
+// Returns {ok:true} or {ok:false, msg}
+function canChangeTaskStatus(task, newStatus){
+  if(!task) return {ok:false, msg:'Task not found'};
+  const cur=task.status;
+  if(cur==='released'){
+    if(newStatus==='rollback') return {ok:true};
+    return {ok:false, msg:'Released tasks can only be rolled back. Use the Rollback option.'};
+  }
+  if(cur==='ready-for-prod'){
+    if(newStatus==='released') return {ok:true};
+    return {ok:false, msg:'Ready for Prod tasks are frozen and cannot be moved.'};
+  }
+  return {ok:true};
+}
+
+// Rollback is an action only — resolves to in-qa; not persisted as a final state
+function resolveRollbackStatus(status){
+  return status==='rollback'?'in-qa':status;
+}
+
+// ─── EPIC STATE TRANSITION RULES ────────────────────────────────
+// Planned → Active → Completed (forward-only).
+// Completed locked unless Admin + today < epic.dueDate.
+const EPIC_STATUS_ORDER={Planned:0,Active:1,Completed:2};
+
+function canChangeEpicStatus(epic, newStatus){
+  const cur=epic.status;
+  if(cur==='Completed'){
+    if(!RBAC.isAdmin()) return {ok:false, msg:'Completed epics are locked. Only an admin can reopen them.'};
+    const today=new Date(); today.setHours(0,0,0,0);
+    const end=epic.dueDate?new Date(epic.dueDate):null;
+    if(!end||today>end) return {ok:false, msg:'Completed epic cannot be reopened — the end date has passed.'};
+    return {ok:true};
+  }
+  const curOrd=EPIC_STATUS_ORDER[cur]??-1;
+  const newOrd=EPIC_STATUS_ORDER[newStatus]??-1;
+  if(newOrd<curOrd) return {ok:false, msg:`Cannot move epic backwards from "${cur}" to "${newStatus}".`};
+  if(cur==='Active'&&newStatus==='Planned') return {ok:false, msg:'Active epics cannot return to Planned.'};
+  return {ok:true};
+}
+
+function isEpicLocked(epic){
+  if(!epic||epic.status!=='Completed') return false;
+  if(RBAC.isAdmin()){
+    const today=new Date(); today.setHours(0,0,0,0);
+    const end=epic.dueDate?new Date(epic.dueDate):null;
+    if(end&&today<=end) return false;
+  }
+  return true;
+}
+// ── Field freeze helpers ──────────────────────────────────────────
+function isReleaseLocked(release){
+  return !!(release && release.status==='Released');
+}
+function isProjectCompleted(project){
+  return !!(project && project.status==='completed');
+}
+function isSprintCompleted(sprint){
+  return !!(sprint && sprint.status==='completed');
+}
 function getSubtasks(taskId){
   const t=getTask(taskId);
   return t?(t.subtasks||[]):[];
@@ -4514,14 +4742,61 @@ function removeTaskFromSprint(taskId){
 function renderKanban(){
   const selectEl=document.getElementById('kanban-sprint-select');
   const epicFilterEl=document.getElementById('kanban-epic-filter');
-  const allSprints=RBAC.getVisibleSprints();
-  const prevVal=selectEl.value;
-  selectEl.innerHTML=allSprints.map(s=>{
-    const proj=getProject(s.project);
-    return `<option value="${s.id}"${s.id===prevVal?' selected':''}>${s.name}${proj?' — '+proj.name:''}`;
-  }).join('');
+  const projectFilterEl=document.getElementById('kanban-project-filter');
 
-  const sprintId=selectEl.value||allSprints[0]?.id;
+  // ── Populate Project filter (Active / Completed groups) ──
+  if(projectFilterEl){
+    const prevProject=projectFilterEl.value;
+    const visibleProjects=RBAC.getVisibleProjects ? RBAC.getVisibleProjects() : state.projects;
+    const activeProjects=visibleProjects.filter(p=>p.status!=='completed');
+    const completedProjects=visibleProjects.filter(p=>p.status==='completed');
+    let projHTML=`<option value="all">All Projects</option>`;
+    if(activeProjects.length){
+      projHTML+=`<optgroup label="── Active Projects ──">`;
+      projHTML+=activeProjects.map(p=>`<option value="${p.id}"${p.id===prevProject?' selected':''}>${p.name}</option>`).join('');
+      projHTML+=`</optgroup>`;
+    }
+    if(completedProjects.length){
+      projHTML+=`<optgroup label="── Completed Projects ──">`;
+      projHTML+=completedProjects.map(p=>`<option value="${p.id}"${p.id===prevProject?' selected':''}>${p.name}</option>`).join('');
+      projHTML+=`</optgroup>`;
+    }
+    projectFilterEl.innerHTML=projHTML;
+    // Reset to "all" if previously selected project no longer exists in visible list
+    if(prevProject && prevProject!=='all' && !visibleProjects.find(p=>p.id===prevProject)){
+      projectFilterEl.value='all';
+    }
+  }
+  const selectedProject=projectFilterEl?projectFilterEl.value:'all';
+
+  // ── Populate Sprint filter (Active / Completed groups), scoped to selected project ──
+  const allSprints=RBAC.getVisibleSprints();
+  const scopedSprints=selectedProject==='all'
+    ? allSprints
+    : allSprints.filter(s=>s.project===selectedProject);
+  const prevVal=selectEl.value;
+  const activeSprints=scopedSprints.filter(s=>s.status!=='completed');
+  const completedSprints=scopedSprints.filter(s=>s.status==='completed');
+  let sprintHTML='';
+  if(activeSprints.length){
+    sprintHTML+=`<optgroup label="── Active Sprints ──">`;
+    sprintHTML+=activeSprints.map(s=>{
+      const proj=getProject(s.project);
+      return `<option value="${s.id}"${s.id===prevVal?' selected':''}>${s.name}${proj&&selectedProject==='all'?' — '+proj.name:''}`;
+    }).join('');
+    sprintHTML+=`</optgroup>`;
+  }
+  if(completedSprints.length){
+    sprintHTML+=`<optgroup label="── Completed Sprints ──">`;
+    sprintHTML+=completedSprints.map(s=>{
+      const proj=getProject(s.project);
+      return `<option value="${s.id}"${s.id===prevVal?' selected':''}>${s.name}${proj&&selectedProject==='all'?' — '+proj.name:''}`;
+    }).join('');
+    sprintHTML+=`</optgroup>`;
+  }
+  selectEl.innerHTML=sprintHTML;
+
+  const sprintId=selectEl.value||scopedSprints[0]?.id;
   const board=document.getElementById('kanban-board');
   if(!sprintId){
     board.innerHTML=`<div class="empty-state w-full">
@@ -4539,15 +4814,29 @@ function renderKanban(){
     if(labelEl) labelEl.textContent=`${sprint.name||'Sprint'}${proj?' — '+proj.name:''}`;
   }
 
-  // Populate epic filter
+  // ── Populate Epic filter (Active / Completed groups), scoped to sprint's project ──
   if(epicFilterEl){
     const prevEpic=epicFilterEl.value;
+    const sprintProjectId=sprint?sprint.project:null;
     const relevantEpics=(state.epics||[]).filter(e=>{
-      if(!sprint) return false;
+      if(!sprintProjectId) return false;
       const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
-      return epicProjects.includes(sprint.project);
+      return epicProjects.includes(sprintProjectId);
     });
-    epicFilterEl.innerHTML=`<option value="all">All Epics</option>`+relevantEpics.map(e=>`<option value="${e.id}"${e.id===prevEpic?' selected':''}>${e.title}</option>`).join('');
+    const activeEpics=relevantEpics.filter(e=>e.status!=='completed'&&e.status!=='Completed');
+    const completedEpics=relevantEpics.filter(e=>e.status==='completed'||e.status==='Completed');
+    let epicHTML=`<option value="all">All Epics</option>`;
+    if(activeEpics.length){
+      epicHTML+=`<optgroup label="── Active Epics ──">`;
+      epicHTML+=activeEpics.map(e=>`<option value="${e.id}"${e.id===prevEpic?' selected':''}>${e.title}</option>`).join('');
+      epicHTML+=`</optgroup>`;
+    }
+    if(completedEpics.length){
+      epicHTML+=`<optgroup label="── Completed Epics ──">`;
+      epicHTML+=completedEpics.map(e=>`<option value="${e.id}"${e.id===prevEpic?' selected':''}>${e.title}</option>`).join('');
+      epicHTML+=`</optgroup>`;
+    }
+    epicFilterEl.innerHTML=epicHTML;
   }
   const epicFilter=epicFilterEl?epicFilterEl.value:'all';
 
@@ -4711,7 +5000,16 @@ function kanbanSubtaskCard(sub,parent){
   </div>`;
 }
 
-function kanbanDragStart(e,id){kanbanDraggedId=id;kanbanDraggedSubtask=null;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('type','task');setTimeout(()=>e.target.classList.add('dragging'),0);}
+function kanbanDragStart(e,id){
+  const _t=getTask(id);
+  // ── Frozen tasks (ready-for-prod / released) cannot be dragged ──
+  if(_t && isTaskLocked(_t)){
+    e.preventDefault();
+    showNotif('⚠ '+statusLabel(_t.status)+' tasks cannot be moved via drag-drop','error');
+    return;
+  }
+  kanbanDraggedId=id;kanbanDraggedSubtask=null;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('type','task');setTimeout(()=>e.target.classList.add('dragging'),0);
+}
 function kanbanDragEnd(e){
   // Clean up on the specific target and also sweep any orphaned dragging classes
   e.target.classList.remove('dragging');
@@ -4774,12 +5072,15 @@ function kanbanDrop(e,status){
       kanbanDraggedSubtask=null;return;
     }
     if(sub&&sub.status!==status){
-      sub.status=status;
+      // ── Task state transition guard (subtasks use same lock rules) ──
+      const stateCheck=canChangeTaskStatus(sub,status);
+      if(!stateCheck.ok){showNotif('⚠ '+stateCheck.msg,'error');kanbanDraggedSubtask=null;return;}
+      sub.status=resolveRollbackStatus(status);
       // ── Debounced Firebase write — absorbs rapid drag/drop sequences ──
       DebounceWrite.schedule('tasks', parent);
       SaveManager.save();
       renderKanban();
-      showNotif(`Subtask moved to ${statusLabel(status)} ✓`);
+      showNotif(`Subtask moved to ${statusLabel(sub.status)} ✓`);
     }
     kanbanDraggedSubtask=null;
     return;
@@ -4794,14 +5095,20 @@ function kanbanDrop(e,status){
     kanbanDraggedId=null;return;
   }
   if(task&&task.status!==status){
-    const check=canMoveToClosedStatus(kanbanDraggedId,status);
+    // ── Block drag into Released column — use release board flow instead ──
+    if(status==='released'){showNotif('⚠ Tasks can only be released via the Release board','error');kanbanDraggedId=null;return;}
+    // ── Task state transition guard ──
+    const stateCheck=canChangeTaskStatus(task,status);
+    if(!stateCheck.ok){showNotif('⚠ '+stateCheck.msg,'error');kanbanDraggedId=null;return;}
+    const resolvedStatus=resolveRollbackStatus(status);
+    const check=canMoveToClosedStatus(kanbanDraggedId,resolvedStatus);
     if(!check.ok){showNotif('⚠ '+check.msg,'error');kanbanDraggedId=null;return;}
-    task.status=status;
+    task.status=resolvedStatus;
     // ── Debounced Firebase write — absorbs rapid drag/drop sequences ──
     DebounceWrite.schedule('tasks', task);
     SaveManager.save();
     renderKanban();
-    showNotif(`Moved to ${statusLabel(status)} ✓`);
+    showNotif(`Moved to ${statusLabel(resolvedStatus)} ✓`);
   }
   kanbanDraggedId=null;
 }
@@ -5817,8 +6124,24 @@ function openTaskModal(taskId){
       </div>
       ${subtaskSection}
       <div class="flex justify-between items-center pt-4 mt-4 border-t border-slate-100 flex-wrap gap-2">
-        <select onchange="updateTaskStatus('${t.id}',this.value)" class="text-sm" style="width:auto" ${RBAC.canEditTask(t)?'':'disabled title="You can only update status for tasks assigned to you"'}>
-          ${Object.entries(STATUS_META).map(([v,m])=>`<option value="${v}" ${t.status===v?'selected':''}>${m.label}</option>`).join('')}
+        <select onchange="updateTaskStatus('${t.id}',this.value)" class="text-sm" style="width:auto"
+          ${(()=>{
+            if(!RBAC.canEditTask(t)) return 'disabled title="You can only update status for tasks assigned to you"';
+            if(t.status!=='released' && isTaskLocked(t)) return 'disabled title="This task is frozen and cannot change status"';
+            return '';
+          })()}>
+          ${(()=>{
+            // Released: show current status + Rollback — user must actively select Rollback to trigger onchange
+            if(t.status==='released'){
+              return '<option value="released" selected>Released</option><option value="rollback">Rollback</option>';
+            }
+            // Ready for Prod: frozen — show current only
+            if(t.status==='ready-for-prod'){
+              return '<option value="ready-for-prod" selected>Ready for Prod</option>';
+            }
+            // All other statuses: full list except rollback (rollback only for released)
+            return Object.entries(STATUS_META).filter(([v])=>v!=='rollback').map(([v,m])=>`<option value="${v}" ${t.status===v?'selected':''}>${m.label}</option>`).join('');
+          })()}
         </select>
         <div class="flex gap-2">
           ${RBAC.canEditTask(t)?`<button class="btn btn-secondary" onclick="closeModal();setTimeout(()=>openEditTaskModal('${t.id}'),220)">Edit</button>`:''}
@@ -5838,19 +6161,28 @@ function updateTaskStatus(taskId,status){
     try{const sel=document.querySelector(`select[onchange*="updateTaskStatus"][onchange*="${taskId}"]`)||document.querySelector(`select[onchange*="${taskId}"]`);if(sel)sel.value=task.status;}catch(e){}
     return;
   }
-  const check=canMoveToClosedStatus(taskId,status);
-  if(!check.ok){
-    showNotif('⚠ '+check.msg,'error');
-    // reset select safely
+  // ── Task state transition guard ──
+  const stateCheck=canChangeTaskStatus(task,status);
+  if(!stateCheck.ok){
+    showNotif('⚠ '+stateCheck.msg,'error');
     try{const sel=document.querySelector(`select[onchange*="updateTaskStatus"][onchange*="${taskId}"]`)||document.querySelector(`select[onchange*="${taskId}"]`);if(sel)sel.value=task.status;}catch(e){}
     return;
   }
-  task.status=status;
+  // ── Resolve rollback → in-qa; all other statuses pass through unchanged ──
+  const resolvedStatus=resolveRollbackStatus(status);
+  const check=canMoveToClosedStatus(taskId,resolvedStatus);
+  if(!check.ok){
+    showNotif('⚠ '+check.msg,'error');
+    try{const sel=document.querySelector(`select[onchange*="updateTaskStatus"][onchange*="${taskId}"]`)||document.querySelector(`select[onchange*="${taskId}"]`);if(sel)sel.value=task.status;}catch(e){}
+    return;
+  }
+  task.status=resolvedStatus;
   // ── Debounced Firebase write ──
   DebounceWrite.schedule('tasks', task, 300);
   SaveManager.save();
   renderPage(currentPage);
-  showNotif(`Status updated to ${statusLabel(status)} ✓`);
+  const notifMsg=status==='rollback'?'Task rolled back to In QA':`Status updated to ${statusLabel(resolvedStatus)} ✓`;
+  showNotif(notifMsg,'success');
 }
 
 function deleteTask(taskId){
@@ -5925,7 +6257,7 @@ function openCreateSubtaskModal(parentTaskId){
           <div>
             <label>Status</label>
             <select id="cst-status">
-              ${Object.entries(STATUS_META).map(([v,m])=>`<option value="${v}"${v==='open'?' selected':''}>${m.label}</option>`).join('')}
+              ${Object.entries(STATUS_META).filter(([v])=>v!=='rollback').map(([v,m])=>`<option value="${v}"${v==='open'?' selected':''}>${m.label}</option>`).join('')}
             </select>
           </div>
           <div>
@@ -6077,8 +6409,17 @@ function openSubtaskModal(parentTaskId,subtaskId){
         </div>
       </div>
       <div class="flex justify-between items-center pt-4 border-t border-slate-100 flex-wrap gap-2">
-        <select onchange="updateSubtaskStatus('${parentTaskId}','${s.id}',this.value)" class="text-sm" style="width:auto" ${RBAC.canEditSubtask(s)?'':'disabled title="You can only update status for subtasks assigned to you"'}>
-          ${Object.entries(STATUS_META).map(([v,m])=>`<option value="${v}" ${s.status===v?'selected':''}>${m.label}</option>`).join('')}
+        <select onchange="updateSubtaskStatus('${parentTaskId}','${s.id}',this.value)" class="text-sm" style="width:auto"
+          ${(()=>{
+            if(!RBAC.canEditSubtask(s)) return 'disabled title="You can only update status for subtasks assigned to you"';
+            if(s.status!=='released' && isTaskLocked(s)) return 'disabled title="This subtask is frozen and cannot change status"';
+            return '';
+          })()}>
+          ${(()=>{
+            if(s.status==='released') return '<option value="released" selected>Released</option><option value="rollback">Rollback</option>';
+            if(s.status==='ready-for-prod') return '<option value="ready-for-prod" selected>Ready for Prod</option>';
+            return Object.entries(STATUS_META).filter(([v])=>v!=='rollback').map(([v,m])=>`<option value="${v}" ${s.status===v?'selected':''}>${m.label}</option>`).join('');
+          })()}
         </select>
         <div class="flex gap-2">
           ${RBAC.canEditSubtask(s)?`<button class="btn btn-secondary" onclick="openEditSubtaskModal('${parentTaskId}','${s.id}')">Edit</button>`:''}
@@ -6099,12 +6440,15 @@ function openEditSubtaskModal(parentTaskId,subtaskId){
     showNotif('⚠ You can only edit subtasks assigned to you','error');
     return;
   }
+  const isReleased = s.status==='released';
+  const _sdis = (cond) => cond ? 'disabled' : '';
+  const _sro  = (cond) => cond ? 'style="opacity:0.65;pointer-events:none;cursor:not-allowed"' : '';
   const inheritedProject=s.project?getProject(s.project):null;
   const inheritedSprint=s.sprint?getSprint(s.sprint):null;
   replaceModal(`
     <div class="p-6">
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-bold text-slate-900">Edit Subtask</h2>
+        <h2 class="text-lg font-bold text-slate-900">Edit Subtask${isReleased?' <span style="font-size:11px;font-weight:500;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;padding:2px 7px;border-radius:4px;vertical-align:middle">Released — Read Only</span>':''}</h2>
         <button onclick="openSubtaskModal('${parentTaskId}','${subtaskId}')" style="color:var(--text-muted);cursor:pointer;transition:color 0.14s" onmouseenter="this.style.color='var(--text-primary)'" onmouseleave="this.style.color='var(--text-muted)'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="space-y-4">
@@ -6121,23 +6465,23 @@ function openEditSubtaskModal(parentTaskId,subtaskId){
         </div>
         <div>
           <label>Title *</label>
-          <input type="text" id="est-title" value="${s.title}"/>
+          <input type="text" id="est-title" value="${s.title}" ${_sdis(isReleased)}/>
         </div>
         <div>
           <label>Description</label>
-          <div id="est-description" class="desc-editor" data-placeholder="Add more context..."></div>
+          <div id="est-description" class="desc-editor" data-placeholder="Add more context..." ${_sro(isReleased)}></div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Type</label>
-            <select id="est-type">
+            <select id="est-type" ${_sdis(isReleased)}>
               <option value="task" ${(!s.type||s.type==='task')?'selected':''}>Task</option>
               <option value="bug" ${s.type==='bug'?'selected':''}>Bug</option>
             </select>
           </div>
           <div>
             <label>Priority</label>
-            <select id="est-priority">
+            <select id="est-priority" ${_sdis(isReleased)}>
               <option value="critical" ${s.priority==='critical'?'selected':''}>Critical</option>
               <option value="high" ${s.priority==='high'?'selected':''}>High</option>
               <option value="medium" ${s.priority==='medium'?'selected':''}>Medium</option>
@@ -6148,13 +6492,17 @@ function openEditSubtaskModal(parentTaskId,subtaskId){
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Status</label>
-            <select id="est-status">
-              ${Object.entries(STATUS_META).map(([v,m])=>`<option value="${v}" ${s.status===v?'selected':''}>${m.label}</option>`).join('')}
+            <select id="est-status" ${isTaskLocked(s)?'disabled title="Subtask is frozen — status cannot be changed"':''}>
+              ${(()=>{
+                if(s.status==='released') return '<option value="released" selected>Released</option><option value="rollback">Rollback</option>';
+                if(s.status==='ready-for-prod') return '<option value="ready-for-prod" selected>Ready for Prod</option>';
+                return Object.entries(STATUS_META).filter(([v])=>v!=='rollback').map(([v,m])=>`<option value="${v}" ${s.status===v?'selected':''}>${m.label}</option>`).join('');
+              })()}
             </select>
           </div>
           <div>
             <label>Story Points</label>
-            <select id="est-points">
+            <select id="est-points" ${_sdis(isReleased)}>
               ${[1,2,3,5,8,13].map(p=>`<option value="${p}" ${s.points===p?'selected':''}>${p}</option>`).join('')}
             </select>
           </div>
@@ -6162,7 +6510,7 @@ function openEditSubtaskModal(parentTaskId,subtaskId){
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Assignee</label>
-            <select id="est-assignee">
+            <select id="est-assignee" ${_sdis(isReleased)}>
               <option value="" ${!s.assignee?'selected':''}>Unassigned</option>
               ${(()=>{
                 const selfId = RBAC.memberSelfOnlyId();
@@ -6174,27 +6522,27 @@ function openEditSubtaskModal(parentTaskId,subtaskId){
           </div>
           <div>
             <label>Due Date</label>
-            <input type="date" id="est-due" value="${s.dueDate||''}"/>
+            <input type="date" id="est-due" value="${s.dueDate||''}" ${_sdis(isReleased)}/>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Start Date</label>
-            <input type="date" id="est-startDate" value="${s.startDate||''}" onchange="estOnStartDateChange(this.value)"/>
+            <input type="date" id="est-startDate" value="${s.startDate||''}" ${_sdis(isReleased)} ${isReleased?'':'onchange="estOnStartDateChange(this.value)"'}/>
           </div>
           <div>
             <label>End Date</label>
-            <input type="date" id="est-endDate" value="${s.endDate||''}" min="${s.startDate||''}"/>
+            <input type="date" id="est-endDate" value="${s.endDate||''}" min="${s.startDate||''}" ${_sdis(isReleased)}/>
           </div>
         </div>
         <div>
           <label>Tags (comma separated)</label>
-          <input type="text" id="est-tags" value="${(s.tags||[]).join(', ')}"/>
+          <input type="text" id="est-tags" value="${(s.tags||[]).join(', ')}" ${_sdis(isReleased)}/>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4" style="border-top:1px solid rgba(0,0,0,0.05)">
         <button class="btn btn-secondary" onclick="openSubtaskModal('${parentTaskId}','${subtaskId}')">Cancel</button>
-        <button class="btn btn-primary" onclick="saveSubtask('${parentTaskId}','${subtaskId}')">Save Changes</button>
+        <button class="btn btn-primary" onclick="saveSubtask('${parentTaskId}','${subtaskId}')">${isReleased?'Rollback':'Save Changes'}</button>
       </div>
     </div>
   `);
@@ -6209,6 +6557,22 @@ function saveSubtask(parentTaskId,subtaskId){
   // ── RBAC: members can only save subtasks assigned to themselves ──
   if(!RBAC.canEditSubtask(s)){
     showNotif('⚠ You can only edit subtasks assigned to you','error');
+    return;
+  }
+  // ── Freeze guard: released subtasks are fully frozen except rollback action ──
+  if(s.status==='released'){
+    const selectedStatus = document.getElementById('est-status') ? document.getElementById('est-status').value : '';
+    if(selectedStatus==='rollback'){
+      s.status='in-qa';
+      s.updatedAt=_now();
+      FirebaseDB.saveEntity('tasks', parent).catch(e=>console.warn('[saveSubtask] Firebase error:',e));
+      SaveManager.save();
+      renderPage(currentPage);
+      openSubtaskModal(parentTaskId,subtaskId);
+      showNotif('Task rolled back to In QA','success');
+      return;
+    }
+    showNotif('⚠ Released subtasks are read-only. Use Rollback to move back.','error');
     return;
   }
   const title=document.getElementById('est-title').value.trim();
@@ -6247,13 +6611,15 @@ function updateSubtaskStatus(parentTaskId,subtaskId,status){
     return;
   }
   if(s){
-    s.status=status;
+    const resolvedStatus=resolveRollbackStatus(status);
+    s.status=resolvedStatus;
     // ── Firebase: persist parent task with updated subtask status ──
     FirebaseDB.saveEntity('tasks', parent).catch(e=>console.warn('[updateSubtaskStatus] Firebase error:',e));
     SaveManager.save();
     renderPage(currentPage);
     openSubtaskModal(parentTaskId,subtaskId);
-    showNotif(`Subtask status → ${statusLabel(status)} ✓`);
+    const notifMsg=status==='rollback'?'Task rolled back to In QA':`Subtask status → ${statusLabel(resolvedStatus)} ✓`;
+    showNotif(notifMsg,'success');
   }
 }
 
@@ -6413,14 +6779,14 @@ function openCreateTaskModal(){
           <div>
             <label>Status</label>
             <select id="ct-status">
-              ${Object.entries(STATUS_META).map(([v,m])=>`<option value="${v}"${v==='open'?' selected':''}>${m.label}</option>`).join('')}
+              ${Object.entries(STATUS_META).filter(([v])=>v!=='rollback').map(([v,m])=>`<option value="${v}"${v==='open'?' selected':''}>${m.label}</option>`).join('')}
             </select>
           </div>
           <div>
             <label>Epic</label>
             <select id="ct-epic">
               <option value="">No Epic</option>
-              ${(state.epics||[]).map(e=>`<option value="${e.id}">◈ ${e.title}</option>`).join('')}
+              ${(state.epics||[]).filter(e=>e.status!=='completed').map(e=>`<option value="${e.id}">◈ ${e.title}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -6471,6 +6837,7 @@ function ctOnProjectChange(projectId){
   if(epicSel){
     const prevEpic = epicSel.value;
     const projectEpics = (state.epics||[]).filter(e=>{
+      if(e.status==='completed') return false;
       if(!projectId) return true;
       const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
       return epicProjects.includes(projectId);
@@ -6605,8 +6972,26 @@ function openEditTaskModal(taskId){
     showNotif('⚠ You can only edit tasks assigned to you','error');
     return;
   }
+
+  // ── Field-freeze flags ──────────────────────────────────────────
+  const isReleased     = t.status==='released';
+  const isReadyForProd = t.status==='ready-for-prod';
+  // All fields frozen for released tasks; only status allowed for ready-for-prod
+  const freezeAll      = isReleased;
+  const freezeNonStatus= isReadyForProd; // freeze everything except status
+  // Assignee: only Admin or Program Manager may change
+  const canEditAssignee= RBAC.isAdmin() || RBAC.isProgramManager();
+  // Project & Type: frozen after task creation (always in edit mode)
+  const freezeProjType = true;
+  // Sprint: frozen once mapped to a sprint
+  const freezeSprint   = !!(t.sprint);
+
+  const _dis = (cond) => cond ? 'disabled' : '';
+  const _ro  = (cond) => cond ? 'readonly style="opacity:0.65;pointer-events:none;cursor:not-allowed"' : '';
+
   const sprintOptsHtml = _sprintOptionsForProject(t.project, t.sprint||'');
   const projectEpics = (state.epics||[]).filter(e=>{
+    if(e.status==='completed') return false;
     if(!t.project) return true;
     const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
     return epicProjects.includes(t.project);
@@ -6615,18 +7000,18 @@ function openEditTaskModal(taskId){
   openModal(`
     <div class="p-6">
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-bold text-slate-900">Edit Task</h2>
+        <h2 class="text-lg font-bold text-slate-900">Edit Task${freezeAll?' <span style="font-size:11px;font-weight:500;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;padding:2px 7px;border-radius:4px;vertical-align:middle">Released — Read Only</span>':(freezeNonStatus?' <span style="font-size:11px;font-weight:500;color:#065945;background:#d1fae5;border:1px solid #6ee7b7;padding:2px 7px;border-radius:4px;vertical-align:middle">Ready For Prod</span>':'')}</h2>
         <button onclick="closeModal()" style="color:var(--text-muted);cursor:pointer;transition:color 0.14s" onmouseenter="this.style.color='var(--text-primary)'" onmouseleave="this.style.color='var(--text-muted)'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="space-y-4">
         <div>
           <label>Title *</label>
-          <input type="text" id="et-title" value="${t.title}"/>
+          <input type="text" id="et-title" value="${t.title}" ${_dis(freezeAll||freezeNonStatus)}/>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Type *</label>
-            <select id="et-type">
+            <select id="et-type" ${_dis(freezeAll||freezeNonStatus||freezeProjType)}>
               <option value="">— Select type —</option>
               <option value="story" ${t.type==='story'?'selected':''}>Story</option>
               <option value="task" ${t.type==='task'?'selected':''}>Task</option>
@@ -6635,7 +7020,7 @@ function openEditTaskModal(taskId){
           </div>
           <div>
             <label>Priority *</label>
-            <select id="et-priority">
+            <select id="et-priority" ${_dis(freezeAll||freezeNonStatus)}>
               <option value="">— Select priority —</option>
               <option value="critical" ${t.priority==='critical'?'selected':''}>Critical</option>
               <option value="high" ${t.priority==='high'?'selected':''}>High</option>
@@ -6647,13 +7032,17 @@ function openEditTaskModal(taskId){
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Status</label>
-            <select id="et-status">
-              ${Object.entries(STATUS_META).map(([v,m])=>`<option value="${v}" ${t.status===v?'selected':''}>${m.label}</option>`).join('')}
+            <select id="et-status" ${_dis(freezeAll)}>
+              ${(()=>{
+                if(t.status==='released') return '<option value="released" selected>Released</option><option value="rollback">Rollback</option>';
+                if(t.status==='ready-for-prod') return '<option value="ready-for-prod" selected>Ready for Prod</option><option value="released">Released</option>';
+                return Object.entries(STATUS_META).filter(([v])=>v!=='rollback').map(([v,m])=>`<option value="${v}" ${t.status===v?'selected':''}>${m.label}</option>`).join('');
+              })()}
             </select>
           </div>
           <div>
             <label>Story Points *</label>
-            <select id="et-points">
+            <select id="et-points" ${_dis(freezeAll||freezeNonStatus)}>
               <option value="">— Select —</option>
               ${[1,2,3,5,8,13].map(p=>`<option value="${p}" ${t.points===p?'selected':''}>${p}</option>`).join('')}
             </select>
@@ -6662,14 +7051,14 @@ function openEditTaskModal(taskId){
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Project *</label>
-            <select id="et-project" onchange="etOnProjectChange(this.value)">
+            <select id="et-project" ${_dis(freezeAll||freezeNonStatus||freezeProjType)} onchange="${(freezeAll||freezeNonStatus||freezeProjType)?'':'etOnProjectChange(this.value)'}">
               <option value="">— Select project —</option>
               ${RBAC.getVisibleProjects().map(p=>`<option value="${p.id}" ${t.project===p.id?'selected':''}>${p.name}</option>`).join('')}
             </select>
           </div>
           <div>
             <label>Sprint / Backlog *</label>
-            <select id="et-sprint" onchange="etOnSprintChange(this.value)">
+            <select id="et-sprint" ${_dis(freezeAll||freezeNonStatus||freezeSprint)} onchange="${(freezeAll||freezeNonStatus||freezeSprint)?'':'etOnSprintChange(this.value)'}">
               ${sprintOptsHtml}
             </select>
           </div>
@@ -6677,13 +7066,13 @@ function openEditTaskModal(taskId){
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label id="et-assignee-label">${isBacklog?'Assignee':'Assignee *'}</label>
-            <select id="et-assignee">
+            <select id="et-assignee" ${_dis(freezeAll||freezeNonStatus||!canEditAssignee)}>
               ${_assigneeOptionsForProject(t.project, t.assignee||'')}
             </select>
           </div>
           <div>
             <label>Epic</label>
-            <select id="et-epic">
+            <select id="et-epic" ${_dis(freezeAll||freezeNonStatus)}>
               <option value="" ${!t.epicId?'selected':''}>No Epic</option>
               ${projectEpics.map(e=>`<option value="${e.id}" ${t.epicId===e.id?'selected':''}>◈ ${e.title}</option>`).join('')}
             </select>
@@ -6692,25 +7081,25 @@ function openEditTaskModal(taskId){
         <div class="grid grid-cols-2 gap-4" id="et-date-row">
           <div>
             <label id="et-start-label">${isBacklog?'Start Date':'Start Date *'}</label>
-            <input type="date" id="et-start" value="${t.startDate||''}" onchange="etOnStartDateChange(this.value)" min="${t.startDate||''}" />
+            <input type="date" id="et-start" value="${t.startDate||''}" ${_dis(freezeAll||freezeNonStatus)} ${(freezeAll||freezeNonStatus)?'':'onchange="etOnStartDateChange(this.value)"'} min="${t.startDate||''}" />
           </div>
           <div>
             <label id="et-end-label">${isBacklog?'End Date':'End Date *'}</label>
-            <input type="date" id="et-end" value="${t.endDate||''}"/>
+            <input type="date" id="et-end" value="${t.endDate||''}" ${_dis(freezeAll||freezeNonStatus)}/>
           </div>
         </div>
         <div>
           <label>Description</label>
-          <div id="et-desc" class="desc-editor" data-placeholder="Add more context..."></div>
+          <div id="et-desc" class="desc-editor" data-placeholder="Add more context..." ${(freezeAll||freezeNonStatus)?'style="opacity:0.65;pointer-events:none;cursor:not-allowed"':''}></div>
         </div>
         <div>
           <label>Tags (comma separated)</label>
-          <input type="text" id="et-tags" value="${(t.tags||[]).join(', ')}"/>
+          <input type="text" id="et-tags" value="${(t.tags||[]).join(', ')}" ${_dis(freezeAll||freezeNonStatus)}/>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4" style="border-top:1px solid rgba(0,0,0,0.05)">
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveTask('${t.id}')">Save Changes</button>
+        ${freezeAll?'':'<button class="btn btn-primary" onclick="saveTask(\''+t.id+'\')">Save Changes</button>'}
       </div>
     </div>
   `);
@@ -6747,6 +7136,7 @@ function etOnProjectChange(projectId){
   if(epicSel){
     const prevEpic = epicSel.value;
     const projectEpics = (state.epics||[]).filter(e=>{
+      if(e.status==='completed') return false;
       if(!projectId) return true;
       const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
       return epicProjects.includes(projectId);
@@ -6800,6 +7190,26 @@ function estOnStartDateChange(startVal){
 function saveTask(taskId){
   const t=getTask(taskId);
   if(!t)return;
+  // ── Freeze guard: released tasks are fully frozen except rollback action ──
+  if(t.status==='released'){
+    const selectedStatus = document.getElementById('et-status') ? document.getElementById('et-status').value : '';
+    if(selectedStatus==='rollback'){
+      // Allow rollback: resolve to 'in-qa', keep all other fields unchanged
+      t.status='in-qa';
+      t.updatedAt=_now();
+      SyncState.markPending(t.id);
+      DebounceWrite.schedule('tasks', t, 300);
+      SaveManager.save();
+      invalidateStateMaps();
+      _invalidateSearchCache();
+      closeModal();
+      refreshAll();
+      showNotif('Task rolled back to In QA','success');
+      return;
+    }
+    showNotif('⚠ Released tasks are read-only. Use Rollback to move back.','error');
+    return;
+  }
   // ── RBAC: block save for members who are not the assignee ──
   if(!RBAC.canEditTask(t)){
     showNotif('⚠ You can only edit tasks assigned to you','error');
@@ -6862,14 +7272,23 @@ function saveTask(taskId){
   if(firstError){ document.getElementById(firstError)?.focus(); return; }
 
   t.title=title;
-  t.type=type;
+  t.type=t.type;         // frozen after creation — keep original
   t.priority=priority;
-  t.project=projectId;
-  t.status=document.getElementById('et-status').value;
+  t.project=t.project;   // frozen after creation — keep original
+  // ── Task state transition guard on save ──
+  const _etNewStatus=document.getElementById('et-status').value;
+  const _etStateCheck=canChangeTaskStatus(t,_etNewStatus);
+  if(!_etStateCheck.ok){showNotif('⚠ '+_etStateCheck.msg,'error');return;}
+  t.status=resolveRollbackStatus(_etNewStatus);
   t.points=parseInt(points);
-  // ── RBAC: members can only assign tasks to themselves ──
-  t.assignee= RBAC.memberSelfOnlyId() || assigneeId;
-  t.sprint=sprintId;
+  // ── RBAC: assignee editable only by Admin / PM; members assign to themselves ──
+  if(RBAC.isAdmin()||RBAC.isProgramManager()){
+    t.assignee= RBAC.memberSelfOnlyId() || assigneeId;
+  } else {
+    t.assignee= RBAC.memberSelfOnlyId() || t.assignee; // members: keep existing or self
+  }
+  // ── Sprint: frozen once mapped; only update if task was in backlog ──
+  if(!t.sprint){ t.sprint=sprintId; } // allow mapping from backlog; frozen once set
   t.epicId=document.getElementById('et-epic')?document.getElementById('et-epic').value||null:t.epicId;
   t.startDate=startDate||null;
   t.endDate=endDate||null;
@@ -6971,21 +7390,24 @@ function createSprint(){
 function openEditSprintModal(sprintId){
   const s=getSprint(sprintId);
   if(!s)return;
+  // ── Field-freeze flags ──
+  const isCompleted = isSprintCompleted(s);
+  const _sdis = (cond) => cond ? 'disabled' : '';
   openModal(`
     <div class="p-6">
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-bold text-slate-900">Edit Sprint</h2>
+        <h2 class="text-lg font-bold text-slate-900">Edit Sprint${isCompleted?' <span style="font-size:11px;font-weight:500;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;padding:2px 7px;border-radius:4px;vertical-align:middle">Completed — Locked</span>':''}</h2>
         <button onclick="closeModal()" style="color:var(--text-muted);cursor:pointer;transition:color 0.14s" onmouseenter="this.style.color='var(--text-primary)'" onmouseleave="this.style.color='var(--text-muted)'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Sprint Name *</label>
-            <input type="text" id="es-name" value="${s.name}"/>
+            <input type="text" id="es-name" value="${s.name}" ${_sdis(isCompleted)}/>
           </div>
           <div>
             <label>Project</label>
-            <select id="es-project">
+            <select id="es-project" disabled title="Project cannot be changed after sprint creation">
               ${state.projects.map(p=>`<option value="${p.id}"${p.id===s.project?' selected':''}>${p.name}</option>`).join('')}
             </select>
           </div>
@@ -6993,29 +7415,41 @@ function openEditSprintModal(sprintId){
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Start Date</label>
-            <input type="date" id="es-start" value="${s.start||''}"/>
+            <input type="date" id="es-start" value="${s.start||''}" disabled title="Sprint dates cannot be changed after creation"/>
           </div>
           <div>
             <label>End Date</label>
-            <input type="date" id="es-end" value="${s.end||''}"/>
+            <input type="date" id="es-end" value="${s.end||''}" disabled title="Sprint dates cannot be changed after creation"/>
           </div>
         </div>
         <div>
           <label>Status</label>
-          <select id="es-status">
-            <option value="planned"${s.status==='planned'?' selected':''}>Planned</option>
-            <option value="active"${s.status==='active'?' selected':''}>Active</option>
-            <option value="completed"${s.status==='completed'?' selected':''}>Completed</option>
+          <select id="es-status" ${_sdis(isCompleted)}>
+            ${(()=>{
+              const _ss=s.status;
+              const _allSprint=[
+                {v:'planned',l:'Planned'},
+                {v:'active', l:'Active'},
+                {v:'completed',l:'Completed'}
+              ];
+              // Forward-only: only show current status and statuses ahead of it
+              const _sprintOrder={planned:0,active:1,completed:2};
+              const _curOrd=_sprintOrder[_ss]??0;
+              return _allSprint
+                .filter(x=>(_sprintOrder[x.v]??0)>=_curOrd)
+                .map(x=>`<option value="${x.v}"${_ss===x.v?' selected':''}>${x.l}</option>`)
+                .join('');
+            })()}
           </select>
         </div>
         <div>
           <label>Sprint Goal</label>
-          <textarea id="es-goal" rows="2">${s.goal||''}</textarea>
+          <textarea id="es-goal" rows="2" ${_sdis(isCompleted)}>${s.goal||''}</textarea>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4" style="border-top:1px solid rgba(0,0,0,0.05)">
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveSprint('${s.id}')">Save Changes</button>
+        ${isCompleted?'':`<button class="btn btn-primary" onclick="saveSprint('${s.id}')">Save Changes</button>`}
       </div>
     </div>
   `);
@@ -7024,13 +7458,45 @@ function openEditSprintModal(sprintId){
 function saveSprint(sprintId){
   const s=getSprint(sprintId);
   if(!s)return;
+  // ── Completed sprint is fully locked ──
+  if(isSprintCompleted(s)){
+    showNotif('⚠ Completed sprints are locked and cannot be edited.','error');
+    return;
+  }
   const name=document.getElementById('es-name').value.trim();
   if(!name){showNotif('⚠ Sprint name required','error');return;}
+  const newStatus=document.getElementById('es-status').value;
+
+  // ── SPRINT COMPLETION INTERCEPT ────────────────────────────────────
+  // Only fires when transitioning INTO 'completed' (not already completed).
+  if(newStatus==='completed' && s.status!=='completed'){
+    const sprintTasks=state.tasks.filter(t=>t.sprint===sprintId);
+    const sprintSubs=sprintTasks.flatMap(t=>t.subtasks||[]);
+    const unfinished=[...sprintTasks,...sprintSubs]
+      .filter(i=>!DONE_STATUSES.includes(i.status));
+    if(unfinished.length>0){
+      // Stash form values — modal replaces this one, form DOM is gone after.
+      window._scPending={
+        sprintId,
+        fields:{
+          name,
+          project:document.getElementById('es-project').value,
+          start:document.getElementById('es-start').value,
+          end:document.getElementById('es-end').value,
+          goal:document.getElementById('es-goal').value.trim()
+        },
+        unfinishedCount:unfinished.length
+      };
+      _openSprintCompletionModal();
+      return; // halt normal save — completion modal takes over
+    }
+  }
+  // ── Normal save path (no completion intercept needed) ─────────────
   s.name=name;
   s.project=document.getElementById('es-project').value;
-  s.start=document.getElementById('es-start').value;
-  s.end=document.getElementById('es-end').value;
-  s.status=document.getElementById('es-status').value;
+  // Dates are frozen after creation — never overwrite from disabled fields
+  // s.start and s.end remain unchanged
+  s.status=newStatus;
   s.goal=document.getElementById('es-goal').value.trim();
   s.updatedAt=_now();
   invalidateStateMaps();
@@ -7048,6 +7514,190 @@ function saveSprint(sprintId){
   closeModal();
   refreshAll();
   showNotif('Sprint updated ✓');
+}
+
+// ── SPRINT COMPLETION MODAL ────────────────────────────────────────────────
+// Replaces the edit sprint modal in-place (openModal with _modalOpen=true).
+// All data flows through window._scPending set by saveSprint() above.
+function _openSprintCompletionModal(){
+  const p=window._scPending;
+  if(!p)return;
+  const s=getSprint(p.sprintId);
+  if(!s)return;
+  const availableSprints=state.sprints.filter(
+    sp=>sp.id!==p.sprintId&&sp.project===s.project&&sp.status!=='completed'
+  );
+  const hasTargets=availableSprints.length>0;
+  const sprintOpts=availableSprints.map(sp=>
+    `<option value="${sp.id}">${sp.name}</option>`
+  ).join('');
+  openModal(`
+    <div style="width:460px;max-width:92vw">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 22px 0">
+        <h2 style="font-size:16px;font-weight:700;color:var(--text-primary);margin:0">Complete Sprint</h2>
+        <button onclick="closeModal()"
+          style="display:flex;align-items:center;justify-content:center;
+                 width:28px;height:28px;border-radius:6px;border:none;
+                 background:transparent;color:var(--text-muted);cursor:pointer;
+                 transition:background .14s,color .14s;flex-shrink:0"
+          onmouseenter="this.style.background='var(--control-bg)';this.style.color='var(--text-primary)'"
+          onmouseleave="this.style.background='transparent';this.style.color='var(--text-muted)'">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="spillover-ui">
+
+        <!-- Alert banner -->
+        <div class="spillover-alert">
+          <svg class="spillover-alert-icon" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <div class="spillover-alert-body">
+            <span><b>${p.unfinishedCount} unfinished item${p.unfinishedCount!==1?'s':''}</b> found in <b>${s.name}</b></span>
+            <div class="spillover-sub">Choose where unfinished work should move.</div>
+          </div>
+        </div>
+
+        <!-- Section label -->
+        <div class="spillover-title">Move unfinished items to</div>
+
+        <!-- Option: Backlog -->
+        <label id="_sc-lbl-backlog" class="spillover-option is-selected">
+          <input type="radio" name="_sc-dest" value="backlog" id="_sc-radio-backlog"
+                 checked onchange="_scUpdateUI()"/>
+          <div class="spillover-radio-dot"></div>
+          <div class="spillover-option-body">
+            <div class="spillover-option-title">Move to Backlog</div>
+            <div class="spillover-option-desc">Remove sprint assignment. Tasks will appear in the project backlog.</div>
+          </div>
+        </label>
+
+        <!-- Option: Another Sprint -->
+        <label id="_sc-lbl-sprint" class="spillover-option"
+               style="cursor:${hasTargets?'pointer':'default'};opacity:${hasTargets?'1':'0.45'}">
+          <input type="radio" name="_sc-dest" value="sprint" id="_sc-radio-sprint"
+                 ${hasTargets?'':'disabled'} onchange="_scUpdateUI()"/>
+          <div class="spillover-radio-dot"></div>
+          <div class="spillover-option-body">
+            <div class="spillover-option-title">Move to another Sprint</div>
+            <div class="spillover-option-desc">${hasTargets?'Transfer unfinished work to an active sprint.':'No other active sprints available in this project.'}</div>
+            ${hasTargets?`
+              <select id="_sc-target-sprint" disabled>
+                <option value="" disabled selected>Select a sprint…</option>
+                ${sprintOpts}
+              </select>
+            `:''}
+          </div>
+        </label>
+
+        <!-- Footer -->
+        <div class="spillover-footer">
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="_executeSprintCompletion()">Complete Sprint</button>
+        </div>
+
+      </div>
+    </div>
+  `);
+  requestAnimationFrame(()=>_scUpdateUI());
+}
+
+// Toggle active label highlight + enable/disable sprint dropdown on radio change
+function _scUpdateUI(){
+  const isSprint=document.getElementById('_sc-radio-sprint')?.checked;
+  const sel=document.getElementById('_sc-target-sprint');
+  // Enable/disable dropdown — stays in DOM for stable layout
+  if(sel){
+    sel.disabled=!isSprint;
+    sel.style.opacity=isSprint?'1':'0.4';
+    sel.style.pointerEvents=isSprint?'auto':'none';
+    sel.style.cursor=isSprint?'pointer':'not-allowed';
+  }
+  // Toggle is-selected class on option cards (drives CSS custom radio + border)
+  const bl=document.getElementById('_sc-lbl-backlog');
+  const sl=document.getElementById('_sc-lbl-sprint');
+  if(bl) bl.classList.toggle('is-selected',!isSprint);
+  if(sl) sl.classList.toggle('is-selected',!!isSprint);
+}
+
+// Executes the transfer + marks sprint completed.
+// Reads sprint id & pending fields from window._scPending (set by saveSprint).
+function _executeSprintCompletion(){
+  const p=window._scPending;
+  if(!p){closeModal();return;}
+  const s=getSprint(p.sprintId);
+  if(!s){closeModal();return;}
+
+  const destRadio=document.querySelector('input[name="_sc-dest"]:checked');
+  const dest=destRadio?destRadio.value:'backlog';
+  const targetSprintId=dest==='sprint'
+    ?(document.getElementById('_sc-target-sprint')?.value||null)
+    :null;
+
+  if(dest==='sprint'&&!targetSprintId){
+    showNotif('⚠ Please select a target sprint','error');
+    return;
+  }
+
+  // ── Find all parent tasks that need to move ──────────────────────
+  // A parent task must move if:
+  //   (a) it is itself unfinished, OR
+  //   (b) it is done but has at least one unfinished subtask
+  // Sprint membership is tracked on the parent task only.
+  const sprintTasks=state.tasks.filter(t=>t.sprint===p.sprintId);
+  const toMove=sprintTasks.filter(t=>
+    !DONE_STATUSES.includes(t.status)||
+    (t.subtasks||[]).some(sub=>!DONE_STATUSES.includes(sub.status))
+  );
+
+  toMove.forEach(t=>{
+    t.sprint=dest==='sprint'?targetSprintId:null;
+    t.updatedAt=_now();
+    if(FirebaseDB.isReady()){
+      FirebaseDB.saveEntity('tasks',t).catch(e=>
+        console.warn('[_executeSprintCompletion] Firebase task error:',t.id,e)
+      );
+    } else {
+      PendingSyncQueue.saveEntity('tasks',t);
+    }
+  });
+
+  // ── Apply pending sprint fields + mark completed ─────────────────
+  s.name    =p.fields.name;
+  s.project =p.fields.project;
+  s.start   =p.fields.start;
+  s.end     =p.fields.end;
+  s.goal    =p.fields.goal;
+  s.status  ='completed';
+  s.updatedAt=_now();
+  invalidateStateMaps();
+
+  SyncState.markPending(s.id);
+  if(FirebaseDB.isReady()){
+    FirebaseDB.saveEntity('sprints',s).then(ok=>{
+      if(ok){ SyncState.markSynced(s.id); }
+      else  { SyncState.markFailed(s.id); PendingSyncQueue.saveEntity('sprints',s); }
+    }).catch(()=>{ SyncState.markFailed(s.id); PendingSyncQueue.saveEntity('sprints',s); });
+  } else {
+    PendingSyncQueue.saveEntity('sprints',s);
+  }
+
+  if(toMove.length) SaveManager.save();
+  window._scPending=null; // clean up stash
+  closeModal();
+  refreshAll();
+
+  const destName=dest==='sprint'
+    ?`moved to "${getSprint(targetSprintId)?.name||'sprint'}"`
+    :'moved to backlog';
+  showNotif(`Sprint completed ✓ — ${toMove.length} task${toMove.length!==1?'s':''} ${destName}`);
 }
 
 function confirmDeleteSprint(sprintId){
@@ -7184,37 +7834,40 @@ function openEditProjectModal(projId){
   const p = state.projects.find(x=>x.id===projId);
   if(!p){ showNotif('Project not found','error'); return; }
   const canDelete = RBAC.isAdmin();
+  // ── Field-freeze: completed project is fully locked ──
+  const isCompleted = isProjectCompleted(p);
+  const _pdis = (cond) => cond ? 'disabled' : '';
   openModal(`
     <div class="p-6">
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-bold text-slate-900">Edit Project</h2>
+        <h2 class="text-lg font-bold text-slate-900">Edit Project${isCompleted?' <span style="font-size:11px;font-weight:500;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;padding:2px 7px;border-radius:4px;vertical-align:middle">Completed — Locked</span>':''}</h2>
         <button onclick="closeModal()" style="color:var(--text-muted);cursor:pointer;transition:color 0.14s" onmouseenter="this.style.color='var(--text-primary)'" onmouseleave="this.style.color='var(--text-muted)'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <input type="hidden" id="ep-id" value="${p.id}"/>
       <div class="space-y-4">
         <div>
           <label>Project Name *</label>
-          <input type="text" id="ep-name" value="${p.name}"/>
+          <input type="text" id="ep-name" value="${p.name}" ${_pdis(isCompleted)}/>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Project Key *</label>
-            <input type="text" id="ep-key" value="${p.key}" maxlength="5" style="font-family:'DM Mono',monospace;text-transform:uppercase"/>
+            <input type="text" id="ep-key" value="${p.key}" maxlength="5" style="font-family:'DM Mono',monospace;text-transform:uppercase" ${_pdis(isCompleted)}/>
           </div>
           <div>
             <label>Project Color</label>
-            <input type="color" id="ep-color" value="${p.color||'#6366f1'}" style="height:38px;padding:2px 4px;cursor:pointer"/>
+            <input type="color" id="ep-color" value="${p.color||'#6366f1'}" style="height:38px;padding:2px 4px;cursor:pointer" ${_pdis(isCompleted)}/>
           </div>
         </div>
         <div>
           <label>Status</label>
-          <select id="ep-status">
+          <select id="ep-status" ${_pdis(isCompleted)}>
             ${['active','planned','on-hold','completed'].map(s=>`<option value="${s}"${p.status===s?' selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
           </select>
         </div>
         <div>
           <label>Lead</label>
-          <select id="ep-lead">
+          <select id="ep-lead" ${_pdis(isCompleted)}>
             <option value="">No lead</option>
             ${state.users.map(u=>`<option value="${u.id}"${p.lead===u.id?' selected':''}>${u.name}</option>`).join('')}
           </select>
@@ -7224,13 +7877,13 @@ function openEditProjectModal(projId){
             <label style="margin-bottom:0">Members</label>
             <span id="ep-member-count" style="font-size:11px;font-weight:600;color:var(--accent);background:rgba(91,95,199,0.08);border:1px solid rgba(91,95,199,0.14);border-radius:20px;padding:2px 9px">None selected</span>
           </div>
-          <div style="border:1px solid rgba(0,0,0,0.09);border-radius:10px;overflow:hidden;background:#fff">
+          <div style="border:1px solid rgba(0,0,0,0.09);border-radius:10px;overflow:hidden;background:#fff${isCompleted?';opacity:0.65;pointer-events:none':''}">
             ${state.users.map((u,i)=>{
               const checked=(p.memberIds||[]).includes(u.id);
               const roleLabel=u.role==='admin'?'Admin':u.role==='program_manager'?'Prog. Manager':'Team Member';
               const roleBadgeClass=u.role==='admin'?'admin':u.role==='program_manager'?'program_manager':'team_member';
-              return `<label onclick="(function(el){const cb=el.querySelector('.ep-member-check');cb.checked=!cb.checked;const isChecked=cb.checked;el.style.background=isChecked?'rgba(91,95,199,0.06)':'#fff';el.querySelector('.ep-chk-box').style.background=isChecked?'var(--accent)':'transparent';el.querySelector('.ep-chk-box').style.borderColor=isChecked?'var(--accent)':'rgba(0,0,0,0.2)';el.querySelector('.ep-chk-icon').style.opacity=isChecked?'1':'0';const total=document.querySelectorAll('.ep-member-check:checked').length;const badge=document.getElementById('ep-member-count');badge.textContent=total===0?'None selected':total+' selected';})(this.closest('label'))" style="display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-bottom:${i<state.users.length-1?'1px solid rgba(0,0,0,0.05)':'none'};background:${checked?'rgba(91,95,199,0.06)':'#fff'};transition:background 0.12s;user-select:none" onmouseenter="if(!this.querySelector('.ep-member-check').checked)this.style.background='rgba(0,0,0,0.02)'" onmouseleave="if(!this.querySelector('.ep-member-check').checked)this.style.background='#fff'">
-                <input type="checkbox" value="${u.id}" class="ep-member-check" ${checked?'checked':''} style="position:absolute;opacity:0;pointer-events:none"/>
+              return `<label onclick="${isCompleted?'':'(function(el){const cb=el.querySelector(\'.ep-member-check\');cb.checked=!cb.checked;const isChecked=cb.checked;el.style.background=isChecked?\'rgba(91,95,199,0.06)\':\'\'+\'\'\'#fff\'\'\';el.querySelector(\'.ep-chk-box\').style.background=isChecked?\'var(--accent)\':\'\'+\'\'\'transparent\'\'\';el.querySelector(\'.ep-chk-box\').style.borderColor=isChecked?\'var(--accent)\':\'\'+\'\'\'rgba(0,0,0,0.2)\'\'\';el.querySelector(\'.ep-chk-icon\').style.opacity=isChecked?\'1\':\'0\';const total=document.querySelectorAll(\'.ep-member-check:checked\').length;const badge=document.getElementById(\'ep-member-count\');badge.textContent=total===0?\'None selected\':total+\' selected\';})(this.closest(\'label\'))'}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:${isCompleted?'default':'pointer'};border-bottom:${i<state.users.length-1?'1px solid rgba(0,0,0,0.05)':'none'};background:${checked?'rgba(91,95,199,0.06)':'#fff'};transition:background 0.12s;user-select:none">
+                <input type="checkbox" value="${u.id}" class="ep-member-check" ${checked?'checked':''} style="position:absolute;opacity:0;pointer-events:none" ${_pdis(isCompleted)}/>
                 <div class="ep-chk-box" style="width:18px;height:18px;border-radius:5px;border:1.5px solid ${checked?'var(--accent)':'rgba(0,0,0,0.2)'};background:${checked?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.12s,border-color 0.12s">
                   <svg class="ep-chk-icon" width="10" height="10" viewBox="0 0 10 10" fill="none" style="opacity:${checked?'1':'0'};transition:opacity 0.12s"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
@@ -7246,7 +7899,7 @@ function openEditProjectModal(projId){
         </div>
         <div>
           <label>Description</label>
-          <textarea id="ep-desc" rows="2" placeholder="Brief description...">${p.description||''}</textarea>
+          <textarea id="ep-desc" rows="2" placeholder="Brief description..." ${_pdis(isCompleted)}>${p.description||''}</textarea>
         </div>
       </div>
       <div class="flex justify-between gap-3 mt-6 pt-4" style="border-top:1px solid rgba(0,0,0,0.05)">
@@ -7255,7 +7908,7 @@ function openEditProjectModal(projId){
         </div>
         <div class="flex gap-3">
           <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveProjectEdit()">Save Changes</button>
+          ${isCompleted?'':`<button class="btn btn-primary" onclick="saveProjectEdit()">Save Changes</button>`}
         </div>
       </div>
     </div>
@@ -7271,6 +7924,8 @@ function saveProjectEdit(){
   const p=state.projects.find(x=>x.id===id);
   if(!p){showNotif('Project not found','error');return;}
   if(!RBAC.isAdmin()&&!RBAC.canManageProject(id)){showNotif('⚠ Permission denied','error');return;}
+  // ── Completed project is fully locked ──
+  if(isProjectCompleted(p)){showNotif('⚠ Completed projects are locked and cannot be edited.','error');return;}
   const name=document.getElementById('ep-name').value.trim();
   const key=document.getElementById('ep-key').value.trim().toUpperCase();
   if(!name||!key){showNotif('⚠ Name and key required','error');return;}
@@ -7857,32 +8512,38 @@ function createEpic(){
 function openEditEpicModal(epicId){
   const e=getEpic(epicId);
   if(!e)return;
+  // ── Epic lock: if fully locked, show read-only notice and disable fields ──
+  const _epicFullyLocked=isEpicLocked(e);
+  const _epicLockedAttr=_epicFullyLocked?'disabled readonly style="opacity:0.6;pointer-events:none;cursor:not-allowed"':'';
+  const _epicSelLocked=_epicFullyLocked?'disabled':'';
+  const _epicProjBtnStyle=_epicFullyLocked?'pointer-events:none;opacity:0.6;cursor:not-allowed':'cursor:pointer';
   openModal(`
     <div class="p-6">
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-bold text-slate-900">Edit Epic</h2>
+        <h2 class="text-lg font-bold text-slate-900">Edit Epic${_epicFullyLocked?" <span style=\"font-size:11px;font-weight:500;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;padding:2px 7px;border-radius:4px;vertical-align:middle\">Locked</span>":""}</h2>
         <button onclick="closeModal()" style="color:var(--text-muted);cursor:pointer;transition:color 0.14s" onmouseenter="this.style.color='var(--text-primary)'" onmouseleave="this.style.color='var(--text-muted)'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="space-y-4">
         <div>
           <label>Epic Title *</label>
-          <input type="text" id="ee-title" value="${e.title}"/>
+          <input type="text" id="ee-title" value="${e.title}" ${_epicLockedAttr}/>
         </div>
         <div>
           <label>Description</label>
-          <textarea id="ee-desc" rows="2">${e.description||''}</textarea>
+          <textarea id="ee-desc" rows="2" ${_epicLockedAttr}>${e.description||''}</textarea>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Projects</label>
-            <div id="ee-projects-list" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0">
+            <div id="ee-projects-list" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0${_epicFullyLocked?';opacity:0.6;pointer-events:none':''}">
               ${(()=>{
                 const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
                 return state.projects.map(p=>{
                   const sel=epicProjects.includes(p.id);
                   return `<button type="button" data-proj-id="${p.id}" data-selected="${sel}"
-                    onclick="(function(btn){btn.dataset.selected=btn.dataset.selected==='true'?'false':'true';btn.style.background=btn.dataset.selected==='true'?'#eef2ff':'';btn.style.borderColor=btn.dataset.selected==='true'?'#6366f1':'var(--control-border)';btn.style.color=btn.dataset.selected==='true'?'#4338ca':'var(--text-secondary)';btn.style.fontWeight=btn.dataset.selected==='true'?'600':'400';})(this)"
-                    style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid ${sel?'#6366f1':'var(--control-border)'};background:${sel?'#eef2ff':''};cursor:pointer;font-size:12px;color:${sel?'#4338ca':'var(--text-secondary)'};font-weight:${sel?'600':'400'};transition:all 0.15s;white-space:nowrap">
+                    onclick="(function(btn){if(btn.disabled)return;btn.dataset.selected=btn.dataset.selected==='true'?'false':'true';btn.style.background=btn.dataset.selected==='true'?'#eef2ff':'';btn.style.borderColor=btn.dataset.selected==='true'?'#6366f1':'var(--control-border)';btn.style.color=btn.dataset.selected==='true'?'#4338ca':'var(--text-secondary)';btn.style.fontWeight=btn.dataset.selected==='true'?'600':'400';})(this)"
+                    ${_epicFullyLocked?'disabled':''}
+                    style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid ${sel?'#6366f1':'var(--control-border)'};background:${sel?'#eef2ff':''};${_epicProjBtnStyle};font-size:12px;color:${sel?'#4338ca':'var(--text-secondary)'};font-weight:${sel?'600':'400'};transition:all 0.15s;white-space:nowrap">
                     <span style="width:8px;height:8px;border-radius:50%;background:${p.color};display:inline-block;flex-shrink:0"></span>${p.name}
                   </button>`;
                 }).join('');
@@ -7891,7 +8552,7 @@ function openEditEpicModal(epicId){
           </div>
           <div>
             <label>Owner</label>
-            <select id="ee-owner">
+            <select id="ee-owner" ${_epicSelLocked}>
               <option value="" ${!e.ownerId?'selected':''}>No Owner</option>
               ${state.users.map(u=>`<option value="${u.id}"${u.id===e.ownerId?' selected':''}>${u.name}</option>`).join('')}
             </select>
@@ -7900,7 +8561,7 @@ function openEditEpicModal(epicId){
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Priority</label>
-            <select id="ee-priority">
+            <select id="ee-priority" ${_epicSelLocked}>
               <option value="critical"${e.priority==='critical'?' selected':''}>Critical</option>
               <option value="high"${e.priority==='high'?' selected':''}>High</option>
               <option value="medium"${e.priority==='medium'?' selected':''}>Medium</option>
@@ -7909,28 +8570,39 @@ function openEditEpicModal(epicId){
           </div>
           <div>
             <label>Status</label>
-            <select id="ee-status">
-              <option value="Planned"${e.status==='Planned'?' selected':''}>Planned</option>
-              <option value="Active"${e.status==='Active'?' selected':''}>Active</option>
-              <option value="Completed"${e.status==='Completed'?' selected':''}>Completed</option>
-              <option value="On Hold"${e.status==='On Hold'?' selected':''}>On Hold</option>
+            <select id="ee-status" ${isEpicLocked(e)?'disabled title="Epic is locked — completed and past end date"':''}>
+              ${(()=>{
+                const _ec=e.status;
+                const _allEpic=[
+                  {v:'Planned',  l:'Planned'},
+                  {v:'Active',   l:'Active'},
+                  {v:'Completed',l:'Completed'}
+                ];
+                // Forward-only: only show current status and statuses ahead of it
+                const _epicOrd=EPIC_STATUS_ORDER;
+                const _curOrd=_epicOrd[_ec]??0;
+                return _allEpic
+                  .filter(x=>(_epicOrd[x.v]??0)>=_curOrd)
+                  .map(x=>`<option value="${x.v}"${_ec===x.v?' selected':''}>${x.l}</option>`)
+                  .join('');
+              })()}
             </select>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Due Date</label>
-            <input type="date" id="ee-due" value="${e.dueDate||''}"/>
+            <input type="date" id="ee-due" value="${e.dueDate||''}" ${_epicLockedAttr}/>
           </div>
           <div>
             <label>Color</label>
-            <input type="color" id="ee-color" value="${e.color}" style="height:38px;padding:2px 4px;cursor:pointer"/>
+            <input type="color" id="ee-color" value="${e.color}" style="height:38px;padding:2px 4px;cursor:pointer" ${_epicSelLocked}/>
           </div>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4" style="border-top:1px solid rgba(0,0,0,0.05)">
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveEpic('${e.id}')">Save Changes</button>
+        ${_epicFullyLocked?'':`<button class="btn btn-primary" onclick="saveEpic('${e.id}')">Save Changes</button>`}
       </div>
     </div>
   `);
@@ -7944,13 +8616,26 @@ function saveEpic(epicId){
   const checkedBoxes=[...document.querySelectorAll('#ee-projects-list button[data-proj-id][data-selected="true"]')];
   const projectIds=checkedBoxes.map(btn=>btn.dataset.projId);
   if(!projectIds.length){showNotif('⚠ Select at least one project','error');return;}
+  // ── Epic lock check: fully locked epics cannot be saved ──
+  if(isEpicLocked(e)){
+    showNotif('⚠ This epic is locked and cannot be edited.','error');
+    return;
+  }
+  // ── Epic state transition guard ──
+  const _eeNewStatus=document.getElementById('ee-status').value;
+  const _eeStateCheck=canChangeEpicStatus(e,_eeNewStatus);
+  if(!_eeStateCheck.ok){
+    showNotif('⚠ '+_eeStateCheck.msg,'error');
+    document.getElementById('ee-status').value=e.status; // reset select
+    return;
+  }
   e.title=title;
   e.description=document.getElementById('ee-desc').value.trim();
   e.projectIds=projectIds;
   e.projectId=projectIds[0];  // backward compat: keep primary projectId in sync
   e.ownerId=document.getElementById('ee-owner').value||null;
   e.priority=document.getElementById('ee-priority').value;
-  e.status=document.getElementById('ee-status').value;
+  e.status=_eeNewStatus;
   e.dueDate=document.getElementById('ee-due').value||null;
   e.color=document.getElementById('ee-color').value;
   e.updatedAt=_now();
@@ -8576,54 +9261,75 @@ function submitCreateRelease(){
 function openEditReleaseModal(id){
   const r=getRelease(id);
   if(!r)return;
+  // ── Field-freeze: released release locks all fields EXCEPT status dropdown ──
+  const isLocked = isReleaseLocked(r);
+  const _rdis = (cond) => cond ? 'disabled' : '';
   const visibleProjects=RBAC.getVisibleProjects();
   openModal(`
     <div class="p-6">
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-bold text-slate-900">Edit Release</h2>
+        <h2 class="text-lg font-bold text-slate-900">Edit Release${isLocked?' <span style="font-size:11px;font-weight:500;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;padding:2px 7px;border-radius:4px;vertical-align:middle">Released — Locked</span>':''}</h2>
         <button onclick="closeModal()" style="color:var(--text-muted);cursor:pointer;transition:color 0.14s" onmouseenter="this.style.color='var(--text-primary)'" onmouseleave="this.style.color='var(--text-muted)'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
-          <div><label>Release Name *</label><input type="text" id="er-name" value="${r.name}"/></div>
-          <div><label>Version *</label><input type="text" id="er-version" value="${r.version}"/></div>
+          <div><label>Release Name *</label><input type="text" id="er-name" value="${r.name}" ${_rdis(isLocked)}/></div>
+          <div><label>Version *</label><input type="text" id="er-version" value="${r.version}" ${_rdis(isLocked)}/></div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div><label>Project</label>
-            <select id="er-project" onchange="_releaseProjectChanged('er')">
+            <select id="er-project" ${_rdis(isLocked)} ${isLocked?'':'onchange="_releaseProjectChanged(\'er\')"'}>
               <option value="">None</option>
               ${visibleProjects.map(p=>`<option value="${p.id}"${p.id===r.projectId?' selected':''}>${p.name}</option>`).join('')}
             </select>
           </div>
           <div><label>Sprint</label>
-            <select id="er-sprint">${_releaseSprintOptions(r.projectId||'',r.sprintId||'')}</select>
+            <select id="er-sprint" ${_rdis(isLocked)}>${_releaseSprintOptions(r.projectId||'',r.sprintId||'')}</select>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div><label>Owner</label>
-            <select id="er-owner">${_releaseOwnerOptions(r.projectId||'',r.ownerId||'')}</select>
+            <select id="er-owner" ${_rdis(isLocked)}>${_releaseOwnerOptions(r.projectId||'',r.ownerId||'')}</select>
           </div>
-          <div><label>Release Date</label><input type="date" id="er-date" value="${r.releaseDate||''}"/></div>
+          <div><label>Release Date</label><input type="date" id="er-date" value="${r.releaseDate||''}" ${_rdis(isLocked)}/></div>
         </div>
         <div><label>Status</label>
-          <select id="er-status">${RELEASE_STATUSES.map(s=>`<option value="${s}"${s===r.status?' selected':''}>${s}</option>`).join('')}</select>
+          <select id="er-status">${isLocked
+            ? '<option value="Released" selected>Released</option><option value="rollback">Rollback</option>'
+            : RELEASE_STATUSES.map(s=>`<option value="${s}"${s===r.status?' selected':''}>${s}</option>`).join('')
+          }</select>
         </div>
         <div>
           <label>Release Notes</label>
-          <textarea id="er-notes" rows="3">${r.releaseNotes||''}</textarea>
+          <textarea id="er-notes" rows="3" ${_rdis(isLocked)}>${r.releaseNotes||''}</textarea>
           <div id="er-warn-notes" class="release-warn" style="display:${(!r.releaseNotes||!r.releaseNotes.trim())?'flex':'none'}">⚠ Release notes required for tasks to be marked Released</div>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4" style="border-top:1px solid rgba(0,0,0,0.05)">
         ${RBAC.isAdmin()?`<button class="btn btn-danger text-sm" onclick="confirmDeleteRelease('${r.id}');closeModal()">Delete</button>`:''}
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="submitEditRelease('${r.id}')">Save Changes</button>
+        <button class="btn btn-primary" onclick="submitEditRelease('${r.id}')">${isLocked?'Rollback':'Save Changes'}</button>
       </div>
     </div>
   `);
 }
 
 function submitEditRelease(id){
+  const existing=getRelease(id);
+  if(!existing)return;
+  // ── Released release: only rollback is allowed ──
+  if(isReleaseLocked(existing)){
+    const selectedStatus = document.getElementById('er-status') ? document.getElementById('er-status').value : '';
+    if(selectedStatus==='rollback'){
+      updateRelease(id,{ status:'active', taskIds:existing.taskIds });
+      closeModal();
+      renderReleaseBoard();
+      showNotif('Release rolled back','success');
+      return;
+    }
+    showNotif('⚠ Released releases are locked and cannot be edited.','error');
+    return;
+  }
   const name=document.getElementById('er-name').value.trim();
   const version=document.getElementById('er-version').value.trim();
   if(!name){showNotif('⚠ Release name required','error');return;}
@@ -8631,7 +9337,6 @@ function submitEditRelease(id){
   const notes=document.getElementById('er-notes').value.trim();
   document.getElementById('er-warn-notes').style.display=notes?'none':'flex';
   // Preserve existing taskIds — mapping is done via queue only
-  const existing=getRelease(id);
   updateRelease(id,{
     name,version,
     projectId:document.getElementById('er-project').value||null,
