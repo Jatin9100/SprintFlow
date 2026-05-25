@@ -6,6 +6,7 @@
 <title>SprintFlow v26 — Sprint Planning</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -73,6 +74,11 @@ document.addEventListener('DOMContentLoaded', function() {
     Chart.defaults.elements.point.hoverRadius = 5.5;
     Chart.defaults.elements.point.borderWidth = 0;
     Chart.defaults.elements.arc.borderWidth = 0;
+    // Register datalabels plugin — disabled globally; Reports charts opt-in explicitly
+    if (typeof ChartDataLabels !== 'undefined') {
+      Chart.register(ChartDataLabels);
+      Chart.defaults.plugins.datalabels = { display: false };
+    }
   }
 });
 </script>
@@ -1570,21 +1576,11 @@ document.addEventListener('DOMContentLoaded', function() {
               </button>
               <!-- ── DIVIDER ── -->
               <div style="height:1px;background:rgba(0,0,0,0.055);margin:5px 0"></div>
-              <!-- ── EXCEL EXPORT SECTION ── -->
+              <!-- ── DATABASE EXPORT SECTION ── -->
               <div style="margin:4px 10px 3px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:#94a3b8;display:flex;align-items:center;gap:5px">
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
                 Excel Export
               </div>
-              <!-- Analytics -->
-              <button onclick="exportReportExcel('analytics')" id="rpt-menu-analytics-btn" style="display:flex;align-items:center;gap:9px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:12px;font-weight:600;color:#1e293b;font-family:'DM Sans',sans-serif;transition:background 0.13s" onmouseover="this.style.background='rgba(245,158,11,0.07)'" onmouseout="this.style.background='none'">
-                <div style="width:28px;height:28px;border-radius:7px;background:rgba(245,158,11,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                </div>
-                <span>
-                  <span style="display:block">Export Analytics</span>
-                  <span style="font-size:10px;font-weight:500;color:#64748b">KPIs, velocity &amp; metrics</span>
-                </span>
-              </button>
               <!-- Full Database — triggers date range modal -->
               <button onclick="openExportDateRangeModal('full')" id="rpt-menu-full-btn" style="display:flex;align-items:center;gap:9px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:12px;font-weight:600;color:#1e293b;font-family:'DM Sans',sans-serif;transition:background 0.13s" onmouseover="this.style.background='rgba(99,102,241,0.07)'" onmouseout="this.style.background='none'">
                 <div style="width:28px;height:28px;border-radius:7px;background:rgba(99,102,241,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -1593,16 +1589,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span>
                   <span style="display:block">Export Full Database</span>
                   <span style="font-size:10px;font-weight:500;color:#64748b">All data, tasks, sprints, epics</span>
-                </span>
-              </button>
-              <!-- Audit Logs — triggers date range modal — Admin only -->
-              <button onclick="openExportDateRangeModal('audit')" id="rpt-menu-audit-btn" style="display:flex;align-items:center;gap:9px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;border-radius:8px;font-size:12px;font-weight:600;color:#1e293b;font-family:'DM Sans',sans-serif;transition:background 0.13s" onmouseover="this.style.background='rgba(168,85,247,0.07)'" onmouseout="this.style.background='none'">
-                <div style="width:28px;height:28px;border-radius:7px;background:rgba(168,85,247,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                </div>
-                <span>
-                  <span style="display:block">Export Audit Logs</span>
-                  <span style="font-size:10px;font-weight:500;color:#64748b">Enterprise activity tracking</span>
                 </span>
               </button>
             </div>
@@ -1655,12 +1641,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="chart-container"><canvas id="burndownChart"></canvas></div>
         </div>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div class="card">
-          <div class="card-title" style="margin-bottom:4px">Commitment vs Completion</div>
-          <div class="card-subtitle" style="margin-bottom:16px">How accurately sprints are planned</div>
-          <div class="chart-container"><canvas id="commitCompChart"></canvas></div>
-        </div>
+      <div class="grid grid-cols-1 gap-6 mb-6">
         <div class="card">
           <div class="card-title" style="margin-bottom:4px">Sprint Spillover</div>
           <div class="card-subtitle" style="margin-bottom:16px">Incomplete tasks carried over between sprints</div>
@@ -1694,8 +1675,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <select id="rpt-prod-sort" class="sf-select sf-select-sm" onchange="renderProductivityTable()">
               <option value="completed">Sort: Completed</option>
               <option value="active">Sort: Active Tasks</option>
-              <option value="points">Sort: Story Points</option>
+              <option value="points">Sort: Points Completed</option>
               <option value="reopen">Sort: QA Reopens</option>
+              <option value="workload">Sort: Workload</option>
             </select>
           </div>
         </div>
@@ -1707,6 +1689,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;text-align:right" onclick="setSortProd('completed')">Completed</th>
                 <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;text-align:right" onclick="setSortProd('active')">Active</th>
                 <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;text-align:right" onclick="setSortProd('points')">Pts Completed</th>
+                <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;text-align:right">Pts Assigned</th>
                 <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;text-align:right" onclick="setSortProd('reopen')">QA Reopens</th>
                 <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px" >Workload</th>
               </tr>
@@ -2115,7 +2098,10 @@ const RBAC = (function(){
     if(isAdmin()) return state.epics || [];
     const ids = _visibleProjectIds();
     if(!ids) return state.epics || [];
-    return (state.epics || []).filter(e => ids.includes(e.projectId));
+    return (state.epics || []).filter(e => {
+      const epicProjects = e.projectIds || (e.projectId ? [e.projectId] : []);
+      return epicProjects.some(pid => ids.includes(pid));
+    });
   }
 
   // Returns true when the current user can create/edit a sprint/release/epic
@@ -3812,7 +3798,10 @@ function renderDashboard(){
   if(sprintFilter!=='all') _sprints=_sprints.filter(s=>s.id===sprintFilter);
 
   let _epics=(state.epics||[]);
-  if(projFilter!=='all') _epics=_epics.filter(e=>e.projectId===projFilter);
+  if(projFilter!=='all') _epics=_epics.filter(e=>{
+    const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
+    return epicProjects.includes(projFilter);
+  });
 
   let _releases=(state.releases||[]);
   if(projFilter!=='all') _releases=_releases.filter(r=>r.projectId===projFilter);
@@ -3925,52 +3914,129 @@ function renderDashboard(){
       }).join('')
     :`<div class="empty-state py-6"><div class="text-sm">No tasks yet</div><button class="btn btn-secondary text-xs mt-2" onclick="openCreateTaskModal()">Create first task →</button></div>`;
 
+  // ── Single dashboard dataset — tasks + subtasks combined ──
+  const dashboardSubs = (_tasks).flatMap(t => t.subtasks || []);
+  const dashboardItems = [..._tasks, ...dashboardSubs];
+
+  // Status counts from dashboardItems (tasks + subtasks) for accurate chart data
+  const di_open            = dashboardItems.filter(x => x.status === 'open').length;
+  const di_devInProgress   = dashboardItems.filter(x => x.status === 'dev-in-progress').length;
+  const di_devCompleted    = dashboardItems.filter(x => x.status === 'dev-completed').length;
+  const di_inQA            = dashboardItems.filter(x => x.status === 'in-qa').length;
+  const di_qaInProgress    = dashboardItems.filter(x => x.status === 'qa-in-progress').length;
+  const di_reopen          = dashboardItems.filter(x => x.status === 'reopen').length;
+  const di_pendingClient   = dashboardItems.filter(x => x.status === 'pending-with-client').length;
+  const di_readyForProd    = dashboardItems.filter(x => x.status === 'ready-for-prod').length;
+  const di_released        = dashboardItems.filter(x => DONE_STATUSES.includes(x.status)).length;
+
   // ── Destroy existing dashboard charts before recreating (prevents duplicate instances) ──
   // v27: fingerprint-guarded — only rebuild if data changed
-  const _sprintChartSig = [openTasks,devInProgressTasks,devCompletedTasks,inQATasks,qaInProgressTasks,reopenTasks,pendingClientTasks,readyForProdTasks,releasedTasks];
+  const _sprintChartSig = [di_open,di_devInProgress,di_devCompleted,di_inQA,di_qaInProgress,di_reopen,di_pendingClient,di_readyForProd,di_released];
   const _sprintChartChanged = _chartDataChanged('dash_sprintProgress', _sprintChartSig);
   if(_sprintChartChanged){
     ['sprintProgress'].forEach(k=>{ if(charts[k]){try{charts[k].destroy();}catch(e){}delete charts[k];} });
   }
 
-  // Sprint Progress Chart (dynamic)
+  // ── Sprint Progress Chart — uses dashboardItems counts, no overlapping labels ──
   const spCtx=_getCtx('sprintProgressChart');
-  const chartLabels=['Open','Dev In Progress','Dev Completed','In QA','QA In Progress','Reopen','Pending Client','Ready for Prod','Released'];
-  const chartData=_sprintChartSig;
-  const chartColors=['rgba(148,163,184,0.72)','rgba(59,130,246,0.75)','rgba(99,102,241,0.75)','rgba(217,119,6,0.75)','rgba(234,88,12,0.75)','rgba(239,68,68,0.75)','rgba(202,138,4,0.75)','rgba(5,150,105,0.75)','rgba(22,163,74,0.75)'];
+  // Build label+data pairs and filter out zero-value statuses
+  const _spAllPairs = [
+    ['Open',            di_open,          'rgba(148,163,184,0.72)'],
+    ['Dev In Progress', di_devInProgress,  'rgba(59,130,246,0.75)'],
+    ['Dev Completed',   di_devCompleted,   'rgba(99,102,241,0.75)'],
+    ['In QA',           di_inQA,           'rgba(217,119,6,0.75)'],
+    ['QA In Progress',  di_qaInProgress,   'rgba(234,88,12,0.75)'],
+    ['Reopen',          di_reopen,         'rgba(239,68,68,0.75)'],
+    ['Pending Client',  di_pendingClient,  'rgba(202,138,4,0.75)'],
+    ['Ready for Prod',  di_readyForProd,   'rgba(5,150,105,0.75)'],
+    ['Released',        di_released,       'rgba(22,163,74,0.75)'],
+  ].filter(p => p[1] > 0);
+  const chartLabels = _spAllPairs.map(p => p[0]);
+  const chartData   = _spAllPairs.map(p => p[1]);
+  const chartColors = _spAllPairs.map(p => p[2]);
   if(spCtx && _sprintChartChanged) charts.sprintProgress=new Chart(spCtx,{
     type:'bar',
     data:{
       labels:chartLabels,
-      datasets:[{label:'Tasks',data:chartData,backgroundColor:chartColors,borderRadius:7,borderSkipped:false}]
+      datasets:[{label:'Work Items',data:chartData,backgroundColor:chartColors,borderRadius:7,borderSkipped:false}]
     },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(14,16,26,0.88)',titleFont:{family:'DM Sans',size:12,weight:'600'},bodyFont:{family:'DM Sans',size:11},padding:{top:9,bottom:9,left:12,right:12},cornerRadius:8,borderColor:'rgba(255,255,255,0.08)',borderWidth:1,titleColor:'#e8eaf4',bodyColor:'#a0a8c8'}},scales:{x:{grid:{display:false},border:{display:false},ticks:{font:{family:'DM Sans',size:11},color:'#9399b0',maxRotation:35,minRotation:25}},y:{grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},border:{display:false},ticks:{font:{family:'DM Sans',size:11},color:'#9399b0',stepSize:1}}}}
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        datalabels:{display:false},
+        tooltip:{backgroundColor:'rgba(14,16,26,0.88)',titleFont:{family:'DM Sans',size:12,weight:'600'},bodyFont:{family:'DM Sans',size:11},padding:{top:9,bottom:9,left:12,right:12},cornerRadius:8,borderColor:'rgba(255,255,255,0.08)',borderWidth:1,titleColor:'#e8eaf4',bodyColor:'#a0a8c8'}
+      },
+      scales:{
+        x:{
+          grid:{display:false},
+          border:{display:false},
+          ticks:{autoSkip:false,maxRotation:25,minRotation:25,font:{family:'DM Sans',size:10},color:'#9399b0'}
+        },
+        y:{
+          beginAtZero:true,
+          grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},
+          border:{display:false},
+          ticks:{precision:0,font:{family:'DM Sans',size:11},color:'#9399b0'}
+        }
+      }
+    }
   });
 
-  // Task dist doughnut
-  const _tdSig = [releasedTasks,devInProgressTasks,allQATasks,readyForProdTasks,openTasks];
+  // ── Task Status donut — uses dashboardItems, hides zero-value slices ──
+  let statusData = [
+    {label:'Released',      color:'#10b981', value: di_released},
+    {label:'Dev In Progress',color:'#3b82f6', value: di_devInProgress},
+    {label:'In QA',         color:'#f59e0b', value: di_inQA + di_qaInProgress},
+    {label:'Ready for Prod',color:'#059669', value: di_readyForProd},
+    {label:'Reopen',        color:'#ef4444', value: di_reopen},
+    {label:'Pending Client',color:'#ca8a04', value: di_pendingClient},
+    {label:'Dev Completed', color:'#6366f1', value: di_devCompleted},
+    {label:'Open',          color:'#94a3b8', value: di_open},
+  ];
+  // Remove zero-value statuses so they don't pollute legend or chart
+  statusData = statusData.filter(x => x.value > 0);
+
+  const _tdSig = statusData.map(x => x.value);
   const _tdChanged = _chartDataChanged('dash_taskDist', _tdSig);
   if(_tdChanged){ ['taskDist'].forEach(k=>{ if(charts[k]){try{charts[k].destroy();}catch(e){}delete charts[k];} }); }
   const tdCtx=_getCtx('taskDistChart');
   if(tdCtx && _tdChanged) charts.taskDist=new Chart(tdCtx,{
     type:'doughnut',
     data:{
-      labels:['Released','Dev In Progress','In QA','Ready for Prod','Open'],
-      datasets:[{data:_tdSig,backgroundColor:['#10b981','#3b82f6','#f59e0b','#059669','#94a3b8'],borderWidth:0,borderRadius:3,hoverOffset:6}]
+      labels: statusData.map(x => x.label),
+      datasets:[{
+        data: statusData.map(x => x.value),
+        backgroundColor: statusData.map(x => x.color),
+        borderWidth:0,borderRadius:3,hoverOffset:6
+      }]
     },
-    options:{responsive:true,maintainAspectRatio:false,cutout:'74%',plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(14,16,26,0.88)',titleFont:{family:'DM Sans',size:12,weight:'600'},bodyFont:{family:'DM Sans',size:11},padding:{top:9,bottom:9,left:12,right:12},cornerRadius:8,borderColor:'rgba(255,255,255,0.08)',borderWidth:1,titleColor:'#e8eaf4',bodyColor:'#a0a8c8'}}}
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      cutout:'74%',
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          display:(ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
+          color:'#fff',
+          font:{size:10,weight:'700'},
+          formatter:(value,ctx) => {
+            const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+            return Math.round((value/total)*100) + '%';
+          }
+        },
+        tooltip:{backgroundColor:'rgba(14,16,26,0.88)',titleFont:{family:'DM Sans',size:12,weight:'600'},bodyFont:{family:'DM Sans',size:11},padding:{top:9,bottom:9,left:12,right:12},cornerRadius:8,borderColor:'rgba(255,255,255,0.08)',borderWidth:1,titleColor:'#e8eaf4',bodyColor:'#a0a8c8'}
+      }
+    }
   });
   const _taskDistLegend=document.getElementById('task-dist-legend');
-  if(_taskDistLegend) _taskDistLegend.innerHTML=[
-    ['Released','#16a34a',releasedTasks],
-    ['Dev In Progress','#2563eb',devInProgressTasks],
-    ['QA (all)','#f59e0b',allQATasks],
-    ['Ready for Prod','#059669',readyForProdTasks],
-    ['Open','#94a3b8',openTasks]
-  ].map(([label,color,count])=>`<div class="flex justify-between items-center" style="font-size:11.5px;color:var(--text-secondary)">
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block"></span>${label}</span>
-    <span class="font-semibold">${count} tasks</span>
-  </div>`).join('');
+  if(_taskDistLegend) _taskDistLegend.innerHTML=statusData
+    .map(({label,color,value})=>`<div class="flex justify-between items-center" style="font-size:11.5px;color:var(--text-secondary)">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block"></span>${label}</span>
+      <span class="font-semibold">${value} items</span>
+    </div>`).join('');
   }catch(e){console.warn('[Render] renderDashboard error:',e);}
 }
 
@@ -4031,7 +4097,6 @@ function renderProjects(){
         <div class="flex items-center gap-2">
           ${RBAC.isAdmin()||RBAC.canManageProject(p.id)?`<button class="btn btn-ghost" style="height:28px;padding:0 9px;font-size:11.5px;color:var(--text-tertiary)" onclick="event.stopPropagation();openEditProjectModal('${p.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>`:''}
           ${RBAC.isAdmin()?`<button class="btn btn-danger" style="height:28px;padding:0 9px;font-size:11.5px" onclick="event.stopPropagation();deleteProject('${p.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>Del</button>`:''}
-          <button class="text-xs text-indigo-600 font-medium hover:text-indigo-800" onclick="navigate('kanban')">Open Board →</button>
         </div>
       </div>
     </div>`;
@@ -4074,7 +4139,11 @@ function renderBacklog(){
 
   // Populate epic dropdown
   if(epicFilterEl){
-    const relevantEpics=(state.epics||[]).filter(e=>currentProj==='all'||e.projectId===currentProj);
+    const relevantEpics=(state.epics||[]).filter(e=>{
+      if(currentProj==='all') return true;
+      const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
+      return epicProjects.includes(currentProj);
+    });
     epicFilterEl.innerHTML=`<option value="all">All Epics</option>`+relevantEpics.map(e=>`<option value="${e.id}"${e.id===currentEpic?' selected':''}>${e.title}</option>`).join('');
   }
 
@@ -4089,7 +4158,11 @@ function renderBacklog(){
 
   if(groupBy==='epic'){
     // Group by epic
-    const epicsToShow=(state.epics||[]).filter(e=>currentProj==='all'||e.projectId===currentProj);
+    const epicsToShow=(state.epics||[]).filter(e=>{
+      if(currentProj==='all') return true;
+      const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
+      return epicProjects.includes(currentProj);
+    });
     // Pre-index tasks by epicId to avoid repeated filter passes
     const tasksByEpic=new Map();
     tasks.forEach(t=>{
@@ -4469,7 +4542,11 @@ function renderKanban(){
   // Populate epic filter
   if(epicFilterEl){
     const prevEpic=epicFilterEl.value;
-    const relevantEpics=(state.epics||[]).filter(e=>sprint&&e.projectId===sprint.project);
+    const relevantEpics=(state.epics||[]).filter(e=>{
+      if(!sprint) return false;
+      const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
+      return epicProjects.includes(sprint.project);
+    });
     epicFilterEl.innerHTML=`<option value="all">All Epics</option>`+relevantEpics.map(e=>`<option value="${e.id}"${e.id===prevEpic?' selected':''}>${e.title}</option>`).join('');
   }
   const epicFilter=epicFilterEl?epicFilterEl.value:'all';
@@ -4904,7 +4981,10 @@ function _getFilteredReportsData(){
   if(sid&&sid!=='all') sprints=sprints.filter(s=>s.id===sid);
 
   let epics=RBAC.getVisibleEpics();
-  if(pid&&pid!=='all') epics=epics.filter(e=>e.projectId===pid);
+  if(pid&&pid!=='all') epics=epics.filter(e=>{
+    const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
+    return epicProjects.includes(pid);
+  });
   if(f.epic&&f.epic!=='all') epics=epics.filter(e=>e.id===f.epic);
 
   let projects=RBAC.getVisibleProjects();
@@ -5001,21 +5081,29 @@ function _chartOpts(extra){
 
 function renderProductivityTable(){
   try{
+  // Read sort value directly from dropdown so onchange works without setSortProd
+  const sortSel=document.getElementById('rpt-prod-sort');
+  if(sortSel&&sortSel.value) _rptProdSort=sortSel.value;
   const _rt=_rptFilteredTasks(RBAC.getVisibleTasks(state.tasks));
   const tbody=document.getElementById('rpt-prod-tbody');
   if(!tbody)return;
   const rows=state.users.map(u=>{
-    const allTasks=_rt.filter(t=>t.assignee===u.id);
-    const allTaskSubs=(allTasks).flatMap(t=>t.subtasks||[]);
-    const completed=allTasks.filter(t=>DONE_STATUSES.includes(t.status)).length;
-    const active=allTasks.filter(t=>['dev-in-progress','qa-in-progress','in-qa'].includes(t.status)).length;
-    const points=allTasks.filter(t=>DONE_STATUSES.includes(t.status)).reduce((a,t)=>a+(t.points||0),0)+allTaskSubs.filter(s=>DONE_STATUSES.includes(s.status)).reduce((a,s)=>a+(s.points||0),0);
-    const totalPts=allTasks.reduce((a,t)=>a+(t.points||0),0)+allTaskSubs.reduce((a,s)=>a+(s.points||0),0);
-    const reopen=allTasks.filter(t=>t.status==='reopen').length;
-    const pct=allTasks.length?Math.round((completed/allTasks.length)*100):0;
-    return {u,completed,active,points,totalPts,reopen,pct,total:allTasks.length};
+    // Collect all tasks assigned to this member
+    const assignedTasks=_rt.filter(t=>t.assignee===u.id);
+    // Collect all subtasks assigned to this member (across all tasks)
+    const assignedSubs=_rt.flatMap(t=>t.subtasks||[]).filter(s=>s.assignee===u.id);
+    // Combined assigned items
+    const assignedItems=[...assignedTasks,...assignedSubs];
+    const completed=assignedItems.filter(i=>DONE_STATUSES.includes(i.status)).length;
+    const active=assignedItems.filter(i=>!DONE_STATUSES.includes(i.status)).length;
+    const points=assignedItems.filter(i=>DONE_STATUSES.includes(i.status)).reduce((a,i)=>a+(i.points||0),0);
+    const totalPts=assignedItems.filter(i=>!DONE_STATUSES.includes(i.status)).reduce((a,i)=>a+(i.points||0),0);
+    const assignedPts=assignedItems.reduce((a,i)=>a+(i.points||0),0);
+    const reopen=assignedTasks.filter(t=>t.status==='reopen').length;
+    const pct=assignedItems.length?Math.round((completed/assignedItems.length)*100):0;
+    return {u,completed,active,points,assignedPts,totalPts,reopen,pct,total:assignedItems.length};
   });
-  const sortFn={completed:(a,b)=>b.completed-a.completed,active:(a,b)=>b.active-a.active,points:(a,b)=>b.points-a.points,reopen:(a,b)=>b.reopen-a.reopen,name:(a,b)=>a.u.name.localeCompare(b.u.name)};
+  const sortFn={completed:(a,b)=>b.completed-a.completed,active:(a,b)=>b.active-a.active,points:(a,b)=>b.points-a.points,reopen:(a,b)=>b.reopen-a.reopen,workload:(a,b)=>b.totalPts-a.totalPts,name:(a,b)=>a.u.name.localeCompare(b.u.name)};
   rows.sort(sortFn[_rptProdSort]||sortFn.completed);
   const maxPts=Math.max(1,...rows.map(r=>r.totalPts));
   tbody.innerHTML=rows.map(r=>`<tr style="border-bottom:1px solid rgba(0,0,0,0.04)">
@@ -5023,12 +5111,13 @@ function renderProductivityTable(){
     <td style="padding:10px 12px;text-align:right;font-weight:700;color:#10b981">${r.completed}</td>
     <td style="padding:10px 12px;text-align:right;font-weight:600;color:#2563eb">${r.active}</td>
     <td style="padding:10px 12px;text-align:right;font-weight:700;color:#6366f1">${r.points}<span style="font-size:11px;font-weight:400;color:#94a3b8"> pts</span></td>
+    <td style="padding:10px 12px;text-align:right;font-weight:600;color:#475569">${r.assignedPts}<span style="font-size:11px;font-weight:400;color:#94a3b8"> pts</span></td>
     <td style="padding:10px 12px;text-align:right;font-weight:${r.reopen>0?'700':'400'};color:${r.reopen>0?'#ef4444':'#64748b'}">${r.reopen}</td>
     <td style="padding:10px 12px;min-width:120px"><div style="display:flex;align-items:center;gap:8px">
       <div style="flex:1;height:6px;background:rgba(0,0,0,0.07);border-radius:3px;overflow:hidden"><div style="height:100%;border-radius:3px;background:${r.u.color};width:${maxPts?Math.round((r.totalPts/maxPts)*100):0}%;transition:width 0.4s"></div></div>
       <span style="font-size:11px;font-weight:600;color:#64748b;white-space:nowrap">${r.totalPts}sp</span>
     </div></td>
-  </tr>`).join('')||`<tr><td colspan="6" style="padding:24px;text-align:center;color:#94a3b8;font-size:13px">No team members</td></tr>`;
+  </tr>`).join('')||`<tr><td colspan="7" style="padding:24px;text-align:center;color:#94a3b8;font-size:13px">No team members</td></tr>`;
   }catch(e){console.warn('[Render] renderProductivityTable error:',e);}
 }
 
@@ -5071,10 +5160,21 @@ function renderReports(){
   const _rp=fd.projects;
   const _rl=fd.releases;
 
+  // ── reportItems: parent tasks + subtasks for report calculations ──
+  // Subtasks inherit project/sprint/epic from parent so all filter dimensions work correctly.
+  const reportSubs=(_rt||[]).flatMap(t=>(t.subtasks||[]).map(st=>({
+    ...st,
+    parentTaskId:t.id,
+    project:st.project||t.project,
+    sprint:st.sprint||t.sprint,
+    epicId:st.epicId||t.epicId
+  })));
+  const reportItems=[...(_rt||[]),...reportSubs];
+
   // ── KPI: row 1 ──
   const activeSprints=_rs.filter(s=>s.status==='active');
-  const openTasks=_rt.filter(t=>t.status==='open').length;
-  const releasedTasks=_rt.filter(t=>DONE_STATUSES.includes(t.status)).length;
+  const openTasks=reportItems.filter(item=>item.status==='open').length;
+  const releasedTasks=reportItems.filter(item=>DONE_STATUSES.includes(item.status)).length;
   const openBugs=_rt.filter(t=>t.type==='bug'&&!DONE_STATUSES.includes(t.status)).length;
   const setEl=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   setEl('rpt-kpi-projects',_rp.length);
@@ -5082,12 +5182,9 @@ function renderReports(){
   setEl('rpt-kpi-sprints',activeSprints.length);
   setEl('rpt-kpi-sprints-sub',activeSprints.length?`${activeSprints.map(s=>s.name.split(' ').slice(0,2).join(' ')).join(', ')}`:'No active sprints');
   setEl('rpt-kpi-open',openTasks);
-  setEl('rpt-kpi-open-sub',`${_rt.filter(t=>t.status==='dev-in-progress').length} in dev`);
+  setEl('rpt-kpi-open-sub',`${reportItems.filter(item=>item.status==='dev-in-progress').length} in dev`);
   setEl('rpt-kpi-released',releasedTasks);
-  const _rptAllSubs=(_rt).flatMap(t=>t.subtasks||[]);
-  const _rptTotalWithSubs=_rt.length+_rptAllSubs.length;
-  const _rptDoneWithSubs=releasedTasks+_rptAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
-  setEl('rpt-kpi-released-sub',_rptTotalWithSubs?`${Math.round((_rptDoneWithSubs/_rptTotalWithSubs)*100)}% of total`:'—');
+  setEl('rpt-kpi-released-sub',reportItems.length?`${Math.round((releasedTasks/reportItems.length)*100)}% of total`:'—');
   setEl('rpt-kpi-bugs',openBugs);
   setEl('rpt-kpi-bugs-sub',`${_rt.filter(t=>t.type==='bug'&&t.priority==='critical').length} critical`);
 
@@ -5107,13 +5204,13 @@ function renderReports(){
   setEl('rpt-kpi-release-ready',relReady+'%');
   const rrBar=document.getElementById('rpt-kpi-release-ready-bar');if(rrBar)rrBar.style.width=relReady+'%';
 
-  const reopenCount=_rt.filter(t=>t.status==='reopen').length;
-  const qaTotal=_rt.filter(t=>['in-qa','qa-in-progress','reopen'].includes(t.status)).length+(releasedTasks);
+  const reopenCount=reportItems.filter(item=>item.status==='reopen').length;
+  const qaTotal=reportItems.filter(item=>['in-qa','qa-in-progress','reopen'].includes(item.status)).length+(releasedTasks);
   const reopenRate=qaTotal?Math.round((reopenCount/qaTotal)*100):0;
   setEl('rpt-kpi-reopen',reopenRate+'%');
   setEl('rpt-kpi-reopen-sub',`${reopenCount} reopen task${reopenCount!==1?'s':''}`);
 
-  const avgPts=_rt.length?Math.round(_rt.reduce((a,t)=>a+(t.points||0),0)/_rt.length*10)/10:0;
+  const avgPts=reportItems.length?Math.round(reportItems.reduce((a,item)=>a+(item.points||0),0)/reportItems.length*10)/10:0;
   setEl('rpt-kpi-avg-time',avgPts);
   setEl('rpt-kpi-avg-time-sub','avg story points / task');
 
@@ -5122,7 +5219,7 @@ function renderReports(){
   _rptHealthDot('qa', reopenRate<=10?'green':reopenRate<=25?'yellow':'red', reopenRate+'% reopen rate');
   const relBlockers=_rl.filter(r=>!r.releaseNotes||!r.taskIds||!r.taskIds.length).length;
   _rptHealthDot('release', relBlockers===0?'green':relBlockers<=2?'yellow':'red', relBlockers+' blocker'+(relBlockers!==1?'s':''));
-  const _userLoadArr=(state.users||[]).map(u=>(_rt||[]).filter(t=>t.assignee===u.id).reduce((a,t)=>a+(t.points||0),0));
+  const _userLoadArr=(state.users||[]).map(u=>reportItems.filter(item=>item.assignee===u.id).reduce((a,item)=>a+(item.points||0),0));
   const maxLoad=_userLoadArr.length?Math.max(1,..._userLoadArr):1;
   const minLoad=_userLoadArr.length?Math.min(..._userLoadArr):0;
   const imbalance=(state.users||[]).length>1?Math.round(((maxLoad-minLoad)/maxLoad)*100):0;
@@ -5131,18 +5228,18 @@ function renderReports(){
   // ── Destroy existing report charts before recreating (prevents duplicate instances) ──
   // v27-fix: always destroy+recreate — fingerprint+early-return caused blank charts on
   // filter changes and page revisits due to stale/detached canvas contexts.
-  ['velocity','burndown','commitComp','spillover','workload','typeChart','projDist','sprintHealth','relComp','relAging','epicCompletion','epicWorkload','epicVelocity'].forEach(k=>{
+  ['velocity','burndown','spillover','workload','typeChart','projDist','sprintHealth','relComp','relAging','epicCompletion','epicWorkload','epicVelocity'].forEach(k=>{
     if(charts[k]){try{charts[k].destroy();}catch(e){}delete charts[k];}
   });
 
   // ── VELOCITY TREND ──
-  // NOTE: sprintLabels, committed, completedPts are declared here (outside the if-block)
-  // because they are also consumed by the Commitment vs Completion chart below.
   const sprintLabels=_rs.map(s=>s.name.length>14?s.name.slice(0,13)+'…':s.name);
   const committed=_rs.map(s=>{const sTsks=_rt.filter(t=>t.sprint===s.id);return sTsks.reduce((a,t)=>a+(t.points||0),0)+(sTsks).flatMap(t=>t.subtasks||[]).reduce((a,s)=>a+(s.points||0),0);});
   const completedPts=_rs.map(s=>{const sTsks=_rt.filter(t=>t.sprint===s.id);return sTsks.filter(t=>DONE_STATUSES.includes(t.status)).reduce((a,t)=>a+(t.points||0),0)+(sTsks).flatMap(t=>t.subtasks||[]).filter(s=>DONE_STATUSES.includes(s.status)).reduce((a,s)=>a+(s.points||0),0);});
   const vCtx=_getCtx('velocityChart');
   if(vCtx){
+    const _vOpts=_chartOpts();
+    _vOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'start',offset:4,clamp:true,clip:false,color:'#fff',font:{size:10,weight:'700'},formatter:v=>v};_vOpts.layout={padding:{top:8}};
   charts.velocity=new Chart(vCtx,{
     type:'bar',
     data:{
@@ -5152,7 +5249,7 @@ function renderReports(){
         {label:'Completed',data:completedPts.length?completedPts:[0],backgroundColor:'rgba(99,102,241,0.75)',borderRadius:4}
       ]
     },
-    options:_chartOpts()
+    options:_vOpts
   });
   }
 
@@ -5163,7 +5260,10 @@ function renderReports(){
   const totalPts=_bsTasks.reduce((a,t)=>a+(t.points||0),0)+_bsAllSubs.reduce((a,s)=>a+(s.points||0),0);
   const donePts=_bsTasks.filter(t=>DONE_STATUSES.includes(t.status)).reduce((a,t)=>a+(t.points||0),0)+_bsAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).reduce((a,s)=>a+(s.points||0),0);
   const bCtx=_getCtx('burndownChart');
-  if(bCtx) charts.burndown=new Chart(bCtx,{
+  if(bCtx){
+    const _bOpts=_chartOpts();
+    _bOpts.plugins.datalabels={display:ctx=>{const v=ctx.dataset.data[ctx.dataIndex];return v!=null&&v>0;},align:'top',anchor:'end',offset:6,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v};_bOpts.layout={padding:{top:24}};
+    charts.burndown=new Chart(bCtx,{
     type:'line',
     data:{
       labels:['Day 1','Day 3','Day 5','Day 7','Day 9','Day 11','Day 14'],
@@ -5172,70 +5272,59 @@ function renderReports(){
         {label:'Actual',data:[totalPts,null,Math.max(0,totalPts-donePts),null,null,null,null],borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,0.06)',fill:true,borderWidth:2.5,tension:0.3,pointRadius:3,pointBackgroundColor:'#6366f1'}
       ]
     },
-    options:_chartOpts()
+    options:_bOpts
   });
-
-  // ── COMMITMENT vs COMPLETION ──
-  const ccCtx=_getCtx('commitCompChart');
-  const ccRatio=_rs.map((s,i)=>{
-    const c=committed[i]||0;
-    const d=completedPts[i]||0;
-    return c?Math.round((d/c)*100):0;
-  });
-  if(ccCtx) charts.commitComp=new Chart(ccCtx,{
-    type:'line',
-    data:{
-      labels:sprintLabels.length?sprintLabels:['No Sprints'],
-      datasets:[
-        {label:'Accuracy %',data:ccRatio.length?ccRatio:[0],borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.08)',fill:true,tension:0.3,borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#10b981'},
-        {label:'Target 100%',data:_rs.map(()=>100),borderColor:'#e2e8f0',borderDash:[4,4],borderWidth:1.5,tension:0,pointRadius:0}
-      ]
-    },
-    options:_chartOpts({scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{min:0,max:130,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11},callback:v=>v+'%'}}}})
-  });
+  }
 
   // ── SPILLOVER ──
   const soCtx=_getCtx('spilloverChart');
   const soData=_rs.map(s=>{
     const sEnd=s.end?new Date(s.end):null;
     if(!sEnd||s.status==='active')return 0;
-    return _rt.filter(t=>t.sprint===s.id&&!['released','ready-for-prod'].includes(t.status)).length;
+    const sTasks=_rt.filter(t=>t.sprint===s.id);
+    const sAllSubs=sTasks.flatMap(t=>t.subtasks||[]);
+    return [...sTasks,...sAllSubs].filter(item=>!DONE_STATUSES.includes(item.status)).length;
   });
-  if(soCtx) charts.spillover=new Chart(soCtx,{
+  if(soCtx){
+    const _soOpts=_chartOpts();
+    _soOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'top',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v,padding:{top:2,bottom:2,left:3,right:3}};_soOpts.layout={padding:{top:24}};
+    charts.spillover=new Chart(soCtx,{
     type:'bar',
     data:{
       labels:sprintLabels.length?sprintLabels:['No Sprints'],
       datasets:[{label:'Spilled Tasks',data:soData.length?soData:[0],backgroundColor:'rgba(239,68,68,0.6)',borderRadius:4}]
     },
-    options:_chartOpts()
+    options:_soOpts
   });
+  }
 
   // ── WORKLOAD ──
   const users=(state.users||[]);
-  const wLoads=users.map(u=>{
-    const uTasks=_rt.filter(t=>t.assignee===u.id);
-    const uSubs=(uTasks).flatMap(t=>t.subtasks||[]).filter(s=>s.assignee===u.id||(s.assignee==null&&t.assignee===u.id));
-    return uTasks.reduce((a,t)=>a+(t.points||0),0)+uSubs.reduce((a,s)=>a+(s.points||0),0);
-  });
+  // reportItems includes both tasks and subtasks (with inherited assignee/points fields)
+  const wLoads=users.map(u=>reportItems.filter(item=>item.assignee===u.id).reduce((a,item)=>a+(item.points||0),0));
   const wCtx=_getCtx('workloadChart');
-  if(wCtx) charts.workload=new Chart(wCtx,{
-    type:'bar',
-    data:{
-      labels:users.map(u=>u.name.split(' ')[0]),
-      datasets:[{label:'Story Points',data:wLoads,backgroundColor:users.map(u=>u.color+'cc'),borderRadius:6}]
-    },
-    options:_chartOpts({plugins:{legend:{display:false}}})
-  });
+  if(wCtx){
+    const _wOpts=_chartOpts({plugins:{legend:{display:false}}});
+    _wOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'top',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v,padding:{top:2,bottom:2,left:3,right:3}};_wOpts.layout={padding:{top:24}};
+    charts.workload=new Chart(wCtx,{
+      type:'bar',
+      data:{
+        labels:users.map(u=>u.name.split(' ')[0]),
+        datasets:[{label:'Story Points',data:wLoads,backgroundColor:users.map(u=>u.color+'cc'),borderRadius:6}]
+      },
+      options:_wOpts
+    });
+  }
 
   // ── TYPE CHART ──
-  const story=_rt.filter(t=>t.type==='story').length;
-  const task=_rt.filter(t=>t.type==='task').length;
-  const bug=_rt.filter(t=>t.type==='bug').length;
+  const story=reportItems.filter(t=>t.type==='story').length;
+  const task=reportItems.filter(t=>t.type==='task').length;
+  const bug=reportItems.filter(t=>t.type==='bug').length;
   const tCtx=_getCtx('typeChart');
   if(tCtx) charts.typeChart=new Chart(tCtx,{
     type:'doughnut',
     data:{labels:['Stories','Tasks','Bugs'],datasets:[{data:[story,task,bug],backgroundColor:['#7c3aed','#0369a1','#dc2626'],borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(14,16,26,0.88)',titleFont:{family:'DM Sans',size:12,weight:'600'},bodyFont:{family:'DM Sans',size:11},padding:{top:9,bottom:9,left:12,right:12},cornerRadius:8,borderColor:'rgba(255,255,255,0.08)',borderWidth:1,titleColor:'#e8eaf4',bodyColor:'#a0a8c8'}}}
+    options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(14,16,26,0.88)',titleFont:{family:'DM Sans',size:12,weight:'600'},bodyFont:{family:'DM Sans',size:11},padding:{top:9,bottom:9,left:12,right:12},cornerRadius:8,borderColor:'rgba(255,255,255,0.08)',borderWidth:1,titleColor:'#e8eaf4',bodyColor:'#a0a8c8'},datalabels:{display:ctx=>{const data=ctx.dataset.data;const total=data.reduce((a,b)=>a+b,0);const val=data[ctx.dataIndex];return total>0&&((val/total)*100)>=5;},color:'#fff',font:{size:11,weight:'700'},formatter:(value,ctx)=>{const total=ctx.dataset.data.reduce((a,b)=>a+b,0);const pct=Math.round((value/total)*100);return pct+'%';}}}}
   });
   const _typeLegendEl=document.getElementById('type-chart-legend');
   if(_typeLegendEl) _typeLegendEl.innerHTML=[['Stories','#7c3aed',story],['Tasks','#0369a1',task],['Bugs','#dc2626',bug]]
@@ -5246,18 +5335,22 @@ function renderReports(){
 
   // ── PROJECT DIST CHART ──
   const pdCtx=_getCtx('projDistChart');
-  if(pdCtx) charts.projDist=new Chart(pdCtx,{
+  if(pdCtx){
+    const _pdOpts=_chartOpts();
+    _pdOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'start',offset:4,clamp:true,clip:false,color:'#fff',font:{size:10,weight:'700'},formatter:v=>v};_pdOpts.layout={padding:{top:8}};
+    charts.projDist=new Chart(pdCtx,{
     type:'bar',
     data:{
       labels:_rp.map(p=>p.name.length>12?p.name.slice(0,11)+'…':p.name),
       datasets:[
-        {label:'Open',data:_rp.map(p=>_rt.filter(t=>t.project===p.id&&t.status==='open').length),backgroundColor:'rgba(245,158,11,0.7)',borderRadius:4},
-        {label:'In Progress',data:_rp.map(p=>_rt.filter(t=>t.project===p.id&&['dev-in-progress','in-qa','qa-in-progress'].includes(t.status)).length),backgroundColor:'rgba(99,102,241,0.7)',borderRadius:4},
-        {label:'Released',data:_rp.map(p=>_rt.filter(t=>t.project===p.id&&DONE_STATUSES.includes(t.status)).length),backgroundColor:'rgba(16,185,129,0.7)',borderRadius:4}
+        {label:'Open',data:_rp.map(p=>reportItems.filter(item=>item.project===p.id&&item.status==='open').length),backgroundColor:'rgba(245,158,11,0.7)',borderRadius:4},
+        {label:'In Progress',data:_rp.map(p=>reportItems.filter(item=>item.project===p.id&&['dev-in-progress','dev-completed','in-qa','qa-in-progress','reopen','pending-with-client'].includes(item.status)).length),backgroundColor:'rgba(99,102,241,0.7)',borderRadius:4},
+        {label:'Released',data:_rp.map(p=>reportItems.filter(item=>item.project===p.id&&DONE_STATUSES.includes(item.status)).length),backgroundColor:'rgba(16,185,129,0.7)',borderRadius:4}
       ]
     },
-    options:_chartOpts()
+    options:_pdOpts
   });
+  }
 
   // ── SPRINT HEALTH per PROJECT ──
   const shCtx=_getCtx('sprintHealthChart');
@@ -5269,24 +5362,33 @@ function renderReports(){
     const pDone=pTasks.filter(t=>DONE_STATUSES.includes(t.status)).length+pAllSubs.filter(s=>DONE_STATUSES.includes(s.status)).length;
     return pTotalWithSubs?Math.round((pDone/pTotalWithSubs)*100):0;
   });
-  if(shCtx) charts.sprintHealth=new Chart(shCtx,{
+  if(shCtx){
+    const _shOpts=_chartOpts({plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{max:100,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11},callback:v=>v+'%'}}}});
+    _shOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'top',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v+'%',padding:{top:2,bottom:2,left:3,right:3}};_shOpts.layout={padding:{top:24}};
+    charts.sprintHealth=new Chart(shCtx,{
     type:'bar',
     data:{
       labels:_rp.map(p=>p.name.length>12?p.name.slice(0,11)+'…':p.name),
       datasets:[{label:'Sprint Completion %',data:shData,backgroundColor:shData.map(v=>v>=70?'rgba(16,185,129,0.7)':v>=40?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.6)'),borderRadius:6}]
     },
-    options:_chartOpts({plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{max:100,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11},callback:v=>v+'%'}}}})
+    options:_shOpts
   });
+  }
 
   // ── PROJECT DETAIL TABLE ──
   const projTbody=document.getElementById('rpt-proj-tbody');
   if(projTbody){
     projTbody.innerHTML=_rp.map(p=>{
       const pTasks=_rt.filter(t=>t.project===p.id);
-      const pEpics=(state.epics||[]).filter(e=>e.projectId===p.id);
+      const pAllSubs=pTasks.flatMap(t=>(t.subtasks||[]).map(st=>({...st,project:st.project||t.project})));
+      const pItems=[...pTasks,...pAllSubs];
+      const pEpics=(state.epics||[]).filter(e=>{
+        const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
+        return epicProjects.includes(p.id);
+      });
       const pRels=_rl.filter(r=>r.projectId===p.id);
-      const overdueCount=pTasks.filter(t=>t.dueDate&&new Date(t.dueDate)<new Date()&&!DONE_STATUSES.includes(t.status)).length;
-      const blockedReopen=pTasks.filter(t=>t.status==='reopen').length;
+      const overdueCount=pItems.filter(t=>t.dueDate&&new Date(t.dueDate)<new Date()&&!DONE_STATUSES.includes(t.status)).length;
+      const blockedReopen=pItems.filter(t=>t.status==='reopen').length;
       const epicDone=pEpics.filter(e=>e.status==='Completed').length;
       const epicComp=pEpics.length?Math.round((epicDone/pEpics.length)*100):0;
       const relDone2=pRels.flatMap(r=>r.taskIds||[]).map(id=>pTasks.find(t=>t.id===id)).filter(t=>t&&DONE_STATUSES.includes(t.status)).length;
@@ -5300,7 +5402,7 @@ function renderReports(){
       const pSpPct=pSpTotalWithSubs?Math.round((pSpDone/pSpTotalWithSubs)*100):0;
       return `<tr style="border-bottom:1px solid rgba(0,0,0,0.04)">
         <td style="padding:10px 12px"><div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:${p.color};flex-shrink:0"></div><span style="font-weight:600;color:#1e293b">${p.name}</span></div></td>
-        <td style="padding:10px 12px;text-align:right;color:#64748b;font-size:13px">${pTasks.length}</td>
+        <td style="padding:10px 12px;text-align:right;color:#64748b;font-size:13px">${pItems.length}</td>
         <td style="padding:10px 12px;text-align:right"><span style="font-weight:${overdueCount>0?'700':'400'};color:${overdueCount>0?'#ef4444':'#64748b'}">${overdueCount}</span></td>
         <td style="padding:10px 12px;text-align:right"><span style="font-weight:${blockedReopen>0?'700':'400'};color:${blockedReopen>0?'#f59e0b':'#64748b'}">${blockedReopen}</span></td>
         <td style="padding:10px 12px;text-align:right"><div style="display:flex;align-items:center;justify-content:flex-end;gap:6px"><span style="font-weight:600;color:#6366f1">${epicComp}%</span><span style="font-size:11px;color:#94a3b8">${epicDone}/${pEpics.length}</span></div></td>
@@ -5331,14 +5433,18 @@ function renderReports(){
     const rDone=rTasks.filter(t=>DONE_STATUSES.includes(t.status)).length;
     return rTasks.length?Math.round((rDone/rTasks.length)*100):0;
   });
-  if(rcCtx) charts.relComp=new Chart(rcCtx,{
+  if(rcCtx){
+    const _rcOpts=_chartOpts({plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{max:100,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11},callback:v=>v+'%'}}}});
+    _rcOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'top',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v+'%',padding:{top:2,bottom:2,left:3,right:3}};_rcOpts.layout={padding:{top:24}};
+    charts.relComp=new Chart(rcCtx,{
     type:'bar',
     data:{
       labels:rlAbbrv.length?rlAbbrv:['No Releases'],
       datasets:[{label:'Completion %',data:rlPcts.length?rlPcts:[0],backgroundColor:rlPcts.map(v=>v===100?'rgba(16,185,129,0.7)':v>=50?'rgba(99,102,241,0.7)':'rgba(245,158,11,0.65)'),borderRadius:6}]
     },
-    options:_chartOpts({plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{max:100,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11},callback:v=>v+'%'}}}})
+    options:_rcOpts
   });
+  }
 
   // ── RELEASE AGING ──
   const raCtx=_getCtx('relAgingChart');
@@ -5347,14 +5453,18 @@ function renderReports(){
     const created=r.createdAt?new Date(r.createdAt).getTime():now;
     return Math.max(0,Math.round((now-created)/(1000*60*60*24)));
   });
-  if(raCtx) charts.relAging=new Chart(raCtx,{
+  if(raCtx){
+    const _raOpts=_chartOpts({plugins:{legend:{display:false}}});
+    _raOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'top',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v+'d',padding:{top:2,bottom:2,left:3,right:3}};_raOpts.layout={padding:{top:24}};
+    charts.relAging=new Chart(raCtx,{
     type:'bar',
     data:{
       labels:rlAbbrv.length?rlAbbrv:['No Releases'],
       datasets:[{label:'Days since creation',data:agingDays.length?agingDays:[0],backgroundColor:agingDays.map(d=>d>60?'rgba(239,68,68,0.65)':d>30?'rgba(245,158,11,0.65)':'rgba(99,102,241,0.65)'),borderRadius:6}]
     },
-    options:_chartOpts({plugins:{legend:{display:false}}})
+    options:_raOpts
   });
+  }
 
   // ── EPIC CHARTS — use _re (already filtered by _getFilteredReportsData) ──
   // For counts/points, scope to filtered tasks only
@@ -5363,12 +5473,20 @@ function renderReports(){
   const epicColors=epics.map(e=>e.color);
   const ecDone=epics.map(e=>{
     const eTasks=_rt.filter(t=>t.epicId===e.id);
-    return eTasks.filter(t=>['released','ready-for-prod'].includes(t.status)).length;
+    const eSubs=eTasks.flatMap(t=>t.subtasks||[]);
+    return [...eTasks,...eSubs].filter(item=>DONE_STATUSES.includes(item.status)).length;
   });
-  const ecTotal=epics.map(e=>_rt.filter(t=>t.epicId===e.id).length);
+  const ecTotal=epics.map(e=>{
+    const eTasks=_rt.filter(t=>t.epicId===e.id);
+    const eSubs=eTasks.flatMap(t=>t.subtasks||[]);
+    return eTasks.length+eSubs.length;
+  });
   const ecRemaining=ecTotal.map((t,i)=>t-ecDone[i]);
   const ecCtx=_getCtx('epicCompletionChart');
-  if(ecCtx) charts.epicCompletion=new Chart(ecCtx,{
+  if(ecCtx){
+    const _ecOpts=_chartOpts({scales:{x:{stacked:true,grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{stacked:true,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11},stepSize:1}}}});
+    _ecOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'center',align:'center',clamp:true,color:ctx=>{const bg=ctx.dataset.backgroundColor;return typeof bg==='string'&&bg.includes('e2e8f0')?'#64748b':'#fff';},font:{size:10,weight:'700'},formatter:v=>v};
+    charts.epicCompletion=new Chart(ecCtx,{
     type:'bar',
     data:{
       labels:epicLabels.length?epicLabels:['No Epics'],
@@ -5377,19 +5495,39 @@ function renderReports(){
         {label:'Remaining',data:ecRemaining.length?ecRemaining:[0],backgroundColor:'#e2e8f0',borderRadius:4}
       ]
     },
-    options:_chartOpts({scales:{x:{stacked:true,grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{stacked:true,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11},stepSize:1}}}})
+    options:_ecOpts
   });
-  const ewPts=epics.map(e=>_rt.filter(t=>t.epicId===e.id).reduce((a,t)=>a+(t.points||0),0));
+  }
+  const ewPts=epics.map(e=>{
+    const eTasks=_rt.filter(t=>t.epicId===e.id);
+    const eSubs=eTasks.flatMap(t=>t.subtasks||[]);
+    return [...eTasks,...eSubs].reduce((a,item)=>a+(item.points||0),0);
+  });
   const ewCtx=_getCtx('epicWorkloadChart');
-  if(ewCtx) charts.epicWorkload=new Chart(ewCtx,{
+  if(ewCtx){
+    const _ewOpts=_chartOpts({plugins:{legend:{display:false}}});
+    _ewOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'top',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v,padding:{top:2,bottom:2,left:3,right:3}};_ewOpts.layout={padding:{top:24}};
+    charts.epicWorkload=new Chart(ewCtx,{
     type:'bar',
     data:{labels:epicLabels.length?epicLabels:['No Epics'],datasets:[{label:'Story Points',data:ewPts.length?ewPts:[0],backgroundColor:epicColors.length?epicColors.map(c=>c+'bb'):['#e2e8f0'],borderRadius:6}]},
-    options:_chartOpts({plugins:{legend:{display:false}}})
+    options:_ewOpts
   });
-  const evDone=epics.map(e=>_rt.filter(t=>t.epicId===e.id&&['released','ready-for-prod'].includes(t.status)).reduce((a,t)=>a+(t.points||0),0));
-  const evRemaining=epics.map(e=>_rt.filter(t=>t.epicId===e.id&&!['released','ready-for-prod'].includes(t.status)).reduce((a,t)=>a+(t.points||0),0));
+  }
+  const evDone=epics.map(e=>{
+    const eTasks=_rt.filter(t=>t.epicId===e.id);
+    const eSubs=eTasks.flatMap(t=>t.subtasks||[]);
+    return [...eTasks,...eSubs].filter(item=>DONE_STATUSES.includes(item.status)).reduce((a,item)=>a+(item.points||0),0);
+  });
+  const evRemaining=epics.map(e=>{
+    const eTasks=_rt.filter(t=>t.epicId===e.id);
+    const eSubs=eTasks.flatMap(t=>t.subtasks||[]);
+    return [...eTasks,...eSubs].filter(item=>!DONE_STATUSES.includes(item.status)).reduce((a,item)=>a+(item.points||0),0);
+  });
   const evCtx=_getCtx('epicVelocityChart');
-  if(evCtx) charts.epicVelocity=new Chart(evCtx,{
+  if(evCtx){
+    const _evOpts=_chartOpts({scales:{x:{stacked:true,grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{stacked:true,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11}}}}});
+    _evOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'center',align:'center',clamp:true,color:ctx=>{const bg=ctx.dataset.backgroundColor;return typeof bg==='string'&&bg.includes('f1f5f9')?'#64748b':'#fff';},font:{size:10,weight:'700'},formatter:v=>v};
+    charts.epicVelocity=new Chart(evCtx,{
     type:'bar',
     data:{
       labels:epicLabels.length?epicLabels:['No Epics'],
@@ -5398,8 +5536,9 @@ function renderReports(){
         {label:'Remaining',data:evRemaining.length?evRemaining:[0],backgroundColor:'rgba(241,245,249,1)',borderRadius:4}
       ]
     },
-    options:_chartOpts({scales:{x:{stacked:true,grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{stacked:true,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11}}}}})
+    options:_evOpts
   });
+  }
   }catch(e){console.warn('[Render] renderReports error:',e);}
 }
 
@@ -6331,7 +6470,11 @@ function ctOnProjectChange(projectId){
   const epicSel = document.getElementById('ct-epic');
   if(epicSel){
     const prevEpic = epicSel.value;
-    const projectEpics = (state.epics||[]).filter(e=>!projectId||e.projectId===projectId);
+    const projectEpics = (state.epics||[]).filter(e=>{
+      if(!projectId) return true;
+      const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
+      return epicProjects.includes(projectId);
+    });
     epicSel.innerHTML = `<option value="">No Epic</option>` + projectEpics.map(e=>`<option value="${e.id}"${e.id===prevEpic?' selected':''}>◈ ${e.title}</option>`).join('');
   }
   ctOnSprintChange(sprintSel.value);
@@ -6463,7 +6606,11 @@ function openEditTaskModal(taskId){
     return;
   }
   const sprintOptsHtml = _sprintOptionsForProject(t.project, t.sprint||'');
-  const projectEpics = (state.epics||[]).filter(e=>!t.project||e.projectId===t.project);
+  const projectEpics = (state.epics||[]).filter(e=>{
+    if(!t.project) return true;
+    const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
+    return epicProjects.includes(t.project);
+  });
   const isBacklog = !t.sprint;
   openModal(`
     <div class="p-6">
@@ -6599,7 +6746,11 @@ function etOnProjectChange(projectId){
   const epicSel = document.getElementById('et-epic');
   if(epicSel){
     const prevEpic = epicSel.value;
-    const projectEpics = (state.epics||[]).filter(e=>!projectId||e.projectId===projectId);
+    const projectEpics = (state.epics||[]).filter(e=>{
+      if(!projectId) return true;
+      const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
+      return epicProjects.includes(projectId);
+    });
     epicSel.innerHTML = `<option value="">No Epic</option>` + projectEpics.map(e=>`<option value="${e.id}"${e.id===prevEpic?' selected':''}>◈ ${e.title}</option>`).join('');
   }
   etOnSprintChange(sprintSel.value);
@@ -7510,7 +7661,10 @@ function renderEpics(){
   }
 
   let epics=state.epics;
-  if(currentProj!=='all') epics=epics.filter(e=>e.projectId===currentProj);
+  if(currentProj!=='all') epics=epics.filter(e=>{
+    const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
+    return epicProjects.includes(currentProj);
+  });
   if(currentStatus!=='all') epics=epics.filter(e=>e.status===currentStatus);
 
   const subtitle=document.getElementById('epics-subtitle');
@@ -7603,10 +7757,14 @@ function openCreateEpicModal(){
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label>Project</label>
-            <select id="ce-project">
-              ${state.projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
-            </select>
+            <label>Projects</label>
+            <div id="ce-projects-list" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0">
+              ${state.projects.map(p=>`<button type="button" data-proj-id="${p.id}" data-selected="false"
+                onclick="(function(btn){btn.dataset.selected=btn.dataset.selected==='true'?'false':'true';btn.style.background=btn.dataset.selected==='true'?'#eef2ff':'';btn.style.borderColor=btn.dataset.selected==='true'?'#6366f1':'var(--control-border)';btn.style.color=btn.dataset.selected==='true'?'#4338ca':'var(--text-secondary)';btn.style.fontWeight=btn.dataset.selected==='true'?'600':'400';})(this)"
+                style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid var(--control-border);background:'';cursor:pointer;font-size:12px;color:var(--text-secondary);font-weight:400;transition:all 0.15s;white-space:nowrap">
+                <span style="width:8px;height:8px;border-radius:50%;background:${p.color};display:inline-block;flex-shrink:0"></span>${p.name}
+              </button>`).join('')}
+            </div>
           </div>
           <div>
             <label>Owner</label>
@@ -7658,15 +7816,17 @@ function openCreateEpicModal(){
 function createEpic(){
   const title=document.getElementById('ce-title').value.trim();
   if(!title){showNotif('⚠ Epic title required','error');return;}
-  const projectId=document.getElementById('ce-project').value;
-  if(!projectId){showNotif('⚠ Select a project','error');return;}
+  const checkedBoxes=[...document.querySelectorAll('#ce-projects-list button[data-proj-id][data-selected="true"]')];
+  const projectIds=checkedBoxes.map(btn=>btn.dataset.projId);
+  if(!projectIds.length){showNotif('⚠ Select at least one project','error');return;}
   if(!state.epics)state.epics=[];
   const now=_now();
   const epic={
     id:epid(),
     title,
     description:document.getElementById('ce-desc').value.trim(),
-    projectId,
+    projectId:projectIds[0],  // backward compat: keep primary projectId
+    projectIds,
     ownerId:document.getElementById('ce-owner').value||null,
     priority:document.getElementById('ce-priority').value,
     status:document.getElementById('ce-status').value,
@@ -7714,10 +7874,20 @@ function openEditEpicModal(epicId){
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label>Project</label>
-            <select id="ee-project">
-              ${state.projects.map(p=>`<option value="${p.id}"${p.id===e.projectId?' selected':''}>${p.name}</option>`).join('')}
-            </select>
+            <label>Projects</label>
+            <div id="ee-projects-list" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0">
+              ${(()=>{
+                const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
+                return state.projects.map(p=>{
+                  const sel=epicProjects.includes(p.id);
+                  return `<button type="button" data-proj-id="${p.id}" data-selected="${sel}"
+                    onclick="(function(btn){btn.dataset.selected=btn.dataset.selected==='true'?'false':'true';btn.style.background=btn.dataset.selected==='true'?'#eef2ff':'';btn.style.borderColor=btn.dataset.selected==='true'?'#6366f1':'var(--control-border)';btn.style.color=btn.dataset.selected==='true'?'#4338ca':'var(--text-secondary)';btn.style.fontWeight=btn.dataset.selected==='true'?'600':'400';})(this)"
+                    style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid ${sel?'#6366f1':'var(--control-border)'};background:${sel?'#eef2ff':''};cursor:pointer;font-size:12px;color:${sel?'#4338ca':'var(--text-secondary)'};font-weight:${sel?'600':'400'};transition:all 0.15s;white-space:nowrap">
+                    <span style="width:8px;height:8px;border-radius:50%;background:${p.color};display:inline-block;flex-shrink:0"></span>${p.name}
+                  </button>`;
+                }).join('');
+              })()}
+            </div>
           </div>
           <div>
             <label>Owner</label>
@@ -7771,9 +7941,13 @@ function saveEpic(epicId){
   if(!e)return;
   const title=document.getElementById('ee-title').value.trim();
   if(!title){showNotif('⚠ Title required','error');return;}
+  const checkedBoxes=[...document.querySelectorAll('#ee-projects-list button[data-proj-id][data-selected="true"]')];
+  const projectIds=checkedBoxes.map(btn=>btn.dataset.projId);
+  if(!projectIds.length){showNotif('⚠ Select at least one project','error');return;}
   e.title=title;
   e.description=document.getElementById('ee-desc').value.trim();
-  e.projectId=document.getElementById('ee-project').value;
+  e.projectIds=projectIds;
+  e.projectId=projectIds[0];  // backward compat: keep primary projectId in sync
   e.ownerId=document.getElementById('ee-owner').value||null;
   e.priority=document.getElementById('ee-priority').value;
   e.status=document.getElementById('ee-status').value;
@@ -9596,25 +9770,25 @@ async function _pdfBuildSprintAnalytics(doc, meta, chartImages) {
   }
   cy += chartH + 32;
 
-  // Row 2: Commitment vs Completion + Spillover
-  const charts2 = ['commitCompChart', 'spilloverChart'];
-  const titles2 = ['Commitment vs Completion — Planning Accuracy', 'Sprint Spillover — Incomplete Tasks Carried Over'];
-  for (let i = 0; i < 2; i++) {
-    const cx2 = x + i * (halfW + 10);
+  // Row 2: Spillover (full width)
+  const charts2 = ['spilloverChart'];
+  const titles2 = ['Sprint Spillover — Incomplete Tasks Carried Over'];
+  {
+    const cx2 = x;
     doc.setFillColor(...PDF_CARD_BG);
-    doc.roundedRect(cx2, cy, halfW, chartH + 24, 6, 6, 'F');
+    doc.roundedRect(cx2, cy, w, chartH + 24, 6, 6, 'F');
     doc.setDrawColor(...PDF_LINE_COLOR);
     doc.setLineWidth(0.4);
-    doc.roundedRect(cx2, cy, halfW, chartH + 24, 6, 6, 'S');
+    doc.roundedRect(cx2, cy, w, chartH + 24, 6, 6, 'S');
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...PDF_TEXT_DARK);
-    doc.text(titles2[i], cx2 + 8, cy + 14, { maxWidth: halfW - 16 });
-    if (chartImages[charts2[i]]) {
-      _pdfInsertChart(doc, chartImages[charts2[i]], cx2 + 6, cy + 18, halfW - 12, chartH);
+    doc.text(titles2[0], cx2 + 8, cy + 14, { maxWidth: w - 16 });
+    if (chartImages[charts2[0]]) {
+      _pdfInsertChart(doc, chartImages[charts2[0]], cx2 + 6, cy + 18, w - 12, chartH);
     } else {
       doc.setFontSize(8); doc.setTextColor(...PDF_TEXT_LIGHT);
-      doc.text('Chart data unavailable', cx2 + halfW/2, cy + chartH/2 + 18, { align:'center' });
+      doc.text('Chart data unavailable', cx2 + w/2, cy + chartH/2 + 18, { align:'center' });
     }
   }
 }
@@ -10017,7 +10191,7 @@ async function exportReportPDF() {
 
       // ── 2. Capture all charts independently ─────────────────────────
       const chartIds = [
-        'velocityChart','burndownChart','commitCompChart','spilloverChart',
+        'velocityChart','burndownChart','spilloverChart',
         'workloadChart','typeChart',
         'projDistChart','sprintHealthChart',
         'relCompChart','relAgingChart',
@@ -10418,26 +10592,43 @@ function _xlFilename(mode) {
  */
 function _xlGetData(mode) {
   const isVisible  = (mode === 'visible');
+  const isFull     = (mode === 'full');
   const lu         = _xlLookup();
 
-  // Start from RBAC-visible base
-  let tasks    = RBAC.getVisibleTasks(state.tasks    || []);
-  let sprints  = RBAC.getVisibleSprints();
-  let projects = RBAC.getVisibleProjects();
-  let epics    = RBAC.getVisibleEpics();
-  let releases = RBAC.getVisibleReleases();
+  let tasks, sprints, projects, epics, releases;
 
-  // Apply active report filters if mode === 'visible'
-  if (isVisible) {
-    const fd = _getFilteredReportsData();
-    tasks    = fd.tasks;
-    sprints  = fd.sprints;
-    projects = fd.projects;
-    epics    = fd.epics;
-    releases = fd.releases;
+  if (isFull) {
+    // ── FULL mode: always use live Firebase-backed state — never filtered/cached data ──
+    tasks    = state.tasks    || [];
+    sprints  = state.sprints  || [];
+    projects = state.projects || [];
+    epics    = state.epics    || [];
+    releases = state.releases || [];
+  } else {
+    // Start from RBAC-visible base
+    tasks    = RBAC.getVisibleTasks(state.tasks || []);
+    sprints  = RBAC.getVisibleSprints();
+    projects = RBAC.getVisibleProjects();
+    epics    = RBAC.getVisibleEpics();
+    releases = RBAC.getVisibleReleases();
+
+    // Apply active report filters if mode === 'visible'
+    if (isVisible) {
+      const fd = _getFilteredReportsData();
+      tasks    = fd.tasks;
+      sprints  = fd.sprints;
+      projects = fd.projects;
+      epics    = fd.epics;
+      releases = fd.releases;
+    }
   }
 
-  return { tasks, sprints, projects, epics, releases, users: state.users || [], lu };
+  // Build flat subtasks array from all tasks
+  const subtasks = tasks.flatMap(t =>
+    (t.subtasks || []).map(s => ({ ...s, _parentTask: t }))
+  );
+
+  return { tasks, subtasks, sprints, projects, epics, releases, users: state.users || [], lu };
 }
 
 // ── SHEET BUILDERS ───────────────────────────────────────────────────────
@@ -10450,19 +10641,22 @@ function _xlSheetCover(mode, data) {
   const modeLabel = { visible: 'Visible Data', full: 'Full Database', analytics: 'Analytics Only' }[mode] || mode;
   const role  = RBAC.isAdmin() ? 'Admin' : RBAC.isProgramManager() ? 'Program Manager' : 'Team Member';
 
+  const allWorkItemsCount = data.tasks.length + (data.subtasks ? data.subtasks.length : data.tasks.flatMap(t => t.subtasks || []).length);
   const aoa = [
     ['SprintFlow — Enterprise Analytics Report'],
     [],
-    ['Export Mode',   modeLabel],
-    ['Generated By',  user],
-    ['Role',          role],
-    ['Export Date',   _xlFmtDate(now)],
-    ['Total Tasks',   data.tasks.length],
-    ['Total Sprints', data.sprints.length],
-    ['Total Projects',data.projects.length],
-    ['Total Epics',   data.epics.length],
-    ['Total Releases',data.releases.length],
-    ['Total Members', data.users.length],
+    ['Export Mode',         modeLabel],
+    ['Generated By',        user],
+    ['Role',                role],
+    ['Export Date',         _xlFmtDate(now)],
+    ['Total Work Items',    allWorkItemsCount],
+    ['  → Parent Tasks',   data.tasks.length],
+    ['  → Subtasks',       allWorkItemsCount - data.tasks.length],
+    ['Total Sprints',       data.sprints.length],
+    ['Total Projects',      data.projects.length],
+    ['Total Epics',         data.epics.length],
+    ['Total Releases',      data.releases.length],
+    ['Total Members',       data.users.length],
     [],
     ['CONFIDENTIAL — For internal use only'],
   ];
@@ -10474,156 +10668,145 @@ function _xlSheetCover(mode, data) {
 
 /** Sheet 2: Summary — KPI executive snapshot */
 function _xlSheetSummary(data) {
-  const { tasks, sprints, projects, releases } = data;
+  const { tasks, subtasks, sprints, projects, releases } = data;
 
+  // ── Use one common source array so totals always reconcile ──
+  const allWorkItems   = [...tasks, ...subtasks];
   const activeSprints  = sprints.filter(s => s.status === 'active').length;
-  const openTasks      = tasks.filter(t => t.status === 'open').length;
-  const inProgress     = tasks.filter(t => ['dev-in-progress','dev-completed','in-qa','qa-in-progress'].includes(t.status)).length;
-  const _expSubs2      = tasks.flatMap(t => t.subtasks || []);
-  const releasedTasks  = tasks.filter(t => DONE_STATUSES.includes(t.status)).length + _expSubs2.filter(s => DONE_STATUSES.includes(s.status)).length;
-  const reopenTasks    = tasks.filter(t => t.status === 'reopen').length;
-  const readyForProd   = tasks.filter(t => t.status === 'ready-for-prod').length + _expSubs2.filter(s => s.status === 'ready-for-prod').length;
+  const openTasks      = allWorkItems.filter(t => t.status === 'open').length;
+  const inProgress     = allWorkItems.filter(t => ['dev-in-progress','dev-completed','in-qa','qa-in-progress'].includes(t.status)).length;
+  const releasedTasks  = allWorkItems.filter(t => DONE_STATUSES.includes(t.status)).length;
+  const reopenTasks    = allWorkItems.filter(t => t.status === 'reopen').length;
+  const readyForProd   = allWorkItems.filter(t => t.status === 'ready-for-prod').length;
   const openBugs       = tasks.filter(t => t.type === 'bug' && !DONE_STATUSES.includes(t.status)).length;
   const critBugs       = tasks.filter(t => t.type === 'bug' && t.priority === 'critical').length;
-  const totalPts       = tasks.reduce((a, t) => a + (t.points || 0), 0) + _expSubs2.reduce((a, s) => a + (s.points || 0), 0);
-  const donePts        = tasks.filter(t => DONE_STATUSES.includes(t.status)).reduce((a, t) => a + (t.points || 0), 0) + _expSubs2.filter(s => DONE_STATUSES.includes(s.status)).reduce((a, s) => a + (s.points || 0), 0);
-  const totalWithSubs  = tasks.length + _expSubs2.length;
+  const totalPts       = allWorkItems.reduce((a, t) => a + (t.points || 0), 0);
+  const donePts        = allWorkItems.filter(t => DONE_STATUSES.includes(t.status)).reduce((a, t) => a + (t.points || 0), 0);
+  const totalWithSubs  = allWorkItems.length;
   const sprintComp     = totalWithSubs ? Math.round((releasedTasks / totalWithSubs) * 100) : 0;
-  const qaTotal        = tasks.filter(t => ['in-qa','qa-in-progress','reopen'].includes(t.status)).length + tasks.filter(t => DONE_STATUSES.includes(t.status)).length;
+  const qaTotal        = allWorkItems.filter(t => ['in-qa','qa-in-progress','reopen'].includes(t.status)).length + allWorkItems.filter(t => DONE_STATUSES.includes(t.status)).length;
   const reopenRate     = qaTotal ? Math.round((reopenTasks / qaTotal) * 100) : 0;
   const relTaskIds     = releases.flatMap(r => r.taskIds || []);
   const relDone        = relTaskIds.filter(id => { const t = tasks.find(x => x.id === id); return t && DONE_STATUSES.includes(t.status); }).length;
   const releaseReady   = relTaskIds.length ? Math.round((relDone / relTaskIds.length) * 100) : 0;
 
+  // Status breakdown — must sum to Total Work Items
+  const statusOpen     = allWorkItems.filter(t => t.status === 'open').length;
+  const statusInProg   = allWorkItems.filter(t => ['dev-in-progress','dev-completed','in-qa','qa-in-progress'].includes(t.status)).length;
+  const statusRFP      = allWorkItems.filter(t => t.status === 'ready-for-prod').length;
+  const statusDone     = allWorkItems.filter(t => DONE_STATUSES.includes(t.status)).length;
+  const statusOther    = allWorkItems.length - statusOpen - statusInProg - statusRFP - statusDone;
+
   const headers = ['Category', 'Metric', 'Value', 'Notes'];
   const rows = [
     headers,
-    ['Tasks',    'Total Tasks',          tasks.length,      ''],
-    ['Tasks',    'Open',                 openTasks,         ''],
-    ['Tasks',    'In Progress',          inProgress,        ''],
-    ['Tasks',    'Ready for Prod',       readyForProd,      ''],
-    ['Tasks',    'Released / Done',      releasedTasks,     ''],
-    ['Tasks',    'Reopened',             reopenTasks,       ''],
-    ['Tasks',    'Completion %',         sprintComp + '%',  'Released / Total'],
-    ['Bugs',     'Open Bugs',            openBugs,          ''],
-    ['Bugs',     'Critical Bugs',        critBugs,          ''],
-    ['Bugs',     'QA Reopen Rate',       reopenRate + '%',  'Reopened / QA-touched'],
-    ['Points',   'Total Story Points',   totalPts,          ''],
-    ['Points',   'Points Completed',     donePts,           ''],
-    ['Sprints',  'Active Sprints',       activeSprints,     ''],
-    ['Sprints',  'Total Sprints',        sprints.length,    ''],
-    ['Projects', 'Total Projects',       projects.length,   ''],
-    ['Releases', 'Total Releases',       releases.length,   ''],
-    ['Releases', 'Release Readiness',    releaseReady + '%','Released / Mapped tasks'],
+    ['Tasks',    'Total Work Items (Tasks + Subtasks)', allWorkItems.length, 'Parent tasks + subtasks combined'],
+    ['Tasks',    'Parent Tasks',              tasks.length,      ''],
+    ['Tasks',    'Subtasks',                  subtasks.length,   ''],
+    ['Tasks',    'Open',                      statusOpen,        `${allWorkItems.length ? Math.round(statusOpen/allWorkItems.length*100) : 0}% of total`],
+    ['Tasks',    'In Progress',               statusInProg,      `${allWorkItems.length ? Math.round(statusInProg/allWorkItems.length*100) : 0}% of total`],
+    ['Tasks',    'Ready for Prod',            statusRFP,         `${allWorkItems.length ? Math.round(statusRFP/allWorkItems.length*100) : 0}% of total`],
+    ['Tasks',    'Released / Done',           statusDone,        `${allWorkItems.length ? Math.round(statusDone/allWorkItems.length*100) : 0}% of total`],
+    ['Tasks',    'Other Statuses',            statusOther,       'Reopen, Pending, etc.'],
+    ['Tasks',    'Status Total Check',        statusOpen+statusInProg+statusRFP+statusDone+statusOther, 'Must equal Total Work Items'],
+    ['Tasks',    'Reopened',                  reopenTasks,       ''],
+    ['Tasks',    'Completion %',              sprintComp + '%',  'Released / Total Work Items'],
+    ['Bugs',     'Open Bugs',                 openBugs,          ''],
+    ['Bugs',     'Critical Bugs',             critBugs,          ''],
+    ['Bugs',     'QA Reopen Rate',            reopenRate + '%',  'Reopened / QA-touched'],
+    ['Points',   'Total Story Points',        totalPts,          ''],
+    ['Points',   'Points Completed',          donePts,           ''],
+    ['Sprints',  'Active Sprints',            activeSprints,     ''],
+    ['Sprints',  'Total Sprints',             sprints.length,    ''],
+    ['Projects', 'Total Projects',            projects.length,   ''],
+    ['Releases', 'Total Releases',            releases.length,   ''],
+    ['Releases', 'Release Readiness',         releaseReady + '%','Released / Mapped tasks'],
   ];
 
-  return _xlBuildSheet(rows, { colWidths: [14, 26, 14, 30] });
+  return _xlBuildSheet(rows, { colWidths: [14, 36, 14, 34] });
 }
 
-/** Sheet 3: Tasks — exhaustive field list */
+/** Sheet 3: Tasks — parent tasks AND subtasks merged, sorted by createdDate asc */
 async function _xlSheetTasks(data) {
   const { tasks, lu } = data;
 
   const headers = [
-    'Task ID','Title','Description','Type','Status','Priority',
-    'Dev Status','QA Status','Prod Status','Completion %',
-    'Assignee','Reporter','Created By',
-    'Project','Sprint','Epic','Release','Parent Task',
-    'Story Points','Tags / Labels',
-    'Created Date','Updated Date','Due Date',
-    'Reopen Count','Subtask Count','Subtask IDs',
-    'Release Notes','Client Status','Internal Notes',
+    'Task ID','Title','Type','Parent Task',
+    'Project','Sprint','Status','Priority',
+    'Assignee','Story Points','Tags / Labels',
+    'Created Date','Updated Date',
   ];
 
-  const rows = [headers];
+  // Build combined rows: parent tasks first, then their subtasks
+  const combinedRows = [];
+
   const BATCH = 200;
 
   for (let i = 0; i < tasks.length; i += BATCH) {
     const chunk = tasks.slice(i, i + BATCH);
     for (const t of chunk) {
-      const subtasks  = t.subtasks || [];
-      const releaseObj = lu.releaseObj(t.releaseId);
-      rows.push([
-        _xlStr(t.id),
-        _xlStr(t.title),
-        _xlStr(t.description),
-        _xlStr(t.type),
-        _xlStr(t.status),
-        _xlStr(t.priority),
-        _xlDevStatus(t.status),
-        _xlQaStatus(t.status),
-        _xlProdStatus(t.status),
-        _xlTaskCompletion(t.status),
-        lu.user(t.assignee),
-        lu.user(t.reporter),
-        lu.user(t.createdBy),
-        lu.proj(t.project),
-        lu.sprint(t.sprint),
-        lu.epic(t.epicId),
-        lu.release(t.releaseId),
-        lu.task(t.parentId),
-        t.points != null ? t.points : '—',
-        _xlStr(t.tags),
-        _xlFmtDate(t.createdAt),
-        _xlFmtDate(t.updatedAt),
-        _xlFmtDate(t.dueDate),
-        _xlReopenCount(t),
-        subtasks.length,
-        subtasks.map(s => s.id).join(', ') || '—',
-        _xlStr(releaseObj ? releaseObj.releaseNotes : null),
-        _xlStr(t.clientStatus),
-        _xlStr(t.internalNotes),
-      ]);
+      // Parent task row
+      combinedRows.push({
+        id:          _xlStr(t.id),
+        title:       _xlStr(t.title),
+        type:        'Task',
+        parentTask:  '—',
+        project:     lu.proj(t.project),
+        sprint:      lu.sprint(t.sprint),
+        status:      _xlStr(t.status),
+        priority:    _xlStr(t.priority),
+        assignee:    lu.user(t.assignee),
+        points:      t.points != null ? t.points : '—',
+        tags:        _xlStr(t.tags),
+        createdAt:   t.createdAt ? new Date(t.createdAt).getTime() : 0,
+        createdFmt:  _xlFmtDate(t.createdAt),
+        updatedFmt:  _xlFmtDate(t.updatedAt),
+      });
+      // Subtask rows
+      for (const s of (t.subtasks || [])) {
+        combinedRows.push({
+          id:         _xlStr(s.id),
+          title:      _xlStr(s.title),
+          type:       'Subtask',
+          parentTask: _xlStr(t.title),
+          project:    lu.proj(t.project),
+          sprint:     lu.sprint(t.sprint || s.sprint),
+          status:     _xlStr(s.status),
+          priority:   _xlStr(s.priority),
+          assignee:   lu.user(s.assignee),
+          points:     s.points != null ? s.points : '—',
+          tags:       _xlStr(s.tags),
+          createdAt:  s.createdAt ? new Date(s.createdAt).getTime() : 0,
+          createdFmt: _xlFmtDate(s.createdAt),
+          updatedFmt: _xlFmtDate(s.updatedAt),
+        });
+      }
     }
-    // Yield every batch to prevent UI freeze
     await _xlYield();
   }
 
-  return _xlBuildSheet(rows, {
-    colWidths: [14,40,36,10,20,10,18,18,14,12,
-                20,16,16, 24,18,18,18,24,
-                10,20, 20,20,16,
-                10,12,32,36,18,24]
-  });
-}
-
-/** Sheet 4: Subtasks — all subtasks with parent mapping */
-async function _xlSheetSubtasks(data) {
-  const { tasks, lu } = data;
-
-  const headers = [
-    'Subtask ID','Title','Status','Priority','Assignee',
-    'Story Points','Parent Task ID','Parent Title','Parent Project',
-    'Sprint','Created Date',
-  ];
+  // Sort by createdAt ascending
+  combinedRows.sort((a, b) => a.createdAt - b.createdAt);
 
   const rows = [headers];
-
-  for (const t of tasks) {
-    for (const s of (t.subtasks || [])) {
-      rows.push([
-        _xlStr(s.id),
-        _xlStr(s.title),
-        _xlStr(s.status),
-        _xlStr(s.priority),
-        lu.user(s.assignee),
-        s.points != null ? s.points : '—',
-        _xlStr(t.id),
-        _xlStr(t.title),
-        lu.proj(t.project),
-        lu.sprint(t.sprint),
-        _xlFmtDate(s.createdAt),
-      ]);
-    }
-    await _xlYield();
+  for (const r of combinedRows) {
+    rows.push([
+      r.id, r.title, r.type, r.parentTask,
+      r.project, r.sprint, r.status, r.priority,
+      r.assignee, r.points, r.tags,
+      r.createdFmt, r.updatedFmt,
+    ]);
   }
 
-  if (rows.length === 1) rows.push(['No subtasks in scope','','','','','','','','','','']);
+  if (rows.length === 1) rows.push(['No tasks in scope']);
 
   return _xlBuildSheet(rows, {
-    colWidths: [14,40,20,10,20,10,14,40,24,18,20]
+    colWidths: [14,40,10,36, 24,18,20,12, 20,10,20, 22,22]
   });
 }
+
+/** Sheet 4: Subtasks — REMOVED: subtasks are now merged into the Tasks sheet */
+// async function _xlSheetSubtasks(data) { /* merged into _xlSheetTasks */ }
 
 /** Sheet 5: Sprints */
 function _xlSheetSprints(data) {
@@ -10631,7 +10814,8 @@ function _xlSheetSprints(data) {
 
   const headers = [
     'Sprint ID','Sprint Name','Status','Project',
-    'Start Date','End Date','Goal',
+    'Created Date','Start Date','End Date','Updated Date',
+    'Goal',
     'Total Tasks','Done','In Progress','Open','Bugs',
     'Story Points Total','Points Done','Velocity %',
   ];
@@ -10653,8 +10837,10 @@ function _xlSheetSprints(data) {
       _xlStr(s.name),
       _xlStr(s.status),
       lu.proj(s.project),
-      _xlStr(s.start),
-      _xlStr(s.end),
+      s.createdAt  ? new Date(s.createdAt).toLocaleString()  : '—',
+      s.start      ? new Date(s.start).toLocaleString()      : (s.startDate ? new Date(s.startDate).toLocaleString() : '—'),
+      s.end        ? new Date(s.end).toLocaleString()        : (s.endDate   ? new Date(s.endDate).toLocaleString()   : '—'),
+      s.updatedAt  ? new Date(s.updatedAt).toLocaleString()  : '—',
       _xlStr(s.goal),
       sTasks.length,
       done, inProg, open, bugs,
@@ -10665,7 +10851,7 @@ function _xlSheetSprints(data) {
 
   if (rows.length === 1) rows.push(['No sprints in scope']);
   return _xlBuildSheet(rows, {
-    colWidths: [12,24,12,24,12,12,36,12,10,12,10,10,14,12,12]
+    colWidths: [12,24,12,24, 20,20,20,20, 36,12,10,12,10,10,14,12,12]
   });
 }
 
@@ -10759,13 +10945,19 @@ function _xlSheetReleases(data) {
   });
 }
 
-/** Sheet 8: Team Members */
+/** Sheet 8: Team Members — ALL roles, ALL assigned work items (tasks + subtasks) */
 function _xlSheetTeam(data) {
   const { users, tasks, sprints } = data;
 
+  // Build flat work-items pool (tasks + subtasks) — no role exclusion
+  const allWorkItems = [
+    ...tasks,
+    ...tasks.flatMap(t => (t.subtasks || []).map(s => ({ ...s, project: t.project, sprint: t.sprint || s.sprint })))
+  ];
+
   const headers = [
     'Member ID','Name','Email','Role','Initials','Color',
-    'Total Tasks Assigned','Open','In Progress','Released',
+    'Total Work Items Assigned','Open','In Progress','Released',
     'Total Story Points','Points Done','Reopen Count',
     'Active Sprints','Completion %','Avg Points Per Task',
     'Projects',
@@ -10774,17 +10966,18 @@ function _xlSheetTeam(data) {
   const rows = [headers];
 
   for (const u of users) {
-    const uTasks   = tasks.filter(t => t.assignee === u.id);
-    const open     = uTasks.filter(t => t.status === 'open').length;
-    const inProg   = uTasks.filter(t => ['dev-in-progress','in-qa','qa-in-progress','dev-completed'].includes(t.status)).length;
-    const released = uTasks.filter(t => t.status === 'released').length;
-    const totalPts = uTasks.reduce((a, t) => a + (t.points || 0), 0);
-    const donePts  = uTasks.filter(t => t.status === 'released').reduce((a, t) => a + (t.points || 0), 0);
-    const reopens  = uTasks.filter(t => t.status === 'reopen').length;
-    const actSpr   = sprints.filter(s => s.status === 'active' && uTasks.find(t => t.sprint === s.id)).length;
-    const pct      = uTasks.length ? Math.round((released / uTasks.length) * 100) : 0;
-    const avgPts   = uTasks.length ? Math.round((totalPts / uTasks.length) * 10) / 10 : 0;
-    const projs    = [...new Set(uTasks.map(t => t.project))].map(id => { const p = data.projects.find(x => x.id === id); return p ? p.name : id; }).join(', ');
+    // Match on both .assignee (tasks) and .assigneeId (subtasks may use either)
+    const uItems   = allWorkItems.filter(t => t.assignee === u.id || t.assigneeId === u.id);
+    const open     = uItems.filter(t => t.status === 'open').length;
+    const inProg   = uItems.filter(t => ['dev-in-progress','in-qa','qa-in-progress','dev-completed'].includes(t.status)).length;
+    const released = uItems.filter(t => DONE_STATUSES.includes(t.status)).length;
+    const totalPts = uItems.reduce((a, t) => a + (t.points || 0), 0);
+    const donePts  = uItems.filter(t => DONE_STATUSES.includes(t.status)).reduce((a, t) => a + (t.points || 0), 0);
+    const reopens  = uItems.filter(t => t.status === 'reopen').length;
+    const actSpr   = sprints.filter(s => s.status === 'active' && uItems.find(t => t.sprint === s.id)).length;
+    const pct      = uItems.length ? Math.round((released / uItems.length) * 100) : 0;
+    const avgPts   = uItems.length ? Math.round((totalPts / uItems.length) * 10) / 10 : 0;
+    const projs    = [...new Set(uItems.map(t => t.project))].map(id => { const p = data.projects.find(x => x.id === id); return p ? p.name : id; }).filter(Boolean).join(', ');
 
     rows.push([
       _xlStr(u.id),
@@ -10793,7 +10986,7 @@ function _xlSheetTeam(data) {
       _xlStr(u.role),
       _xlStr(u.initials),
       _xlStr(u.color),
-      uTasks.length, open, inProg, released,
+      uItems.length, open, inProg, released,
       totalPts, donePts, reopens,
       actSpr,
       pct + '%',
@@ -10804,7 +10997,7 @@ function _xlSheetTeam(data) {
 
   if (rows.length === 1) rows.push(['No members found']);
   return _xlBuildSheet(rows, {
-    colWidths: [10,22,30,18,10,10, 14,10,12,10,12,10,12,12,12,14,36]
+    colWidths: [10,22,30,18,10,10, 18,10,12,10,12,10,12,12,12,14,36]
   });
 }
 
@@ -10818,6 +11011,7 @@ function _xlSheetProjects(data) {
     'Total Tasks','Done','In Progress','Open','Bugs',
     'Total Points','Done Points','Completion %',
     'Epics','Releases','Description',
+    'Created Date','Updated Date',
   ];
 
   const rows = [headers];
@@ -10851,12 +11045,14 @@ function _xlSheetProjects(data) {
       pct + '%',
       pEpics, pRels,
       _xlStr(p.description),
+      p.createdAt  ? new Date(p.createdAt).toLocaleString()  : '—',
+      p.updatedAt  ? new Date(p.updatedAt).toLocaleString()  : '—',
     ]);
   }
 
   if (rows.length === 1) rows.push(['No projects in scope']);
   return _xlBuildSheet(rows, {
-    colWidths: [12,28,8,12,10,20,36,12,12,12,10,12,10,10,12,12,12,10,10,40]
+    colWidths: [12,28,8,12,10,20,36,12,12,12,10,12,10,10,12,12,12,10,10,40,22,22]
   });
 }
 
@@ -10966,37 +11162,9 @@ function _xlSheetMetrics(data) {
   return _xlBuildSheet(aoa, { filter: false, colWidths: [28,24,16,14,14,14,12,12,14,14] });
 }
 
-/** Sheet 11: Comments (stub — extensible when comments are stored on tasks) */
-function _xlSheetComments(data) {
-  const { tasks, lu } = data;
-  const headers = ['Task ID','Task Title','Comment ID','Author','Comment Text','Date'];
-  const rows    = [headers];
-
-  for (const t of tasks) {
-    for (const c of (t.comments || [])) {
-      rows.push([
-        _xlStr(t.id),
-        _xlStr(t.title),
-        _xlStr(c.id),
-        lu.user(c.authorId),
-        _xlStr(c.text),
-        _xlFmtDate(c.createdAt),
-      ]);
-    }
-  }
-
-  if (rows.length === 1) rows.push(['No comments recorded — comments will appear here when added to tasks', '', '', '', '', '']);
-  return _xlBuildSheet(rows, { colWidths: [14,40,12,20,60,20] });
-}
-
-/** Sheet 12: Audit Log (stub — extensible with a server-side audit trail) */
-function _xlSheetAuditLog() {
-  const rows = [
-    ['Timestamp','Actor','Entity Type','Entity ID','Action','Field','Old Value','New Value'],
-    ['Audit log will be populated when server-side change tracking is enabled.','','','','','','',''],
-  ];
-  return _xlBuildSheet(rows, { filter: false, colWidths: [20,22,14,14,14,20,30,30] });
-}
+/** Sheet 11: Comments — REMOVED per product requirements */
+/** Sheet 12: Audit Log — REMOVED per product requirements */
+// These tabs have been removed from the export. Use the dedicated Audit Logs export for audit data.
 
 // ══════════════════════════════════════════════════════════════════════════
 //  MAIN ENTRY POINT
@@ -11012,6 +11180,11 @@ async function exportReportExcel(mode, fromDate, toDate) {
   if (mode === 'full' && RBAC.isMember()) {
     _rptToast('🔒 Full Database export is not available for Members.', 'rgba(220,38,38,0.96)');
     return;
+  }
+
+  // ── Offline guard ──
+  if (!navigator.onLine) {
+    _rptToast('⚠ Offline mode: exporting latest synced data', 'rgba(245,158,11,0.96)');
   }
 
   // ── Guard ──
@@ -11069,8 +11242,8 @@ async function exportReportExcel(mode, fromDate, toDate) {
         return;
       }
 
-      // ── Full Database mode: all 11 sheets ──
-      const totalSheets = 11;
+      // ── Full Database mode: 9 sheets (Subtasks merged into Tasks; Comments & Audit removed) ──
+      const totalSheets = 9;
       let sheetIdx = 0;
 
       function progress(msg) {
@@ -11090,12 +11263,8 @@ async function exportReportExcel(mode, fromDate, toDate) {
       XLSX.utils.book_append_sheet(wb, _xlSheetMetrics(data), '📈 Metrics');
       await _xlYield();
 
-      progress('Tasks (all fields)');
+      progress('Tasks (tasks + subtasks merged)');
       XLSX.utils.book_append_sheet(wb, await _xlSheetTasks(data), '✅ Tasks');
-      await _xlYield();
-
-      progress('Subtasks');
-      XLSX.utils.book_append_sheet(wb, await _xlSheetSubtasks(data), '🔗 Subtasks');
       await _xlYield();
 
       progress('Sprints');
@@ -11116,14 +11285,6 @@ async function exportReportExcel(mode, fromDate, toDate) {
 
       progress('Projects');
       XLSX.utils.book_append_sheet(wb, _xlSheetProjects(data), '📁 Projects');
-      await _xlYield();
-
-      progress('Comments');
-      XLSX.utils.book_append_sheet(wb, _xlSheetComments(data), '💬 Comments');
-      await _xlYield();
-
-      progress('Audit Log');
-      XLSX.utils.book_append_sheet(wb, _xlSheetAuditLog(), '🔒 Audit Log');
       await _xlYield();
 
       // ── Write file ──
@@ -11722,6 +11883,10 @@ function _xlGetDataWithRange(mode, fromDate, toDate) {
       const d = new Date(t.createdAt);
       return d >= from && d <= to;
     });
+    // Rebuild subtasks from filtered tasks
+    data.subtasks = data.tasks.flatMap(t =>
+      (t.subtasks || []).map(s => ({ ...s, _parentTask: t }))
+    );
     data._dateRange = { from: fromDate, to: toDate };
   }
   return data;
