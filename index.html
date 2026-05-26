@@ -1237,6 +1237,65 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-top:4px;
   }
   /* ── END SPILLOVER CSS ── */
+
+  /* ── MULTI-SELECT CONTROL ── */
+  .ms-control{
+    position:relative;
+    border:1px solid var(--control-border);
+    border-radius:var(--control-radius);
+    background:var(--control-bg);
+    min-height:var(--control-h);
+    cursor:text;
+    transition:border-color 0.15s,box-shadow 0.15s;
+  }
+  .ms-control:focus-within{
+    border-color:var(--accent);
+    background:var(--control-bg-focus);
+    box-shadow:0 0 0 3px var(--accent-ring);
+  }
+  .ms-chips-row{
+    display:flex;flex-wrap:wrap;align-items:center;
+    gap:4px;padding:4px 8px;min-height:var(--control-h);
+  }
+  .ms-input{
+    border:none;outline:none;background:transparent;
+    font-family:'DM Sans',sans-serif;font-size:13px;
+    color:var(--text-primary);flex:1;min-width:80px;
+    height:24px;padding:0;
+  }
+  .ms-chip{
+    display:inline-flex;align-items:center;gap:3px;
+    background:var(--accent-ghost);color:var(--accent-dark);
+    border:1px solid var(--accent-ring);border-radius:var(--r-pill);
+    font-size:11.5px;font-weight:600;
+    padding:2px 7px 2px 9px;white-space:nowrap;
+  }
+  .ms-chip-x{
+    background:none;border:none;cursor:pointer;
+    color:var(--accent);font-size:14px;line-height:1;
+    padding:0;margin-left:1px;display:flex;align-items:center;
+    font-family:'DM Sans',sans-serif;transition:color 0.12s;
+  }
+  .ms-chip-x:hover{color:var(--danger);}
+  .ms-dropdown{
+    position:absolute;left:0;right:0;top:calc(100% + 3px);
+    background:var(--glass-bg-strong);
+    border:1px solid var(--control-border);
+    border-radius:var(--r-md);
+    box-shadow:0 8px 28px rgba(0,0,0,0.13),0 2px 8px rgba(0,0,0,0.06);
+    max-height:176px;overflow-y:auto;z-index:9999;display:none;
+  }
+  .ms-dropdown::-webkit-scrollbar{width:4px}
+  .ms-dropdown::-webkit-scrollbar-thumb{background:#cdd2e4;border-radius:2px}
+  .ms-opt{
+    padding:7px 11px;font-size:13px;cursor:pointer;
+    color:var(--text-primary);transition:background 0.12s;
+  }
+  .ms-opt:hover{background:var(--accent-ghost);color:var(--accent-dark);}
+  .ms-opt-empty{
+    padding:8px 11px;font-size:12px;
+    color:var(--text-tertiary);font-style:italic;
+  }
 </style>
 </head>
 <body class="flex overflow-hidden h-screen">
@@ -1920,6 +1979,21 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="chart-container"><canvas id="epicVelocityChart"></canvas></div>
         </div>
       </div>
+
+      <!-- ═══ TASK INSIGHTS ═══ -->
+      <div class="section-label">Task Insights</div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:4px">Tasks by Product</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Task count bifurcation across products</div>
+          <div class="chart-container"><canvas id="productBifurcationChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:4px">Tasks by Tag</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Task count bifurcation across tags</div>
+          <div class="chart-container"><canvas id="tagBifurcationChart"></canvas></div>
+        </div>
+      </div>
     </div>
     <!-- EPICS -->
     <div class="page" id="page-epics">
@@ -2035,6 +2109,34 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="mt-4">
           <button class="btn btn-primary" onclick="showNotif('Settings saved ✓')">Save Changes</button>
         </div>
+
+        <!-- ── ADMIN CONFIG: Products & Tags ── -->
+        <div id="admin-config-section" style="display:none;margin-top:32px">
+
+          <!-- Products -->
+          <div class="settings-section">
+            <div class="settings-header" style="display:flex;align-items:center;justify-content:space-between">
+              <span>📦 Products</span>
+              <button class="btn btn-primary" style="height:30px;font-size:12px;padding:0 12px" onclick="openProductModal()">+ Add Product</button>
+            </div>
+            <div id="admin-products-list">
+              <div class="settings-row" style="justify-content:center;color:var(--text-tertiary);font-size:13px">No products yet.</div>
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div class="settings-section" style="margin-top:20px">
+            <div class="settings-header" style="display:flex;align-items:center;justify-content:space-between">
+              <span>🏷️ Tags</span>
+              <button class="btn btn-primary" style="height:30px;font-size:12px;padding:0 12px" onclick="openTagModal()">+ Add Tag</button>
+            </div>
+            <div id="admin-tags-list">
+              <div class="settings-row" style="justify-content:center;color:var(--text-tertiary);font-size:13px">No tags yet.</div>
+            </div>
+          </div>
+
+        </div><!-- /admin-config-section -->
+
       </div>
     </div>
 
@@ -2153,6 +2255,8 @@ state.users    = state.users    || [];
 state.releases = state.releases || [];
 state.epics    = state.epics    || [];
 state.comments = state.comments || [];
+state.products = state.products || [];
+state.tags     = state.tags     || [];
 state.currentUser = null; // set by RBAC.init() after auth
 let currentPage = 'dashboard';
 // ─── ROLE-BASED ACCESS CONTROL ───────────────────────────────────
@@ -2166,7 +2270,7 @@ const RBAC = (function(){
   // admin       → all pages
   // program_manager → all except settings and teams
   // team_member → dashboard, backlog, kanban, sprint-planning, releases, reports (filtered)
-  const MEMBER_BLOCKED   = new Set(['settings','teams','projects','epics']);
+  const MEMBER_BLOCKED   = new Set(['settings','teams','projects','epics','releases']);
   const PM_BLOCKED       = new Set(['settings','teams']);
 
   // ── Internal helpers ──────────────────────────────────────────
@@ -2481,6 +2585,64 @@ const FirebaseDB = (function(){
       return state;
     }
     try {
+      // ── Determine RBAC scope for load (RBAC not yet init'd — use raw state) ──
+      // Admin or first load (no users yet): fetch all collections from root.
+      // Non-admin: fetch project-scoped collections in parallel per visible project,
+      // then merge into a single array before the existing normalisation logic.
+      const _currentUserEmail = (window.auth && window.auth.currentUser)
+        ? window.auth.currentUser.email : null;
+      const _userRecord = _currentUserEmail
+        ? (state.users || []).find(u => u.email === _currentUserEmail) : null;
+      const _isAdmin = !_userRecord || _userRecord.role === 'admin';
+
+      // Project-scoped collections — these support orderByChild('projectId') / orderByChild('project')
+      const PROJECT_KEYED = {
+        tasks    : 'project',
+        sprints  : 'project',
+        epics    : 'projectId',
+        releases : 'projectId',
+      };
+
+      // Resolve visible project IDs for non-admin (fallback: all)
+      let _scopedProjectIds = null;
+      if(!_isAdmin && _userRecord){
+        const _allProjects = state.projects || [];
+        const _memberProjects = _allProjects.filter(p =>
+          p.memberIds && p.memberIds.includes(_userRecord.id)
+        );
+        if(_memberProjects.length) _scopedProjectIds = _memberProjects.map(p => p.id);
+      }
+
+      // Helper: fetch one collection, scoped or full
+      async function _fetchCollection(colName){
+        const colRef = _safeRef(`sprintflow/${colName}`);
+        // users and projects always fetched in full (needed for RBAC + sidebar)
+        if(!_scopedProjectIds || !(colName in PROJECT_KEYED)){
+          return _get(colRef);
+        }
+        // Non-admin: one query per visible project, merged client-side
+        const field = PROJECT_KEYED[colName];
+        const snaps = await Promise.all(
+          _scopedProjectIds.map(pid =>
+            _get(
+              (window._rtQuery || (r => r))(
+                colRef,
+                (window._rtOrderByChild || (()=>null))(field),
+                (window._rtEqualTo     || (()=>null))(pid)
+              )
+            )
+          )
+        );
+        // Merge multi-snap results into a single pseudo-snapshot
+        const merged = {};
+        snaps.forEach(s => { if(s.exists()) Object.assign(merged, s.val() || {}); });
+        // Return a lightweight object matching the snapshot API used below
+        return {
+          exists : () => Object.keys(merged).length > 0,
+          val    : () => Object.keys(merged).length ? merged : null,
+        };
+      }
+
       const [
         tasksSnap,
         projectsSnap,
@@ -2489,12 +2651,12 @@ const FirebaseDB = (function(){
         usersSnap,
         releasesSnap
       ] = await Promise.all([
-        _get(_safeRef('sprintflow/tasks')),
-        _get(_safeRef('sprintflow/projects')),
-        _get(_safeRef('sprintflow/sprints')),
-        _get(_safeRef('sprintflow/epics')),
-        _get(_safeRef('sprintflow/users')),
-        _get(_safeRef('sprintflow/releases'))
+        _fetchCollection('tasks'),
+        _fetchCollection('projects'),
+        _fetchCollection('sprints'),
+        _fetchCollection('epics'),
+        _fetchCollection('users'),
+        _fetchCollection('releases'),
       ]);
       // If every collection is empty the database has not been seeded yet
       const anyExists = tasksSnap.exists()    || projectsSnap.exists() || sprintsSnap.exists()
@@ -2554,6 +2716,8 @@ const FirebaseDB = (function(){
       state.releases = state.releases || [];
       state.epics    = state.epics    || [];
       state.comments = state.comments || [];
+      state.products = state.products || [];
+      state.tags     = state.tags     || [];
       invalidateStateMaps();
       console.info('[FirebaseDB] loadAppData: state populated from Firebase');
       return state;
@@ -2895,60 +3059,155 @@ const RealtimeSync = (function(){
 
   // ── Set up a single collection listener ──
   function _listen(collection, onValueFn, refFn, db){
-    // Listener Protected: detach existing listener before re-attaching to prevent duplicates
+    // Detach existing listeners before re-attaching to prevent duplicates
     if(_unsubs[collection]) { try{ _unsubs[collection](); }catch(e){} delete _unsubs[collection]; }
     delete _snapshotFingerprints[collection];
 
     const targets = _listenTargets(collection);
-    // Currently always one target per collection (see _listenTargets comment)
     const { path, key, scopedIds } = targets[0];
-    let firstCall = true;
+
+    // ── Resolve child-listener SDK functions (preferred) ──
+    const _onChildAdded   = window._rtOnChildAdded;
+    const _onChildChanged = window._rtOnChildChanged;
+    const _onChildRemoved = window._rtOnChildRemoved;
+    const useChildListeners = !!(_onChildAdded && _onChildChanged && _onChildRemoved);
+
     try {
-      const unsubscribe = onValueFn(refFn(db, path), (snapshot)=>{
-        // Skip the very first emission (that's our loadAppData boot data)
-        if(firstCall){ firstCall=false; return; }
-        // Debounce rapid bursts
-        clearTimeout(_debounceTimers[collection]);
-        _debounceTimers[collection] = setTimeout(()=>{
+      if(useChildListeners){
+        // ── CHILD LISTENERS: only the changed entity is sent over the wire ──
+        // Each callback receives a single child snapshot (one entity).
+        const colRef = refFn(db, path);
+
+        // Shared handler for add + change: upsert the single item into state
+        function _handleUpsert(snapshot){
           try {
-            const val = snapshot.val() || {}; // Production Hardened: safe null fallback
-            if(val === null || (typeof val === 'object' && Object.keys(val).length === 0 && !snapshot.exists())){ return; } // collection deleted remotely — ignore
-
-            // ── Snapshot fingerprint: skip processing if payload identical ──
-            const fingerprint = JSON.stringify(val);
-            if(_snapshotFingerprints[collection] === fingerprint){ return; }
-            _snapshotFingerprints[collection] = fingerprint;
-
-            const incoming = _normalize(val);
-
-            // ── RBAC client-side scope filter for non-admin users ──
-            // For project-linked collections, ignore items outside visible projects.
-            // This avoids patching state with data the current user shouldn't see
-            // and prevents spurious renders caused by other projects' updates.
-            let filteredIncoming = incoming;
+            const item = snapshot.val();
+            if(!item || !item.id) return;
+            // Self-echo suppression
+            if(_localWriteSet.has(item.id)) return;
+            // RBAC client-side scope filter
             if(scopedIds && scopedIds.size){
               const projectField = collection === 'releases' ? 'projectId'
                                  : collection === 'epics'    ? 'projectId'
-                                 : 'project'; // tasks, sprints
-              filteredIncoming = incoming.filter(item=>{
-                const pid = item[projectField];
-                return !pid || scopedIds.has(pid);
-              });
+                                 : 'project';
+              const pid = item[projectField];
+              if(pid && !scopedIds.has(pid)) return;
             }
+            // Debounce per collection to absorb rapid bursts
+            clearTimeout(_debounceTimers[collection]);
+            _debounceTimers[collection] = setTimeout(()=>{
+              try {
+                // Upsert single item into state array
+                const arr = state[collection] || [];
+                const idx = arr.findIndex(x => x && x.id === item.id);
+                if(idx === -1){
+                  arr.push(item);
+                  state[collection] = arr;
+                } else {
+                  if(_isStale(item, arr[idx])) return;
+                  // Conflict toast — another user changed this entity
+                  const localAt  = arr[idx].updatedAt || 0;
+                  const remoteAt = item.updatedAt || 0;
+                  if(remoteAt > localAt){
+                    if(arr[idx]._remoteConflictNotified !== remoteAt){
+                      arr[idx]._remoteConflictNotified = remoteAt;
+                      const prevStr = JSON.stringify({...arr[idx], _remoteConflictNotified:undefined});
+                      if(prevStr !== JSON.stringify(item)) showNotif('This item was updated by another user.','info');
+                    }
+                  }
+                  arr[idx] = item;
+                }
+                // Run same normalisation as _patchCollection
+                if(collection === 'tasks'){
+                  const sm={'todo':'open','in-progress':'dev-in-progress','qa':'in-qa','done':'released'};
+                  const t = state.tasks.find(x=>x&&x.id===item.id);
+                  if(t){
+                    if(sm[t.status]) t.status=sm[t.status];
+                    if(!t.subtasks)  t.subtasks=[];
+                    if(t.epicId===undefined)    t.epicId=null;
+                    if(t.releaseId===undefined) t.releaseId=null;
+                  }
+                }
+                if(collection === 'users'){
+                  state.users.forEach(u=>{ if(u.role==='member') u.role='team_member'; if(!['admin','program_manager','team_member'].includes(u.role)) u.role='team_member'; });
+                }
+                if(collection === 'projects'){
+                  state.projects.forEach(p=>{ if(!p.memberIds) p.memberIds=[]; });
+                }
+                invalidateStateMaps();
+                _renderForCollection(collection);
+                console.log(`[RealtimeSync] ${collection}: child upsert ${item.id}`);
+              } catch(e){ console.warn('[RealtimeSync] upsert error:', collection, e); }
+            }, DEBOUNCE_MS);
+          } catch(e){ console.warn('[RealtimeSync] handleUpsert error:', collection, e); }
+        }
 
-            const diff = _patchCollection(collection, filteredIncoming);
-            if(diff.added+diff.updated+diff.removed+diff.loopSkipped > 0){
-              console.log(`[RealtimeSync] ${collection}: +${diff.added} ~${diff.updated} -${diff.removed}`);
-              _renderForCollection(collection);
-            }
-          } catch(e){
-            console.warn('[RealtimeSync] handler error:', collection, e);
-          }
-        }, DEBOUNCE_MS);
-      }, (err)=>{
-        console.warn('[RealtimeSync] listener error:', collection, err.message||err);
-      });
-      _unsubs[collection] = unsubscribe;
+        function _handleRemove(snapshot){
+          try {
+            const item = snapshot.val();
+            const id = (item && item.id) ? item.id : snapshot.key;
+            if(!id) return;
+            if(_localWriteSet.has(id)) return;
+            clearTimeout(_debounceTimers[collection]);
+            _debounceTimers[collection] = setTimeout(()=>{
+              try {
+                const arr = state[collection] || [];
+                const idx = arr.findIndex(x => x && x.id === id);
+                if(idx !== -1){
+                  arr.splice(idx, 1);
+                  invalidateStateMaps();
+                  _renderForCollection(collection);
+                  console.log(`[RealtimeSync] ${collection}: child removed ${id}`);
+                }
+              } catch(e){ console.warn('[RealtimeSync] remove error:', collection, e); }
+            }, DEBOUNCE_MS);
+          } catch(e){ console.warn('[RealtimeSync] handleRemove error:', collection, e); }
+        }
+
+        // Skip first emission of onChildAdded (already loaded via loadAppData)
+        let _addedBootSkip = true;
+        setTimeout(()=>{ _addedBootSkip = false; }, 5000); // 5s boot window
+
+        const unsubAdded   = _onChildAdded  (colRef, s=>{ if(!_addedBootSkip) _handleUpsert(s); }, e=>console.warn('[RealtimeSync] childAdded error:',  collection, e));
+        const unsubChanged = _onChildChanged(colRef, _handleUpsert,                                  e=>console.warn('[RealtimeSync] childChanged error:', collection, e));
+        const unsubRemoved = _onChildRemoved(colRef, _handleRemove,                                  e=>console.warn('[RealtimeSync] childRemoved error:', collection, e));
+
+        // Store a combined unsub
+        _unsubs[collection] = ()=>{ try{ unsubAdded(); }catch(e){} try{ unsubChanged(); }catch(e){} try{ unsubRemoved(); }catch(e){} };
+
+      } else {
+        // ── FALLBACK: onValue full-collection (SDK functions not available) ──
+        let firstCall = true;
+        const unsubscribe = onValueFn(refFn(db, path), (snapshot)=>{
+          if(firstCall){ firstCall=false; return; }
+          clearTimeout(_debounceTimers[collection]);
+          _debounceTimers[collection] = setTimeout(()=>{
+            try {
+              const val = snapshot.val() || {};
+              if(val === null || (typeof val === 'object' && Object.keys(val).length === 0 && !snapshot.exists())){ return; }
+              const fingerprint = JSON.stringify(val);
+              if(_snapshotFingerprints[collection] === fingerprint){ return; }
+              _snapshotFingerprints[collection] = fingerprint;
+              const incoming = _normalize(val);
+              let filteredIncoming = incoming;
+              if(scopedIds && scopedIds.size){
+                const projectField = collection === 'releases' ? 'projectId'
+                                   : collection === 'epics'    ? 'projectId'
+                                   : 'project';
+                filteredIncoming = incoming.filter(item=>{ const pid=item[projectField]; return !pid||scopedIds.has(pid); });
+              }
+              const diff = _patchCollection(collection, filteredIncoming);
+              if(diff.added+diff.updated+diff.removed+diff.loopSkipped > 0){
+                console.log(`[RealtimeSync] ${collection}: +${diff.added} ~${diff.updated} -${diff.removed}`);
+                _renderForCollection(collection);
+              }
+            } catch(e){ console.warn('[RealtimeSync] handler error:', collection, e); }
+          }, DEBOUNCE_MS);
+        }, (err)=>{
+          console.warn('[RealtimeSync] listener error:', collection, err.message||err);
+        });
+        _unsubs[collection] = unsubscribe;
+      }
     } catch(e){
       console.warn('[RealtimeSync] attach error:', collection, e);
     }
@@ -3818,6 +4077,7 @@ function renderPage(page){
     else if(page==='reports')renderReports();
     else if(page==='teams')renderTeams();
     else if(page==='releases')renderReleaseBoard();
+    else if(page==='settings')renderAdminConfig();
   }catch(err){
     console.error('renderPage error on page:',page,err);
   } finally {
@@ -3936,6 +4196,93 @@ function _populateDashboardFilters(){
   }
 }
 
+// ── RBAC-scoped analytics data source ────────────────────────────
+// Single function that returns role-appropriate collections for
+// Dashboard and Reports. No UI, chart logic, or workflow changes.
+function getRoleScopedAnalyticsData(){
+  const role = (state.currentUser && state.currentUser.role
+    ? state.currentUser.role : 'admin').toLowerCase();
+
+  // ── ADMIN: full access ──
+  if(role === 'admin'){
+    return {
+      tasks:    state.tasks    || [],
+      projects: state.projects || [],
+      sprints:  state.sprints  || [],
+      epics:    state.epics    || [],
+      releases: state.releases || []
+    };
+  }
+
+  // ── PROGRAM MANAGER: mapped scope only ──
+  if(role === 'program_manager'){
+    const visibleProjects  = RBAC.getVisibleProjects();
+    const visibleProjectIds= new Set(visibleProjects.map(p => p.id));
+
+    const visibleSprints   = (state.sprints || []).filter(
+      s => visibleProjectIds.has(s.project)
+    );
+    const visibleSprintIds = new Set(visibleSprints.map(s => s.id));
+
+    const visibleTasks = (state.tasks || []).filter(t =>
+      visibleProjectIds.has(t.project) &&
+      (!t.sprint || visibleSprintIds.has(t.sprint))
+    );
+
+    const visibleEpics = (state.epics || []).filter(e => {
+      const ep = e.projectIds || (e.projectId ? [e.projectId] : []);
+      return ep.some(pid => visibleProjectIds.has(pid));
+    });
+
+    const visibleReleases = (state.releases || []).filter(
+      r => visibleProjectIds.has(r.projectId)
+    );
+
+    return {
+      tasks:    visibleTasks,
+      projects: visibleProjects,
+      sprints:  visibleSprints,
+      epics:    visibleEpics,
+      releases: visibleReleases
+    };
+  }
+
+  // ── TEAM MEMBER: assigned work + mapped project scope ──
+  const memberProjects   = RBAC.getVisibleProjects();
+  const memberProjectIds = new Set(memberProjects.map(p => p.id));
+  const memberId         = state.currentUser ? state.currentUser.id : null;
+
+  const memberSprints    = (state.sprints || []).filter(
+    s => memberProjectIds.has(s.project)
+  );
+  const memberSprintIds  = new Set(memberSprints.map(s => s.id));
+
+  // Member sees tasks assigned to them within their project scope
+  const memberTasks = (state.tasks || []).filter(t =>
+    memberProjectIds.has(t.project) &&
+    (!t.sprint || memberSprintIds.has(t.sprint)) &&
+    (t.assignee === memberId ||
+     (t.subtasks || []).some(st => st.assignee === memberId))
+  );
+
+  const memberEpics = (state.epics || []).filter(e => {
+    const ep = e.projectIds || (e.projectId ? [e.projectId] : []);
+    return ep.some(pid => memberProjectIds.has(pid));
+  });
+
+  const memberReleases = (state.releases || []).filter(
+    r => memberProjectIds.has(r.projectId)
+  );
+
+  return {
+    tasks:    memberTasks,
+    projects: memberProjects,
+    sprints:  memberSprints,
+    epics:    memberEpics,
+    releases: memberReleases
+  };
+}
+
 function renderDashboard(){
   if(document.hidden) return; // tab hidden — skip expensive render; visibilitychange will refresh on return
   try{
@@ -3945,26 +4292,29 @@ function renderDashboard(){
   if(!projFilter) projFilter='all';
   if(!sprintFilter) sprintFilter='all';
 
-  // Filtered data sets
-  let _tasks=RBAC.getVisibleTasks(state.tasks);
+  // ── Scoped base collections — role-restricted before UI filters ──
+  const _scopedData = getRoleScopedAnalyticsData();
+
+  // Filtered data sets (UI filters applied on top of role-scoped base)
+  let _tasks=_scopedData.tasks;
   if(projFilter!=='all') _tasks=_tasks.filter(t=>t.project===projFilter);
   if(sprintFilter!=='all') _tasks=_tasks.filter(t=>t.sprint===sprintFilter);
 
-  let _sprints=RBAC.getVisibleSprints();
+  let _sprints=_scopedData.sprints;
   if(projFilter!=='all') _sprints=_sprints.filter(s=>s.project===projFilter);
   if(sprintFilter!=='all') _sprints=_sprints.filter(s=>s.id===sprintFilter);
 
-  let _epics=(state.epics||[]);
+  let _epics=_scopedData.epics;
   if(projFilter!=='all') _epics=_epics.filter(e=>{
     const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
     return epicProjects.includes(projFilter);
   });
 
-  let _releases=(state.releases||[]);
+  let _releases=_scopedData.releases;
   if(projFilter!=='all') _releases=_releases.filter(r=>r.projectId===projFilter);
   if(sprintFilter!=='all') _releases=_releases.filter(r=>r.sprintId===sprintFilter);
 
-  const totalProjects=projFilter==='all'?state.projects.length:1;
+  const totalProjects=projFilter==='all'?_scopedData.projects.length:1;
   const totalTasks=_tasks.length;
   const activeSprints=_sprints.filter(s=>s.status==='active');
   const openTasks=_tasks.filter(t=>t.status==='open').length;
@@ -4477,6 +4827,24 @@ function canChangeTaskStatus(task, newStatus){
 // Rollback is an action only — resolves to in-qa; not persisted as a final state
 function resolveRollbackStatus(status){
   return status==='rollback'?'in-qa':status;
+}
+
+// ─── QA REOPEN TRACKING ─────────────────────────────────────────
+// QA stages: task has "entered QA" if it reached in-qa or qa-in-progress.
+// Dev stages: open, dev-in-progress, dev-completed.
+// A QA reopen event = task/subtask moves FROM a QA stage BACK TO a dev stage.
+const _QA_STAGES  = new Set(['in-qa','qa-in-progress']);
+const _DEV_STAGES = new Set(['open','dev-in-progress','dev-completed']);
+
+function _trackQAReopen(item, newStatus){
+  // Mark when an item first enters QA
+  if(_QA_STAGES.has(newStatus)) {
+    item._hasEnteredQA = true;
+  }
+  // If it was in QA and moves back to a dev stage → increment qaReopenCount
+  if(item._hasEnteredQA && _QA_STAGES.has(item.status) && _DEV_STAGES.has(newStatus)){
+    item.qaReopenCount = (item.qaReopenCount || 0) + 1;
+  }
 }
 
 // ─── EPIC STATE TRANSITION RULES ────────────────────────────────
@@ -5002,10 +5370,16 @@ function kanbanSubtaskCard(sub,parent){
 
 function kanbanDragStart(e,id){
   const _t=getTask(id);
-  // ── Frozen tasks (ready-for-prod / released) cannot be dragged ──
-  if(_t && isTaskLocked(_t)){
+  // ── Released tasks are fully frozen — cannot be dragged at all ──
+  if(_t && _t.status==='released'){
     e.preventDefault();
     showNotif('⚠ '+statusLabel(_t.status)+' tasks cannot be moved via drag-drop','error');
+    return;
+  }
+  // ── RBAC: members can only drag tasks assigned to themselves ──
+  if(_t && !RBAC.canEditTask(_t)){
+    e.preventDefault();
+    showNotif('⚠ You can only move tasks assigned to you','error');
     return;
   }
   kanbanDraggedId=id;kanbanDraggedSubtask=null;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('type','task');setTimeout(()=>e.target.classList.add('dragging'),0);
@@ -5019,6 +5393,14 @@ function kanbanDragEnd(e){
 }
 
 function kanbanSubDragStart(e,subId,parentId){
+  // ── RBAC: members can only drag subtasks assigned to themselves ──
+  const _parent=getTask(parentId);
+  const _sub=_parent&&(_parent.subtasks||[]).find(s=>s.id===subId);
+  if(_sub && !RBAC.canEditTask(_sub)){
+    e.preventDefault();
+    showNotif('⚠ You can only move subtasks assigned to you','error');
+    return;
+  }
   kanbanDraggedSubtask={subId,parentId};
   kanbanDraggedId=null;
   e.dataTransfer.effectAllowed='move';
@@ -5075,7 +5457,9 @@ function kanbanDrop(e,status){
       // ── Task state transition guard (subtasks use same lock rules) ──
       const stateCheck=canChangeTaskStatus(sub,status);
       if(!stateCheck.ok){showNotif('⚠ '+stateCheck.msg,'error');kanbanDraggedSubtask=null;return;}
-      sub.status=resolveRollbackStatus(status);
+      const resolvedSubStatus=resolveRollbackStatus(status);
+      _trackQAReopen(sub, resolvedSubStatus);
+      sub.status=resolvedSubStatus;
       // ── Debounced Firebase write — absorbs rapid drag/drop sequences ──
       DebounceWrite.schedule('tasks', parent);
       SaveManager.save();
@@ -5095,14 +5479,13 @@ function kanbanDrop(e,status){
     kanbanDraggedId=null;return;
   }
   if(task&&task.status!==status){
-    // ── Block drag into Released column — use release board flow instead ──
-    if(status==='released'){showNotif('⚠ Tasks can only be released via the Release board','error');kanbanDraggedId=null;return;}
-    // ── Task state transition guard ──
+    // ── Task state transition guard (covers ready-for-prod → released and blocks backward moves) ──
     const stateCheck=canChangeTaskStatus(task,status);
     if(!stateCheck.ok){showNotif('⚠ '+stateCheck.msg,'error');kanbanDraggedId=null;return;}
     const resolvedStatus=resolveRollbackStatus(status);
     const check=canMoveToClosedStatus(kanbanDraggedId,resolvedStatus);
     if(!check.ok){showNotif('⚠ '+check.msg,'error');kanbanDraggedId=null;return;}
+    _trackQAReopen(task, resolvedStatus);
     task.status=resolvedStatus;
     // ── Debounced Firebase write — absorbs rapid drag/drop sequences ──
     DebounceWrite.schedule('tasks', task);
@@ -5297,7 +5680,7 @@ function _getFilteredReportsData(){
   let projects=RBAC.getVisibleProjects();
   if(pid&&pid!=='all') projects=projects.filter(p=>p.id===pid);
 
-  let releases=state.releases||[];
+  let releases=RBAC.getVisibleReleases();
   if(pid&&pid!=='all') releases=releases.filter(r=>r.projectId===pid);
   if(f.release&&f.release!=='all') releases=releases.filter(r=>r.id===f.release);
   // When task-level filters are active, also filter release task lists to only matching tasks
@@ -5511,11 +5894,22 @@ function renderReports(){
   setEl('rpt-kpi-release-ready',relReady+'%');
   const rrBar=document.getElementById('rpt-kpi-release-ready-bar');if(rrBar)rrBar.style.width=relReady+'%';
 
-  const reopenCount=reportItems.filter(item=>item.status==='reopen').length;
-  const qaTotal=reportItems.filter(item=>['in-qa','qa-in-progress','reopen'].includes(item.status)).length+(releasedTasks);
-  const reopenRate=qaTotal?Math.round((reopenCount/qaTotal)*100):0;
-  setEl('rpt-kpi-reopen',reopenRate+'%');
-  setEl('rpt-kpi-reopen-sub',`${reopenCount} reopen task${reopenCount!==1?'s':''}`);
+  // ── QA REOPEN RATE ─────────────────────────────────────────────
+  // Definition: items that entered QA (in-qa / qa-in-progress) and then
+  // came back to a development stage (open / dev-in-progress / dev-completed).
+  // qaReopenCount is incremented by _trackQAReopen() each time this happens.
+  // Denominator = all items that have ever reached a QA stage or beyond.
+  const _QA_AND_BEYOND = new Set(['in-qa','qa-in-progress','reopen','pending-with-client','ready-for-prod','released']);
+  const qaEverTouched = reportItems.filter(item =>
+    _QA_AND_BEYOND.has(item.status) || item._hasEnteredQA || (item.qaReopenCount||0) > 0
+  );
+  const qaReopenedItems = reportItems.filter(item => (item.qaReopenCount||0) > 0);
+  const reopenCount = qaReopenedItems.length;
+  const totalReopenEvents = reportItems.reduce((sum, item) => sum + (item.qaReopenCount||0), 0);
+  const qaTotal = qaEverTouched.length;
+  const reopenRate = qaTotal ? Math.round((reopenCount / qaTotal) * 100) : 0;
+  setEl('rpt-kpi-reopen', reopenRate + '%');
+  setEl('rpt-kpi-reopen-sub', `${reopenCount} item${reopenCount!==1?'s':''} (${totalReopenEvents} reopen event${totalReopenEvents!==1?'s':''})`);
 
   const avgPts=reportItems.length?Math.round(reportItems.reduce((a,item)=>a+(item.points||0),0)/reportItems.length*10)/10:0;
   setEl('rpt-kpi-avg-time',avgPts);
@@ -5535,7 +5929,7 @@ function renderReports(){
   // ── Destroy existing report charts before recreating (prevents duplicate instances) ──
   // v27-fix: always destroy+recreate — fingerprint+early-return caused blank charts on
   // filter changes and page revisits due to stale/detached canvas contexts.
-  ['velocity','burndown','spillover','workload','typeChart','projDist','sprintHealth','relComp','relAging','epicCompletion','epicWorkload','epicVelocity'].forEach(k=>{
+  ['velocity','burndown','spillover','workload','typeChart','projDist','sprintHealth','relComp','relAging','epicCompletion','epicWorkload','epicVelocity','productBifurcation','tagBifurcation'].forEach(k=>{
     if(charts[k]){try{charts[k].destroy();}catch(e){}delete charts[k];}
   });
 
@@ -5846,6 +6240,51 @@ function renderReports(){
     options:_evOpts
   });
   }
+
+  // ── PRODUCT BIFURCATION ──
+  const pbCtx=_getCtx('productBifurcationChart');
+  if(pbCtx){
+    const _prodMap={};
+    (_rt||[]).forEach(t=>{
+      const prods=t.products&&t.products.length?t.products
+        :(t.productIds&&t.productIds.length?t.productIds.map(pid=>{const p=(state.products||[]).find(x=>x.id===pid);return p?p.name:pid;}):null);
+      if(prods&&prods.length){prods.forEach(pn=>{_prodMap[pn]=(_prodMap[pn]||0)+1;});}
+      else{_prodMap['(No Product)']=(_prodMap['(No Product)']||0)+1;}
+    });
+    const _pbLabels=Object.keys(_prodMap);
+    const _pbData=_pbLabels.map(k=>_prodMap[k]);
+    const _pbPalette=['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#0ea5e9','#ec4899','#14b8a6','#f97316','#84cc16'];
+    const _pbColors=_pbLabels.map((_,i)=>_pbPalette[i%_pbPalette.length]);
+    const _pbOpts={responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:true,position:'right',labels:{boxWidth:10,padding:12,font:{size:11,family:'DM Sans'},color:'#4a5066'}},tooltip:{backgroundColor:'rgba(14,16,26,0.88)',titleFont:{family:'DM Sans',size:12,weight:'600'},bodyFont:{family:'DM Sans',size:11},padding:{top:9,bottom:9,left:12,right:12},cornerRadius:8},datalabels:{display:ctx=>{const data=ctx.dataset.data;const total=data.reduce((a,b)=>a+b,0);const val=data[ctx.dataIndex];return total>0&&((val/total)*100)>=4;},color:'#fff',font:{size:10,weight:'700'},formatter:(v,ctx)=>{const total=ctx.dataset.data.reduce((a,b)=>a+b,0);return Math.round((v/total)*100)+'%';}}},animation:{duration:400,easing:'easeInOutQuart'}};
+    charts.productBifurcation=new Chart(pbCtx,{
+      type:'doughnut',
+      data:{labels:_pbLabels.length?_pbLabels:['No Data'],datasets:[{data:_pbData.length?_pbData:[1],backgroundColor:_pbColors,borderWidth:0,hoverOffset:5}]},
+      options:_pbOpts
+    });
+  }
+
+  // ── TAG BIFURCATION ──
+  const tbCtx=_getCtx('tagBifurcationChart');
+  if(tbCtx){
+    const _tagMap={};
+    (_rt||[]).forEach(t=>{
+      if(t.tags&&t.tags.length){t.tags.forEach(tg=>{_tagMap[tg]=(_tagMap[tg]||0)+1;});}
+      else{_tagMap['(No Tag)']=(_tagMap['(No Tag)']||0)+1;}
+    });
+    const _tagSorted=Object.entries(_tagMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    const _tbLabels=_tagSorted.map(([k])=>k);
+    const _tbData=_tagSorted.map(([,v])=>v);
+    const _tbPalette=['rgba(99,102,241,0.75)','rgba(16,185,129,0.75)','rgba(245,158,11,0.75)','rgba(239,68,68,0.7)','rgba(139,92,246,0.75)','rgba(14,165,233,0.75)','rgba(236,72,153,0.75)','rgba(20,184,166,0.75)','rgba(249,115,22,0.75)','rgba(132,204,22,0.75)'];
+    const _tbColors=_tbLabels.map((_,i)=>_tbPalette[i%_tbPalette.length]);
+    const _tbOpts=_chartOpts({indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11},stepSize:1}},y:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}}}});
+    _tbOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'right',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v};
+    _tbOpts.layout={padding:{right:28}};
+    charts.tagBifurcation=new Chart(tbCtx,{
+      type:'bar',
+      data:{labels:_tbLabels.length?_tbLabels:['No Data'],datasets:[{label:'Tasks',data:_tbData.length?_tbData:[0],backgroundColor:_tbColors,borderRadius:5}]},
+      options:_tbOpts
+    });
+  }
   }catch(e){console.warn('[Render] renderReports error:',e);}
 }
 
@@ -6121,6 +6560,10 @@ function openTaskModal(taskId){
           <label>Tags</label>
           <div class="flex flex-wrap gap-1 mt-1">${(t.tags||[]).map(tag=>`<span class="tag">${tag}</span>`).join('')||'—'}</div>
         </div>
+        <div>
+          <label>Products</label>
+          <div class="flex flex-wrap gap-1 mt-1">${(t.products||[]).map(name=>`<span class="tag" style="background:var(--accent-ghost);color:var(--accent-dark);border:1px solid var(--accent-ring)">${name}</span>`).join('')||'—'}</div>
+        </div>
       </div>
       ${subtaskSection}
       <div class="flex justify-between items-center pt-4 mt-4 border-t border-slate-100 flex-wrap gap-2">
@@ -6176,6 +6619,7 @@ function updateTaskStatus(taskId,status){
     try{const sel=document.querySelector(`select[onchange*="updateTaskStatus"][onchange*="${taskId}"]`)||document.querySelector(`select[onchange*="${taskId}"]`);if(sel)sel.value=task.status;}catch(e){}
     return;
   }
+  _trackQAReopen(task, resolvedStatus);
   task.status=resolvedStatus;
   // ── Debounced Firebase write ──
   DebounceWrite.schedule('tasks', task, 300);
@@ -6612,6 +7056,7 @@ function updateSubtaskStatus(parentTaskId,subtaskId,status){
   }
   if(s){
     const resolvedStatus=resolveRollbackStatus(status);
+    _trackQAReopen(s, resolvedStatus);
     s.status=resolvedStatus;
     // ── Firebase: persist parent task with updated subtask status ──
     FirebaseDB.saveEntity('tasks', parent).catch(e=>console.warn('[updateSubtaskStatus] Firebase error:',e));
@@ -6693,6 +7138,139 @@ function _ctClearErrors(){
     el.style.borderColor=''; el.style.boxShadow='';
   });
 }
+
+
+// ─── MULTI-SELECT WIDGET ──────────────────────────────────────────
+// Searchable multi-select with chip display.
+// Usage: initMultiSelect(id, [{id,name}], selectedIds, disabled?)
+// Read back: _msGetSelected(id)    → [name, ...]   (display / backward-compat)
+//            _msGetSelectedIds(id) → [id,   ...]   (persist against task)
+const _msState = {};
+
+function initMultiSelect(id, items, selectedIds, disabled){
+  const _items = Array.isArray(items) ? items : [];
+  // Accept id-arrays or legacy name-arrays for backward compat on load
+  const _idSet = new Set();
+  if(Array.isArray(selectedIds)){
+    selectedIds.forEach(val=>{
+      const byId = _items.find(x=>x.id===val);
+      if(byId){ _idSet.add(byId.id); return; }
+      // Legacy: val is a name — resolve to id
+      const byName = _items.find(x=>x.name===val);
+      if(byName) _idSet.add(byName.id);
+    });
+  }
+  _msState[id] = {
+    items: _items,
+    selected: _idSet,   // Set of ids
+    disabled: !!disabled
+  };
+  _msRender(id);
+}
+
+function _msRender(id){
+  const s = _msState[id];
+  if(!s) return;
+  const chipsEl = document.getElementById(id+'-chips');
+  const dropEl  = document.getElementById(id+'-drop');
+  const inputEl = document.getElementById(id+'-input');
+  if(!chipsEl) return;
+
+  // Chips — display names, keyed by id
+  chipsEl.innerHTML = [...s.selected].map(selId=>{
+    const item = s.items.find(x=>x.id===selId);
+    if(!item) return '';
+    const safeName = item.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const safeId   = selId.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<span class="ms-chip">${item.name}${s.disabled?'':'<button type="button" class="ms-chip-x" tabindex="-1" onmousedown="event.preventDefault();_msRemoveId(\''+id+'\',\''+safeId+'\')">×</button>'}</span>`;
+  }).filter(Boolean).join('');
+
+  // Dropdown options — filter by search query
+  if(dropEl && inputEl){
+    const q = inputEl.value.toLowerCase();
+    const filtered = s.items.filter(x => !s.selected.has(x.id) && (!q || x.name.toLowerCase().includes(q)));
+    dropEl.innerHTML = filtered.length
+      ? filtered.map(x=>{
+          const safeId = x.id.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          return `<div class="ms-opt" onmousedown="event.preventDefault();_msSelectId('${id}','${safeId}')">${x.name}</div>`;
+        }).join('')
+      : `<div class="ms-opt-empty">No matches</div>`;
+  }
+}
+
+window._msInput   = id => _msRender(id);
+window._msFocus   = function(id){
+  const dropEl = document.getElementById(id+'-drop');
+  if(dropEl) dropEl.style.display='block';
+  _msRender(id);
+};
+window._msBlur    = function(id){
+  setTimeout(()=>{
+    const dropEl  = document.getElementById(id+'-drop');
+    const inputEl = document.getElementById(id+'-input');
+    if(dropEl)  dropEl.style.display='none';
+    if(inputEl) inputEl.value='';
+    _msRender(id);
+  }, 180);
+};
+// Primary: select/remove by id
+window._msSelectId = function(id, itemId){
+  const s = _msState[id];
+  if(!s || s.disabled) return;
+  s.selected.add(itemId);
+  const inputEl = document.getElementById(id+'-input');
+  if(inputEl) inputEl.value='';
+  _msRender(id);
+};
+window._msRemoveId = function(id, itemId){
+  const s = _msState[id];
+  if(!s || s.disabled) return;
+  s.selected.delete(itemId);
+  _msRender(id);
+};
+// Legacy name-based aliases — kept for any external callers
+window._msSelectName = function(id, name){
+  const s = _msState[id];
+  if(!s || s.disabled) return;
+  const item = s.items.find(x=>x.name===name);
+  if(item) s.selected.add(item.id);
+  const inputEl = document.getElementById(id+'-input');
+  if(inputEl) inputEl.value='';
+  _msRender(id);
+};
+window._msRemoveName = function(id, name){
+  const s = _msState[id];
+  if(!s || s.disabled) return;
+  const item = s.items.find(x=>x.name===name);
+  if(item) s.selected.delete(item.id);
+  _msRender(id);
+};
+// Return selected names — backward-compat display use (kanban, view modal, search, export)
+window._msGetSelected = function(id){
+  const s = _msState[id];
+  if(!s) return [];
+  return [...s.selected].map(selId=>{
+    const item = s.items.find(x=>x.id===selId);
+    return item ? item.name : null;
+  }).filter(Boolean);
+};
+// Return selected ids — use this to persist against task
+window._msGetSelectedIds = function(id){
+  const s = _msState[id];
+  return s ? [...s.selected] : [];
+};
+// Refresh items when project changes; optionally prune selections no longer valid
+window._msRefreshItems = function(id, newItems, pruneInvalid){
+  const s = _msState[id];
+  if(!s) return;
+  s.items = Array.isArray(newItems) ? newItems : [];
+  if(pruneInvalid){
+    const validIds = new Set(s.items.map(x=>x.id));
+    s.selected = new Set([...s.selected].filter(selId=>validIds.has(selId)));
+  }
+  _msRender(id);
+};
+// ─────────────────────────────────────────────────────────────────
 
 function openCreateTaskModal(){
   const _visibleProjects = RBAC.getVisibleProjects();
@@ -6794,9 +7372,29 @@ function openCreateTaskModal(){
           <label>Description</label>
           <div id="ct-desc" class="desc-editor" data-placeholder="Add more context..."></div>
         </div>
-        <div>
-          <label>Tags (comma separated)</label>
-          <input type="text" id="ct-tags" placeholder="backend, api, auth"/>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label>Products</label>
+            <div class="ms-control" id="ct-products">
+              <div class="ms-chips-row">
+                <span id="ct-products-chips"></span>
+                <input class="ms-input" id="ct-products-input" type="text" placeholder="Search products…" autocomplete="off"
+                  oninput="_msInput('ct-products')" onfocus="_msFocus('ct-products')" onblur="_msBlur('ct-products')"/>
+              </div>
+              <div class="ms-dropdown" id="ct-products-drop"></div>
+            </div>
+          </div>
+          <div>
+            <label>Tags</label>
+            <div class="ms-control" id="ct-tags">
+              <div class="ms-chips-row">
+                <span id="ct-tags-chips"></span>
+                <input class="ms-input" id="ct-tags-input" type="text" placeholder="Search tags…" autocomplete="off"
+                  oninput="_msInput('ct-tags')" onfocus="_msFocus('ct-tags')" onblur="_msBlur('ct-tags')"/>
+              </div>
+              <div class="ms-dropdown" id="ct-tags-drop"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4" style="border-top:1px solid rgba(0,0,0,0.05)">
@@ -6809,6 +7407,11 @@ function openCreateTaskModal(){
   // Initialize label states
   ctOnSprintChange(document.getElementById('ct-sprint').value);
   ctOnProjectChange(firstProjectId);
+  // Initialize Products + Tags multi-selects (project-filtered)
+  const _ctProductItems = (state.products||[]).filter(p=>(p.projectIds||[]).includes(firstProjectId)).map(p=>({id:p.id,name:p.name}));
+  const _ctTagItems     = (state.tags||[]).filter(t=>(t.projectIds||[]).includes(firstProjectId)).map(t=>({id:t.id,name:t.name}));
+  initMultiSelect('ct-products', _ctProductItems, []);
+  initMultiSelect('ct-tags',     _ctTagItems,     []);
 }
 
 // Called when project changes — refresh sprint dropdown to matching sprints only
@@ -6845,6 +7448,15 @@ function ctOnProjectChange(projectId){
     epicSel.innerHTML = `<option value="">No Epic</option>` + projectEpics.map(e=>`<option value="${e.id}"${e.id===prevEpic?' selected':''}>◈ ${e.title}</option>`).join('');
   }
   ctOnSprintChange(sprintSel.value);
+  // Refresh Products + Tags multi-selects to match new project
+  if(_msState['ct-products']){
+    const newProducts = (state.products||[]).filter(p=>(p.projectIds||[]).includes(projectId)).map(p=>({id:p.id,name:p.name}));
+    _msRefreshItems('ct-products', newProducts, true);
+  }
+  if(_msState['ct-tags']){
+    const newTags = (state.tags||[]).filter(t=>(t.projectIds||[]).includes(projectId)).map(t=>({id:t.id,name:t.name}));
+    _msRefreshItems('ct-tags', newTags, true);
+  }
 }
 
 // Called when sprint changes — toggle mandatory asterisks on assignee + dates
@@ -6925,7 +7537,10 @@ function createTask(){
 
   if(firstError){ document.getElementById(firstError)?.focus(); return; }
 
-  const tags = document.getElementById('ct-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const tagIds      = _msGetSelectedIds('ct-tags');
+  const productIds  = _msGetSelectedIds('ct-products');
+  const tagNames    = _msGetSelected('ct-tags');
+  const productNames= _msGetSelected('ct-products');
   const _selfId = RBAC.memberSelfOnlyId();
   const task = {
     id:uid(),
@@ -6941,7 +7556,10 @@ function createTask(){
     status:document.getElementById('ct-status').value||'open',
     startDate:startDate||null,
     endDate:endDate||null,
-    tags,
+    tagIds,
+    productIds,
+    tags:tagNames,
+    products:productNames,
     subtasks:[]
   };
   state.tasks.push(task);
@@ -7092,9 +7710,29 @@ function openEditTaskModal(taskId){
           <label>Description</label>
           <div id="et-desc" class="desc-editor" data-placeholder="Add more context..." ${(freezeAll||freezeNonStatus)?'style="opacity:0.65;pointer-events:none;cursor:not-allowed"':''}></div>
         </div>
-        <div>
-          <label>Tags (comma separated)</label>
-          <input type="text" id="et-tags" value="${(t.tags||[]).join(', ')}" ${_dis(freezeAll||freezeNonStatus)}/>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label>Products</label>
+            <div class="ms-control" id="et-products">
+              <div class="ms-chips-row">
+                <span id="et-products-chips"></span>
+                <input class="ms-input" id="et-products-input" type="text" placeholder="Search products…" autocomplete="off" ${(freezeAll||freezeNonStatus)?'disabled style="display:none"':''}
+                  oninput="_msInput('et-products')" onfocus="_msFocus('et-products')" onblur="_msBlur('et-products')"/>
+              </div>
+              <div class="ms-dropdown" id="et-products-drop"></div>
+            </div>
+          </div>
+          <div>
+            <label>Tags</label>
+            <div class="ms-control" id="et-tags">
+              <div class="ms-chips-row">
+                <span id="et-tags-chips"></span>
+                <input class="ms-input" id="et-tags-input" type="text" placeholder="Search tags…" autocomplete="off" ${(freezeAll||freezeNonStatus)?'disabled style="display:none"':''}
+                  oninput="_msInput('et-tags')" onfocus="_msFocus('et-tags')" onblur="_msBlur('et-tags')"/>
+              </div>
+              <div class="ms-dropdown" id="et-tags-drop"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4" style="border-top:1px solid rgba(0,0,0,0.05)">
@@ -7111,6 +7749,19 @@ function openEditTaskModal(taskId){
   if(_etStartEl && _etEndEl && _etStartEl.value){
     _etEndEl.min = _etStartEl.value;
   }
+  const _etProjectId    = t.project || '';
+  const _etProductItems = (state.products||[]).filter(p=>(p.projectIds||[]).includes(_etProjectId)).map(p=>({id:p.id,name:p.name}));
+  const _etTagItems     = (state.tags||[]).filter(tg=>(tg.projectIds||[]).includes(_etProjectId)).map(tg=>({id:tg.id,name:tg.name}));
+  const _frozen = freezeAll || freezeNonStatus;
+  // Backward compat: use id-arrays if present; otherwise resolve legacy name-arrays
+  const _etProductIds = (t.productIds||[]).length
+    ? t.productIds
+    : (t.products||[]).map(name=>{ const p=_etProductItems.find(x=>x.name===name); return p?p.id:null; }).filter(Boolean);
+  const _etTagIds = (t.tagIds||[]).length
+    ? t.tagIds
+    : (t.tags||[]).map(name=>{ const tg=_etTagItems.find(x=>x.name===name); return tg?tg.id:null; }).filter(Boolean);
+  initMultiSelect('et-products', _etProductItems, _etProductIds, _frozen);
+  initMultiSelect('et-tags',     _etTagItems,     _etTagIds,     _frozen);
 }
 
 // Edit task modal — project change handler
@@ -7293,7 +7944,11 @@ function saveTask(taskId){
   t.startDate=startDate||null;
   t.endDate=endDate||null;
   t.description=_getDescValue('et-desc');
-  t.tags=document.getElementById('et-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  t.tagIds     = _msGetSelectedIds('et-tags');
+  t.productIds = _msGetSelectedIds('et-products');
+  // Resolve to name arrays for all existing display paths (kanban, view modal, search, export)
+  t.tags     = _msGetSelected('et-tags');
+  t.products = _msGetSelected('et-products');
   // ── Debounced Firebase write — protects against rapid save sequences ──
   SyncState.markPending(t.id);
   DebounceWrite.schedule('tasks', t, 300);
@@ -7829,6 +8484,21 @@ function createProject(){
 
 // ─── EDIT / DELETE PROJECT ────────────────────────────────────────
 
+function _epToggleMember(el){
+  const cb = el.querySelector('.ep-member-check');
+  if(!cb || cb.disabled) return;
+  cb.checked = !cb.checked;
+  const on = cb.checked;
+  el.style.background = on ? 'rgba(91,95,199,0.06)' : '#fff';
+  const box = el.querySelector('.ep-chk-box');
+  if(box){ box.style.background = on ? 'var(--accent)' : 'transparent'; box.style.borderColor = on ? 'var(--accent)' : 'rgba(0,0,0,0.2)'; }
+  const icon = el.querySelector('.ep-chk-icon');
+  if(icon) icon.style.opacity = on ? '1' : '0';
+  const total = document.querySelectorAll('.ep-member-check:checked').length;
+  const badge = document.getElementById('ep-member-count');
+  if(badge) badge.textContent = total === 0 ? 'None selected' : total + ' selected';
+}
+
 function openEditProjectModal(projId){
   if(!RBAC.isAdmin() && !RBAC.canManageProject(projId)){ showNotif('⚠ Permission denied','error'); return; }
   const p = state.projects.find(x=>x.id===projId);
@@ -7882,7 +8552,7 @@ function openEditProjectModal(projId){
               const checked=(p.memberIds||[]).includes(u.id);
               const roleLabel=u.role==='admin'?'Admin':u.role==='program_manager'?'Prog. Manager':'Team Member';
               const roleBadgeClass=u.role==='admin'?'admin':u.role==='program_manager'?'program_manager':'team_member';
-              return `<label onclick="${isCompleted?'':'(function(el){const cb=el.querySelector(\'.ep-member-check\');cb.checked=!cb.checked;const isChecked=cb.checked;el.style.background=isChecked?\'rgba(91,95,199,0.06)\':\'\'+\'\'\'#fff\'\'\';el.querySelector(\'.ep-chk-box\').style.background=isChecked?\'var(--accent)\':\'\'+\'\'\'transparent\'\'\';el.querySelector(\'.ep-chk-box\').style.borderColor=isChecked?\'var(--accent)\':\'\'+\'\'\'rgba(0,0,0,0.2)\'\'\';el.querySelector(\'.ep-chk-icon\').style.opacity=isChecked?\'1\':\'0\';const total=document.querySelectorAll(\'.ep-member-check:checked\').length;const badge=document.getElementById(\'ep-member-count\');badge.textContent=total===0?\'None selected\':total+\' selected\';})(this.closest(\'label\'))'}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:${isCompleted?'default':'pointer'};border-bottom:${i<state.users.length-1?'1px solid rgba(0,0,0,0.05)':'none'};background:${checked?'rgba(91,95,199,0.06)':'#fff'};transition:background 0.12s;user-select:none">
+              return `<label data-ep-member="${u.id}" onclick="_epToggleMember(this)" style="display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:${isCompleted?'default':'pointer'};border-bottom:${i<state.users.length-1?'1px solid rgba(0,0,0,0.05)':'none'};background:${checked?'rgba(91,95,199,0.06)':'#fff'};transition:background 0.12s;user-select:none">
                 <input type="checkbox" value="${u.id}" class="ep-member-check" ${checked?'checked':''} style="position:absolute;opacity:0;pointer-events:none" ${_pdis(isCompleted)}/>
                 <div class="ep-chk-box" style="width:18px;height:18px;border-radius:5px;border:1.5px solid ${checked?'var(--accent)':'rgba(0,0,0,0.2)'};background:${checked?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.12s,border-color 0.12s">
                   <svg class="ep-chk-icon" width="10" height="10" viewBox="0 0 10 10" fill="none" style="opacity:${checked?'1':'0'};transition:opacity 0.12s"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -8629,6 +9299,16 @@ function saveEpic(epicId){
     document.getElementById('ee-status').value=e.status; // reset select
     return;
   }
+  // ── Incomplete-task guard: block Completed if any mapped task is not done ──
+  if(_eeNewStatus==='Completed'){
+    const _epicTasks=getEpicTasks(e.id);
+    const _incomplete=_epicTasks.filter(t=>!DONE_STATUSES.includes(t.status));
+    if(_incomplete.length){
+      showNotif('⚠ Cannot complete epic — '+_incomplete.length+' task'+(_incomplete.length>1?'s':'')+' still incomplete','error');
+      document.getElementById('ee-status').value=e.status;
+      return;
+    }
+  }
   e.title=title;
   e.description=document.getElementById('ee-desc').value.trim();
   e.projectIds=projectIds;
@@ -8951,6 +9631,7 @@ function renderReleaseQueue(){
 }
 
 function mapTaskToRelease(taskId){
+  if(RBAC.isMember()){ showNotif('⚠ Only admins and program managers can map tasks to releases','error'); return; }
   const sel=document.getElementById('rqsel-'+taskId);
   if(!sel||!sel.value){showNotif('⚠ Select a release first','error');return;}
   const releaseId=sel.value;
@@ -9336,6 +10017,16 @@ function submitEditRelease(id){
   if(!version){showNotif('⚠ Version required','error');return;}
   const notes=document.getElementById('er-notes').value.trim();
   document.getElementById('er-warn-notes').style.display=notes?'none':'flex';
+  // ── Incomplete-task guard: block Released if any mapped task is not fully released ──
+  const _erNewStatus=document.getElementById('er-status').value;
+  if(_erNewStatus==='Released'){
+    const _relTaskIds=(existing.taskIds||[]);
+    const _relIncomplete=_relTaskIds.filter(tid=>{const t=getTask(tid);return t&&t.status!=='released';});
+    if(_relIncomplete.length){
+      showNotif('⚠ Cannot mark release as Released — '+_relIncomplete.length+' task'+(_relIncomplete.length>1?'s':'')+' not yet released','error');
+      return;
+    }
+  }
   // Preserve existing taskIds — mapping is done via queue only
   updateRelease(id,{
     name,version,
@@ -11438,7 +12129,7 @@ async function _xlSheetTasks(data) {
   const headers = [
     'Task ID','Title','Type','Parent Task',
     'Project','Sprint','Status','Priority',
-    'Assignee','Story Points','Tags / Labels',
+    'Assignee','Story Points','Tags / Labels','Products',
     'Created Date','Updated Date',
   ];
 
@@ -11450,6 +12141,10 @@ async function _xlSheetTasks(data) {
   for (let i = 0; i < tasks.length; i += BATCH) {
     const chunk = tasks.slice(i, i + BATCH);
     for (const t of chunk) {
+      // Resolve product names: prefer products array (names); fall back to resolving productIds
+      const _tProducts = (t.products||[]).length
+        ? t.products
+        : (t.productIds||[]).map(pid=>{ const p=(data.products||[]).find(x=>x.id===pid); return p?p.name:pid; });
       // Parent task row
       combinedRows.push({
         id:          _xlStr(t.id),
@@ -11463,11 +12158,12 @@ async function _xlSheetTasks(data) {
         assignee:    lu.user(t.assignee),
         points:      t.points != null ? t.points : '—',
         tags:        _xlStr(t.tags),
+        products:    _xlStr(_tProducts),
         createdAt:   t.createdAt ? new Date(t.createdAt).getTime() : 0,
         createdFmt:  _xlFmtDate(t.createdAt),
         updatedFmt:  _xlFmtDate(t.updatedAt),
       });
-      // Subtask rows
+      // Subtask rows — subtasks don't carry products; inherit parent's if needed
       for (const s of (t.subtasks || [])) {
         combinedRows.push({
           id:         _xlStr(s.id),
@@ -11481,6 +12177,7 @@ async function _xlSheetTasks(data) {
           assignee:   lu.user(s.assignee),
           points:     s.points != null ? s.points : '—',
           tags:       _xlStr(s.tags),
+          products:   '—',
           createdAt:  s.createdAt ? new Date(s.createdAt).getTime() : 0,
           createdFmt: _xlFmtDate(s.createdAt),
           updatedFmt: _xlFmtDate(s.updatedAt),
@@ -11498,7 +12195,7 @@ async function _xlSheetTasks(data) {
     rows.push([
       r.id, r.title, r.type, r.parentTask,
       r.project, r.sprint, r.status, r.priority,
-      r.assignee, r.points, r.tags,
+      r.assignee, r.points, r.tags, r.products,
       r.createdFmt, r.updatedFmt,
     ]);
   }
@@ -11506,7 +12203,7 @@ async function _xlSheetTasks(data) {
   if (rows.length === 1) rows.push(['No tasks in scope']);
 
   return _xlBuildSheet(rows, {
-    colWidths: [14,40,10,36, 24,18,20,12, 20,10,20, 22,22]
+    colWidths: [14,40,10,36, 24,18,20,12, 20,10,20,24, 22,22]
   });
 }
 
@@ -12576,6 +13273,232 @@ function _applyExportMenuRBAC() {
 /** Override _xlGetData to support date-range filtering for 'full' mode */
 const _xlGetData_orig = typeof _xlGetData === 'function' ? _xlGetData : null;
 
+// ─── ADMIN CONFIG: PRODUCTS & TAGS ───────────────────────────────
+// Admin-only. Manages state.products and state.tags with project mapping.
+// CRUD: create, edit, delete. Persisted via SaveManager.
+// Does NOT touch tasks, sprints, kanban, dashboard, or RBAC structure.
+// ─────────────────────────────────────────────────────────────────
+
+function _prdId(){ return 'PRD' + Date.now().toString(36).toUpperCase(); }
+function _tagId(){ return 'TAG' + Date.now().toString(36).toUpperCase(); }
+
+// ── Render Admin Config section (called by renderPage → 'settings') ──
+function renderAdminConfig(){
+  const section = document.getElementById('admin-config-section');
+  if(!section) return;
+  // Only visible to admin
+  if(!RBAC.isAdmin()){
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+  _renderProductsList();
+  _renderTagsList();
+}
+
+// ── Products list ──
+function _renderProductsList(){
+  const el = document.getElementById('admin-products-list');
+  if(!el) return;
+  const products = state.products || [];
+  if(!products.length){
+    el.innerHTML = `<div class="settings-row" style="justify-content:center;color:var(--text-tertiary);font-size:13px">No products yet.</div>`;
+    return;
+  }
+  el.innerHTML = products.map(prd => {
+    const mappedNames = (prd.projectIds || []).map(pid => {
+      const p = getProject(pid);
+      return p ? `<span style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--accent-ghost);color:var(--accent-dark);border-radius:var(--r-pill);font-size:11px;font-weight:600;border:1px solid var(--accent-ring)">${_esc(p.name)}</span>` : '';
+    }).filter(Boolean).join(' ');
+    return `<div class="settings-row">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13.5px;font-weight:600;color:var(--text-primary)">${_esc(prd.name)}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">${mappedNames || '<span style="font-size:11px;color:var(--text-tertiary)">No projects mapped</span>'}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-secondary" style="height:28px;font-size:11.5px;padding:0 10px" onclick="openProductModal('${_esc(prd.id)}')">Edit</button>
+        <button class="btn btn-danger" style="height:28px;font-size:11.5px;padding:0 10px" onclick="deleteProduct('${_esc(prd.id)}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Tags list ──
+function _renderTagsList(){
+  const el = document.getElementById('admin-tags-list');
+  if(!el) return;
+  const tags = state.tags || [];
+  if(!tags.length){
+    el.innerHTML = `<div class="settings-row" style="justify-content:center;color:var(--text-tertiary);font-size:13px">No tags yet.</div>`;
+    return;
+  }
+  el.innerHTML = tags.map(tag => {
+    const mappedNames = (tag.projectIds || []).map(pid => {
+      const p = getProject(pid);
+      return p ? `<span style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--accent-ghost);color:var(--accent-dark);border-radius:var(--r-pill);font-size:11px;font-weight:600;border:1px solid var(--accent-ring)">${_esc(p.name)}</span>` : '';
+    }).filter(Boolean).join(' ');
+    return `<div class="settings-row">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13.5px;font-weight:600;color:var(--text-primary)">${_esc(tag.name)}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">${mappedNames || '<span style="font-size:11px;color:var(--text-tertiary)">No projects mapped</span>'}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-secondary" style="height:28px;font-size:11.5px;padding:0 10px" onclick="openTagModal('${_esc(tag.id)}')">Edit</button>
+        <button class="btn btn-danger" style="height:28px;font-size:11.5px;padding:0 10px" onclick="deleteTag('${_esc(tag.id)}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── HTML escape helper ──
+function _esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Project multi-select HTML for modal ──
+function _projectMultiSelectHTML(selectedIds, prefix){
+  const projects = state.projects || [];
+  if(!projects.length) return '<div style="font-size:13px;color:var(--text-tertiary)">No projects available.</div>';
+  return projects.map(p => {
+    const checked = (selectedIds||[]).includes(p.id) ? 'checked' : '';
+    return `<label style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;font-size:13px;color:var(--text-primary)">
+      <input type="checkbox" value="${_esc(p.id)}" ${checked} style="width:16px;height:16px;flex-shrink:0;cursor:pointer;appearance:auto;-webkit-appearance:checkbox;accent-color:var(--accent);border:1px solid #9399b0;padding:0;background:white;border-radius:3px;box-shadow:none;min-height:unset;">
+      <span>${_esc(p.name)}</span>
+    </label>`;
+  }).join('');
+}
+
+// ── Collect checked project IDs from modal ──
+function _collectCheckedProjects(containerId){
+  const container = document.getElementById(containerId);
+  if(!container) return [];
+  return Array.from(container.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value);
+}
+
+// ── Save products/tags to localStorage + Firebase (products/tags are local-only; no Firebase collection) ──
+function _saveAdminConfig(){
+  SaveManager.save();
+}
+
+// ─── PRODUCT CRUD ─────────────────────────────────────────────────
+
+function openProductModal(productId){
+  if(!RBAC.isAdmin()){ showNotif('Admin access required','error'); return; }
+  const isEdit = !!productId;
+  const prd = isEdit ? (state.products||[]).find(p => p.id === productId) : null;
+  const html = `
+    <div style="padding:24px 24px 20px">
+      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:18px">${isEdit ? 'Edit Product' : 'Add Product'}</div>
+      <div style="margin-bottom:14px">
+        <label>Product Name</label>
+        <input id="prd-name-input" type="text" placeholder="e.g. Claims Portal" value="${isEdit ? _esc(prd.name) : ''}" style="margin-top:4px"/>
+      </div>
+      <div style="margin-bottom:18px">
+        <label style="margin-bottom:8px">Mapped Projects</label>
+        <div id="prd-projects-container" style="display:flex;flex-direction:column;gap:2px;padding:8px 12px;background:var(--control-bg);border:1px solid var(--control-border);border-radius:var(--r-md);max-height:220px;overflow-y:auto">
+          ${_projectMultiSelectHTML(isEdit ? prd.projectIds : [], 'prd')}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProduct('${isEdit ? productId : ''}')">
+          ${isEdit ? 'Save Changes' : 'Add Product'}
+        </button>
+      </div>
+    </div>`;
+  openModal(html);
+  setTimeout(()=>{ const inp=document.getElementById('prd-name-input'); if(inp) inp.focus(); }, 80);
+}
+
+function saveProduct(productId){
+  if(!RBAC.isAdmin()) return;
+  const nameEl = document.getElementById('prd-name-input');
+  const name = (nameEl ? nameEl.value.trim() : '');
+  if(!name){ showNotif('Product name is required','error'); if(nameEl) nameEl.focus(); return; }
+  const projectIds = _collectCheckedProjects('prd-projects-container');
+  state.products = state.products || [];
+  if(productId){
+    const idx = state.products.findIndex(p => p.id === productId);
+    if(idx > -1){
+      state.products[idx] = { ...state.products[idx], name, projectIds, updatedAt: _now() };
+    }
+  } else {
+    state.products.push({ id: _prdId(), name, projectIds, createdAt: _now(), updatedAt: _now() });
+  }
+  _saveAdminConfig();
+  closeModal();
+  _renderProductsList();
+  showNotif(productId ? 'Product updated ✓' : 'Product added ✓');
+}
+
+function deleteProduct(productId){
+  if(!RBAC.isAdmin()) return;
+  if(!confirm('Delete this product?')) return;
+  state.products = (state.products || []).filter(p => p.id !== productId);
+  _saveAdminConfig();
+  _renderProductsList();
+  showNotif('Product deleted');
+}
+
+// ─── TAG CRUD ─────────────────────────────────────────────────────
+
+function openTagModal(tagId){
+  if(!RBAC.isAdmin()){ showNotif('Admin access required','error'); return; }
+  const isEdit = !!tagId;
+  const tag = isEdit ? (state.tags||[]).find(t => t.id === tagId) : null;
+  const html = `
+    <div style="padding:24px 24px 20px">
+      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:18px">${isEdit ? 'Edit Tag' : 'Add Tag'}</div>
+      <div style="margin-bottom:14px">
+        <label>Tag Name</label>
+        <input id="tag-name-input" type="text" placeholder="e.g. Critical" value="${isEdit ? _esc(tag.name) : ''}" style="margin-top:4px"/>
+      </div>
+      <div style="margin-bottom:18px">
+        <label style="margin-bottom:8px">Mapped Projects</label>
+        <div id="tag-projects-container" style="display:flex;flex-direction:column;gap:2px;padding:8px 12px;background:var(--control-bg);border:1px solid var(--control-border);border-radius:var(--r-md);max-height:220px;overflow-y:auto">
+          ${_projectMultiSelectHTML(isEdit ? tag.projectIds : [], 'tag')}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTag('${isEdit ? tagId : ''}')">
+          ${isEdit ? 'Save Changes' : 'Add Tag'}
+        </button>
+      </div>
+    </div>`;
+  openModal(html);
+  setTimeout(()=>{ const inp=document.getElementById('tag-name-input'); if(inp) inp.focus(); }, 80);
+}
+
+function saveTag(tagId){
+  if(!RBAC.isAdmin()) return;
+  const nameEl = document.getElementById('tag-name-input');
+  const name = (nameEl ? nameEl.value.trim() : '');
+  if(!name){ showNotif('Tag name is required','error'); if(nameEl) nameEl.focus(); return; }
+  const projectIds = _collectCheckedProjects('tag-projects-container');
+  state.tags = state.tags || [];
+  if(tagId){
+    const idx = state.tags.findIndex(t => t.id === tagId);
+    if(idx > -1){
+      state.tags[idx] = { ...state.tags[idx], name, projectIds, updatedAt: _now() };
+    }
+  } else {
+    state.tags.push({ id: _tagId(), name, projectIds, createdAt: _now(), updatedAt: _now() });
+  }
+  _saveAdminConfig();
+  closeModal();
+  _renderTagsList();
+  showNotif(tagId ? 'Tag updated ✓' : 'Tag added ✓');
+}
+
+function deleteTag(tagId){
+  if(!RBAC.isAdmin()) return;
+  if(!confirm('Delete this tag?')) return;
+  state.tags = (state.tags || []).filter(t => t.id !== tagId);
+  _saveAdminConfig();
+  _renderTagsList();
+  showNotif('Tag deleted');
+}
+// ─── END ADMIN CONFIG ─────────────────────────────────────────────
+
 function _xlGetDataWithRange(mode, fromDate, toDate) {
   const data = _xlGetData ? _xlGetData(mode) : { tasks: [], subtasks: [], sprints: [], epics: [], releases: [], users: [], projects: [], comments: [] };
 
@@ -12606,7 +13529,13 @@ function _xlGetDataWithRange(mode, fromDate, toDate) {
     update,
     remove,
     get,
-    onValue
+    onValue,
+    query,
+    orderByChild,
+    equalTo,
+    onChildAdded,
+    onChildChanged,
+    onChildRemoved
   } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
   import {
     getAuth,
@@ -12715,8 +13644,14 @@ function _xlGetDataWithRange(mode, fromDate, toDate) {
       if(user) {
         showApp(user);
         // Only load Firebase data after successful auth
-        // Store onValue globally so RealtimeSync can access it
-        window._rtOnValue = onValue;
+        // Store onValue + child listeners + query helpers globally so RealtimeSync can access them
+        window._rtOnValue        = onValue;
+        window._rtOnChildAdded   = onChildAdded;
+        window._rtOnChildChanged = onChildChanged;
+        window._rtOnChildRemoved = onChildRemoved;
+        window._rtQuery          = query;
+        window._rtOrderByChild   = orderByChild;
+        window._rtEqualTo        = equalTo;
         FirebaseDB.init(db, { ref, set, update, remove, get, onValue });
         FirebaseDB.loadAppData().then(() => {
           invalidateStateMaps();
