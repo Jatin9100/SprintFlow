@@ -4181,18 +4181,42 @@ function _populateDashboardFilters(){
   const sprintSel=document.getElementById('dash-sprint-filter');
   if(projSel){
     const prev=projSel.value||'all';
-    projSel.innerHTML=`<option value="all">All Projects</option>`+
-      RBAC.getVisibleProjects().map(p=>`<option value="${p.id}"${p.id===prev?' selected':''}>${p.name}</option>`).join('');
-    // Restore value if it still exists; otherwise reset gracefully
-    if(prev!=='all' && !RBAC.getVisibleProjects().find(p=>p.id===prev)) projSel.value='all';
+    const _allProj=RBAC.getVisibleProjects();
+    const _activeProj=_allProj.filter(p=>(p.status||'').toLowerCase()==='active');
+    const _completedProj=_allProj.filter(p=>(p.status||'').toLowerCase()==='completed');
+    let _projHTML=`<option value="all">All Projects</option>`;
+    if(_activeProj.length){
+      _projHTML+=`<optgroup label="── Active Projects ──">`;
+      _projHTML+=_activeProj.map(p=>`<option value="${p.id}"${p.id===prev?' selected':''}>${p.name}</option>`).join('');
+      _projHTML+=`</optgroup>`;
+    }
+    if(_completedProj.length){
+      _projHTML+=`<optgroup label="── Completed Projects ──">`;
+      _projHTML+=_completedProj.map(p=>`<option value="${p.id}"${p.id===prev?' selected':''}>${p.name}</option>`).join('');
+      _projHTML+=`</optgroup>`;
+    }
+    projSel.innerHTML=_projHTML;
+    if(prev!=='all'&&!_allProj.find(p=>p.id===prev)) projSel.value='all';
   }
   if(sprintSel){
     const prev=sprintSel.value||'all';
     const projFilter=projSel?projSel.value:'all';
-    const visibleSprints=RBAC.getVisibleSprints().filter(s=>projFilter==='all'||s.project===projFilter);
-    sprintSel.innerHTML=`<option value="all">All Sprints</option>`+
-      visibleSprints.map(s=>`<option value="${s.id}"${s.id===prev?' selected':''}>${s.name}</option>`).join('');
-    if(prev!=='all' && !visibleSprints.find(s=>s.id===prev)) sprintSel.value='all';
+    const _allSpr=RBAC.getVisibleSprints().filter(s=>projFilter==='all'||s.project===projFilter);
+    const _activeSpr=_allSpr.filter(s=>(s.status||'').toLowerCase()==='active');
+    const _completedSpr=_allSpr.filter(s=>(s.status||'').toLowerCase()==='completed');
+    let _sprHTML=`<option value="all">All Sprints</option>`;
+    if(_activeSpr.length){
+      _sprHTML+=`<optgroup label="── Active Sprints ──">`;
+      _sprHTML+=_activeSpr.map(s=>`<option value="${s.id}"${s.id===prev?' selected':''}>${s.name}</option>`).join('');
+      _sprHTML+=`</optgroup>`;
+    }
+    if(_completedSpr.length){
+      _sprHTML+=`<optgroup label="── Completed Sprints ──">`;
+      _sprHTML+=_completedSpr.map(s=>`<option value="${s.id}"${s.id===prev?' selected':''}>${s.name}</option>`).join('');
+      _sprHTML+=`</optgroup>`;
+    }
+    sprintSel.innerHTML=_sprHTML;
+    if(prev!=='all'&&!_activeSpr.concat(_completedSpr).find(s=>s.id===prev)) sprintSel.value='all';
   }
 }
 
@@ -5143,8 +5167,8 @@ function renderKanban(){
     ? allSprints
     : allSprints.filter(s=>s.project===selectedProject);
   const prevVal=selectEl.value;
-  const activeSprints=scopedSprints.filter(s=>s.status!=='completed');
-  const completedSprints=scopedSprints.filter(s=>s.status==='completed');
+  const activeSprints=scopedSprints.filter(s=>(s.status||'').toLowerCase()==='active');
+  const completedSprints=scopedSprints.filter(s=>(s.status||'').toLowerCase()==='completed');
   let sprintHTML='';
   if(activeSprints.length){
     sprintHTML+=`<optgroup label="── Active Sprints ──">`;
@@ -5164,7 +5188,12 @@ function renderKanban(){
   }
   selectEl.innerHTML=sprintHTML;
 
-  const sprintId=selectEl.value||scopedSprints[0]?.id;
+  // Safety: if previously selected sprint was planned (not rendered), reset to first active/completed
+  const _prevSprint=prevVal?getSprint(prevVal):null;
+  if(_prevSprint&&(_prevSprint.status||'').toLowerCase()==='planned'){
+    selectEl.value=activeSprints[0]?.id||completedSprints[0]?.id||'';
+  }
+  const sprintId=selectEl.value||activeSprints[0]?.id||completedSprints[0]?.id||'';
   const board=document.getElementById('kanban-board');
   if(!sprintId){
     board.innerHTML=`<div class="empty-state w-full">
@@ -5824,8 +5853,21 @@ function renderReports(){
   const projSel=document.getElementById('rpt-project-filter');
   if(projSel){
     const prev=projSel.value;
-    projSel.innerHTML=`<option value="all">All Projects</option>`+
-      RBAC.getVisibleProjects().map(p=>`<option value="${p.id}"${p.id===prev?' selected':''}>${p.name}</option>`).join('');
+    const _allProj=RBAC.getVisibleProjects();
+    const _activeProj=_allProj.filter(p=>(p.status||'').toLowerCase()==='active');
+    const _completedProj=_allProj.filter(p=>(p.status||'').toLowerCase()==='completed');
+    let _projHTML=`<option value="all">All Projects</option>`;
+    if(_activeProj.length){
+      _projHTML+=`<optgroup label="── Active Projects ──">`;
+      _projHTML+=_activeProj.map(p=>`<option value="${p.id}"${p.id===prev?' selected':''}>${p.name}</option>`).join('');
+      _projHTML+=`</optgroup>`;
+    }
+    if(_completedProj.length){
+      _projHTML+=`<optgroup label="── Completed Projects ──">`;
+      _projHTML+=_completedProj.map(p=>`<option value="${p.id}"${p.id===prev?' selected':''}>${p.name}</option>`).join('');
+      _projHTML+=`</optgroup>`;
+    }
+    projSel.innerHTML=_projHTML;
   }
   // ── Populate sprint filter ──
   const sprintSel=document.getElementById('rpt-sprint-filter');
@@ -5833,9 +5875,21 @@ function renderReports(){
     const prevSprint=sprintSel.value;
     let projFilter=projSel?projSel.value:'all';
     if(!projFilter) projFilter='all';
-    const visibleSprints=RBAC.getVisibleSprints().filter(s=>projFilter==='all'||s.project===projFilter);
-    sprintSel.innerHTML=`<option value="all">All Sprints</option>`+
-      visibleSprints.map(s=>`<option value="${s.id}"${s.id===prevSprint?' selected':''}>${s.name}</option>`).join('');
+    const _allSpr=RBAC.getVisibleSprints().filter(s=>projFilter==='all'||s.project===projFilter);
+    const _activeSpr=_allSpr.filter(s=>(s.status||'').toLowerCase()==='active');
+    const _completedSpr=_allSpr.filter(s=>(s.status||'').toLowerCase()==='completed');
+    let _sprHTML=`<option value="all">All Sprints</option>`;
+    if(_activeSpr.length){
+      _sprHTML+=`<optgroup label="── Active Sprints ──">`;
+      _sprHTML+=_activeSpr.map(s=>`<option value="${s.id}"${s.id===prevSprint?' selected':''}>${s.name}</option>`).join('');
+      _sprHTML+=`</optgroup>`;
+    }
+    if(_completedSpr.length){
+      _sprHTML+=`<optgroup label="── Completed Sprints ──">`;
+      _sprHTML+=_completedSpr.map(s=>`<option value="${s.id}"${s.id===prevSprint?' selected':''}>${s.name}</option>`).join('');
+      _sprHTML+=`</optgroup>`;
+    }
+    sprintSel.innerHTML=_sprHTML;
   }
 
   // ── Sync badge & chips with current applied filters ──
@@ -7091,7 +7145,7 @@ function deleteSubtask(parentTaskId,subtaskId){
 // ─── CREATE TASK ──────────────────────────────────────────────────
 // Helper: build sprint options filtered by projectId
 function _sprintOptionsForProject(projectId, selectedSprintId){
-  const filtered = state.sprints.filter(s => !projectId || s.project === projectId);
+  const filtered = state.sprints.filter(s => (s.status||'').toLowerCase()==='active' && (!projectId || s.project===projectId));
   return `<option value="">Backlog</option>` + filtered.map(s=>`<option value="${s.id}"${s.id===selectedSprintId?' selected':''}>${s.name}</option>`).join('');
 }
 
@@ -7273,7 +7327,7 @@ window._msRefreshItems = function(id, newItems, pruneInvalid){
 // ─────────────────────────────────────────────────────────────────
 
 function openCreateTaskModal(){
-  const _visibleProjects = RBAC.getVisibleProjects();
+  const _visibleProjects = RBAC.getVisibleProjects().filter(p=>(p.status||'').toLowerCase()==='active');
   const firstProjectId = _visibleProjects.length ? _visibleProjects[0].id : '';
   const sprintOptsHtml = _sprintOptionsForProject(firstProjectId, '');
   openModal(`
@@ -7364,7 +7418,7 @@ function openCreateTaskModal(){
             <label>Epic</label>
             <select id="ct-epic">
               <option value="">No Epic</option>
-              ${(state.epics||[]).filter(e=>e.status!=='completed').map(e=>`<option value="${e.id}">◈ ${e.title}</option>`).join('')}
+              ${(state.epics||[]).filter(e=>(e.status||'').toLowerCase()==='active').map(e=>`<option value="${e.id}">◈ ${e.title}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -7440,7 +7494,7 @@ function ctOnProjectChange(projectId){
   if(epicSel){
     const prevEpic = epicSel.value;
     const projectEpics = (state.epics||[]).filter(e=>{
-      if(e.status==='completed') return false;
+      if((e.status||'').toLowerCase()!=='active') return false;
       if(!projectId) return true;
       const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
       return epicProjects.includes(projectId);
@@ -7609,7 +7663,7 @@ function openEditTaskModal(taskId){
 
   const sprintOptsHtml = _sprintOptionsForProject(t.project, t.sprint||'');
   const projectEpics = (state.epics||[]).filter(e=>{
-    if(e.status==='completed') return false;
+    if((e.status||'').toLowerCase()!=='active') return false;
     if(!t.project) return true;
     const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
     return epicProjects.includes(t.project);
@@ -7671,7 +7725,7 @@ function openEditTaskModal(taskId){
             <label>Project *</label>
             <select id="et-project" ${_dis(freezeAll||freezeNonStatus||freezeProjType)} onchange="${(freezeAll||freezeNonStatus||freezeProjType)?'':'etOnProjectChange(this.value)'}">
               <option value="">— Select project —</option>
-              ${RBAC.getVisibleProjects().map(p=>`<option value="${p.id}" ${t.project===p.id?'selected':''}>${p.name}</option>`).join('')}
+              ${RBAC.getVisibleProjects().filter(p=>(p.status||'').toLowerCase()==='active').map(p=>`<option value="${p.id}" ${t.project===p.id?'selected':''}>${p.name}</option>`).join('')}
             </select>
           </div>
           <div>
@@ -7787,7 +7841,7 @@ function etOnProjectChange(projectId){
   if(epicSel){
     const prevEpic = epicSel.value;
     const projectEpics = (state.epics||[]).filter(e=>{
-      if(e.status==='completed') return false;
+      if((e.status||'').toLowerCase()!=='active') return false;
       if(!projectId) return true;
       const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
       return epicProjects.includes(projectId);
@@ -7963,6 +8017,7 @@ function saveTask(taskId){
 // ─── CREATE SPRINT ────────────────────────────────────────────────
 function openCreateSprintModal(){
   if(RBAC.isMember()){ showNotif('⚠ Only admins and program managers can create sprints','error'); return; }
+  const sprintProjects=RBAC.getVisibleProjects().filter(p=>(p.status||'').toLowerCase()==='active');
   openModal(`
     <div class="p-6">
       <div class="flex items-center justify-between mb-5">
@@ -7978,7 +8033,7 @@ function openCreateSprintModal(){
           <div>
             <label>Project</label>
             <select id="cs-project">
-              ${state.projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
+              ${sprintProjects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -8048,6 +8103,7 @@ function openEditSprintModal(sprintId){
   // ── Field-freeze flags ──
   const isCompleted = isSprintCompleted(s);
   const _sdis = (cond) => cond ? 'disabled' : '';
+  const sprintProjects=RBAC.getVisibleProjects().filter(p=>(p.status||'').toLowerCase()==='active');
   openModal(`
     <div class="p-6">
       <div class="flex items-center justify-between mb-5">
@@ -8063,7 +8119,7 @@ function openEditSprintModal(sprintId){
           <div>
             <label>Project</label>
             <select id="es-project" disabled title="Project cannot be changed after sprint creation">
-              ${state.projects.map(p=>`<option value="${p.id}"${p.id===s.project?' selected':''}>${p.name}</option>`).join('')}
+              ${sprintProjects.map(p=>`<option value="${p.id}"${p.id===s.project?' selected':''}>${p.name}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -9065,6 +9121,7 @@ function renderEpics(){
 
 function openCreateEpicModal(){
   if(RBAC.isMember()){ showNotif('⚠ Only admins and program managers can create epics','error'); return; }
+  const epicProjects=RBAC.getVisibleProjects().filter(p=>(p.status||'').toLowerCase()==='active');
   openModal(`
     <div class="p-6">
       <div class="flex items-center justify-between mb-5">
@@ -9084,7 +9141,7 @@ function openCreateEpicModal(){
           <div>
             <label>Projects</label>
             <div id="ce-projects-list" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0">
-              ${state.projects.map(p=>`<button type="button" data-proj-id="${p.id}" data-selected="false"
+              ${epicProjects.map(p=>`<button type="button" data-proj-id="${p.id}" data-selected="false"
                 onclick="(function(btn){btn.dataset.selected=btn.dataset.selected==='true'?'false':'true';btn.style.background=btn.dataset.selected==='true'?'#eef2ff':'';btn.style.borderColor=btn.dataset.selected==='true'?'#6366f1':'var(--control-border)';btn.style.color=btn.dataset.selected==='true'?'#4338ca':'var(--text-secondary)';btn.style.fontWeight=btn.dataset.selected==='true'?'600':'400';})(this)"
                 style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid var(--control-border);background:'';cursor:pointer;font-size:12px;color:var(--text-secondary);font-weight:400;transition:all 0.15s;white-space:nowrap">
                 <span style="width:8px;height:8px;border-radius:50%;background:${p.color};display:inline-block;flex-shrink:0"></span>${p.name}
@@ -9187,6 +9244,7 @@ function openEditEpicModal(epicId){
   const _epicLockedAttr=_epicFullyLocked?'disabled readonly style="opacity:0.6;pointer-events:none;cursor:not-allowed"':'';
   const _epicSelLocked=_epicFullyLocked?'disabled':'';
   const _epicProjBtnStyle=_epicFullyLocked?'pointer-events:none;opacity:0.6;cursor:not-allowed':'cursor:pointer';
+  const epicProjects=RBAC.getVisibleProjects().filter(p=>(p.status||'').toLowerCase()==='active');
   openModal(`
     <div class="p-6">
       <div class="flex items-center justify-between mb-5">
@@ -9207,9 +9265,9 @@ function openEditEpicModal(epicId){
             <label>Projects</label>
             <div id="ee-projects-list" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0${_epicFullyLocked?';opacity:0.6;pointer-events:none':''}">
               ${(()=>{
-                const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
-                return state.projects.map(p=>{
-                  const sel=epicProjects.includes(p.id);
+                const _epicSelIds=e.projectIds||(e.projectId?[e.projectId]:[]);
+                return epicProjects.map(p=>{
+                  const sel=_epicSelIds.includes(p.id);
                   return `<button type="button" data-proj-id="${p.id}" data-selected="${sel}"
                     onclick="(function(btn){if(btn.disabled)return;btn.dataset.selected=btn.dataset.selected==='true'?'false':'true';btn.style.background=btn.dataset.selected==='true'?'#eef2ff':'';btn.style.borderColor=btn.dataset.selected==='true'?'#6366f1':'var(--control-border)';btn.style.color=btn.dataset.selected==='true'?'#4338ca':'var(--text-secondary)';btn.style.fontWeight=btn.dataset.selected==='true'?'600':'400';})(this)"
                     ${_epicFullyLocked?'disabled':''}
