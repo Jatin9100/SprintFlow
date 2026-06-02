@@ -297,6 +297,20 @@ document.addEventListener('DOMContentLoaded', function() {
   .badge-program_manager{background:#fef3c7;color:#92400e}
   .badge-member{background:#e0f2fe;color:#035690}
   .badge-team_member{background:#e0f2fe;color:#035690}
+  /* ── EPIC BADGE — Sprint Planning unassigned panel only ── */
+  .badge-epic{
+    background:rgba(124,58,237,0.09);color:#6d28d9;
+    border:1px solid rgba(124,58,237,0.15);
+    font-size:9.5px;font-weight:600;
+    padding:1px 6px;border-radius:var(--r-pill);
+    letter-spacing:.02em;text-transform:none;
+    max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    display:inline-flex;align-items:center;gap:3px;vertical-align:middle;
+  }
+  .badge-epic::before{
+    content:'';display:inline-block;width:5px;height:5px;
+    background:#7c3aed;border-radius:50%;flex-shrink:0;opacity:.7;
+  }
 
   /* ── AVATAR ── */
   .avatar{
@@ -1369,6 +1383,10 @@ document.addEventListener('DOMContentLoaded', function() {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
       <span class="nav-label">Release Board</span>
     </div>
+    <div class="nav-item" data-page="retrospectives">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <span class="nav-label">Retrospectives</span>
+    </div>
     <div class="nav-section-label">Insights</div>
     <div class="nav-item" data-page="reports">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -1657,6 +1675,9 @@ document.addEventListener('DOMContentLoaded', function() {
           <select id="kanban-epic-filter" class="sf-select" onchange="_debouncedRenderKanban()">
             <option value="all">All Epics</option>
           </select>
+          <select id="kanban-assignee-filter" class="sf-select" onchange="_debouncedRenderKanban()">
+            <option value="all">All Assignees</option>
+          </select>
           <button class="btn btn-primary" onclick="openCreateTaskModal()">+ Task</button>
         </div>
       </div>
@@ -1856,17 +1877,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
       <!-- ═══ TEAM PRODUCTIVITY ═══ -->
       <div class="section-label">Team Productivity</div>
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div class="card lg:col-span-2">
-          <div class="card-title" style="margin-bottom:4px">Workload Distribution</div>
-          <div class="card-subtitle" style="margin-bottom:16px">Story points assigned per member</div>
-          <div class="chart-container"><canvas id="workloadChart"></canvas></div>
+      <!-- Workload Distribution — full width primary chart -->
+      <div class="card mb-4">
+        <div class="flex items-center justify-between mb-1 flex-wrap gap-3">
+          <div>
+            <div class="card-title" style="margin-bottom:4px">Workload Distribution</div>
+            <div class="card-subtitle">Story points assigned per member</div>
+          </div>
+          <!-- Chart-level filter: affects ONLY this chart -->
+          <div class="flex items-center gap-2">
+            <span style="font-size:11px;color:var(--text-tertiary);font-weight:500">Show:</span>
+            <select id="workload-member-filter" class="sf-select sf-select-sm" onchange="_applyWorkloadMemberFilter()" style="font-size:12px;min-width:150px">
+              <option value="all">All Members</option>
+              <option value="assigned">Assigned Members</option>
+              <option value="unassigned">Unassigned Members</option>
+            </select>
+          </div>
         </div>
+        <div class="chart-container" style="height:260px"><canvas id="workloadChart"></canvas></div>
+      </div>
+      <!-- Task Types + Delivery Risk Members — secondary row below Workload -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="card">
           <div class="card-title" style="margin-bottom:4px">Task Types</div>
           <div class="card-subtitle" style="margin-bottom:16px">Distribution by type</div>
           <div class="chart-container" style="height:180px"><canvas id="typeChart"></canvas></div>
           <div class="mt-3 space-y-2" id="type-chart-legend"></div>
+        </div>
+        <!-- Delivery Risk Members — occupies remaining 2 columns -->
+        <div class="card lg:col-span-2" style="display:flex;flex-direction:column">
+          <div class="card-title" style="margin-bottom:4px">Delivery Risk Members</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Members at risk of not completing assigned workload · top 5 · sorted by highest risk</div>
+          <div id="delivery-risk-empty" style="display:none;flex:1;align-items:center;justify-content:center;padding:32px 0;text-align:center;color:var(--text-tertiary);font-size:13px">No delivery risk data available</div>
+          <div id="delivery-risk-list" style="flex:1;display:flex;flex-direction:column;gap:6px"></div>
         </div>
       </div>
       <!-- Productivity Table -->
@@ -1891,6 +1934,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <thead>
               <tr style="border-bottom:2px solid #f1f5f9;text-align:left">
                 <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;cursor:pointer" onclick="setSortProd('name')">Member</th>
+                <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px">Projects</th>
                 <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;text-align:right" onclick="setSortProd('completed')">Completed</th>
                 <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;text-align:right" onclick="setSortProd('active')">Active</th>
                 <th style="padding:8px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;text-align:right" onclick="setSortProd('points')">Pts Completed</th>
@@ -2210,6 +2254,26 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
+    <div class="page" id="page-retrospectives">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-1 flex-wrap gap-3">
+          <div>
+            <h1 class="page-title">Retrospectives</h1>
+            <div class="page-subtitle" id="retro-subtitle">Sprint retrospective boards</div>
+          </div>
+          <div class="flex gap-2 items-center" style="flex-wrap:nowrap">
+            <select id="retro-project-filter" class="sf-select" onchange="_onRetroProjectFilterChange()">
+              <option value="all">All Projects</option>
+            </select>
+            <select id="retro-sprint-filter" class="sf-select" onchange="renderRetrospectives()">
+              <option value="all">All Sprints</option>
+            </select>
+          </div>
+        </div>
+        <div id="retro-list-container" class="mt-4"></div>
+      </div>
+    </div>
+
   </div><!-- /page-area -->
 </main>
 
@@ -2257,6 +2321,9 @@ state.epics    = state.epics    || [];
 state.comments = state.comments || [];
 state.products = state.products || [];
 state.tags     = state.tags     || [];
+state.notifications = state.notifications || {}; // standalone collection — never merged into tasks
+state.retrospectives        = state.retrospectives        || [];
+state.retrospectiveEntries  = state.retrospectiveEntries  || [];
 state.currentUser = null; // set by RBAC.init() after auth
 let currentPage = 'dashboard';
 // ─── ROLE-BASED ACCESS CONTROL ───────────────────────────────────
@@ -2269,9 +2336,9 @@ const RBAC = (function(){
   // ── Page access rules by role ──────────────────────────────────
   // admin       → all pages
   // program_manager → all except settings and teams
-  // team_member → dashboard, backlog, kanban, sprint-planning, releases, reports (filtered)
+  // team_member → dashboard, backlog, kanban, sprint-planning, releases, reports (filtered), retrospectives (view + add entries only)
   const MEMBER_BLOCKED   = new Set(['settings','teams','projects','epics','releases']);
-  const PM_BLOCKED       = new Set(['settings','teams']);
+  const PM_BLOCKED       = new Set(['teams']);
 
   // ── Internal helpers ──────────────────────────────────────────
   function _user(){ return state.currentUser || null; }
@@ -2566,7 +2633,8 @@ const FirebaseDB = (function(){
   function _col(collection){
     const map = {
       projects:'projects', users:'users', sprints:'sprints',
-      tasks:'tasks', epics:'epics', releases:'releases', subtasks:'subtasks'
+      tasks:'tasks', epics:'epics', releases:'releases', subtasks:'subtasks',
+      products:'products', tags:'tags'
     };
     if(!map[collection]) throw new Error('[FirebaseDB] Unknown collection: '+collection);
     return map[collection];
@@ -2649,7 +2717,9 @@ const FirebaseDB = (function(){
         sprintsSnap,
         epicsSnap,
         usersSnap,
-        releasesSnap
+        releasesSnap,
+        productsSnap,
+        tagsSnap
       ] = await Promise.all([
         _fetchCollection('tasks'),
         _fetchCollection('projects'),
@@ -2657,6 +2727,8 @@ const FirebaseDB = (function(){
         _fetchCollection('epics'),
         _fetchCollection('users'),
         _fetchCollection('releases'),
+        _get(_safeRef('sprintflow/products')),
+        _get(_safeRef('sprintflow/tags')),
       ]);
       // If every collection is empty the database has not been seeded yet
       const anyExists = tasksSnap.exists()    || projectsSnap.exists() || sprintsSnap.exists()
@@ -2678,9 +2750,11 @@ const FirebaseDB = (function(){
         projects : _mergeArr(projectsSnap.val(), state.projects),
         users    : _mergeArr(usersSnap.val(),    state.users),
         sprints  : _mergeArr(sprintsSnap.val(),  state.sprints),
-        epics    : _mergeArr(epicsSnap.val(),    state.epics),
-        tasks    : _mergeArr(tasksSnap.val(),    state.tasks),
-        releases : _mergeArr(releasesSnap.val(), state.releases),
+        epics    : _mergeArr(epicsSnap.val(),     state.epics),
+        tasks    : _mergeArr(tasksSnap.val(),     state.tasks),
+        releases : _mergeArr(releasesSnap.val(),  state.releases),
+        products : _mergeArr(productsSnap && productsSnap.exists() ? productsSnap.val() : null, state.products),
+        tags     : _mergeArr(tagsSnap     && tagsSnap.exists()     ? tagsSnap.val()     : null, state.tags),
       };
       // Normalise projects
       merged.projects.forEach(p=>{ if(!p.memberIds) p.memberIds=[]; });
@@ -2851,6 +2925,8 @@ const FirebaseDB = (function(){
         epics    : _toObj(state.epics),
         tasks    : _toObj(state.tasks),
         releases : _toObj(state.releases),
+        products : _toObj(state.products),
+        tags     : _toObj(state.tags),
       };
       await _set(_safeRef('sprintflow'), payload);
       console.info('[FirebaseDB] syncAppState: full state pushed to Firebase');
@@ -2872,7 +2948,7 @@ const FirebaseDB = (function(){
 // and updatedAt-based conflict rejection.
 // ──────────────────────────────────────────────────────────────────
 const RealtimeSync = (function(){
-  const COLLECTIONS = ['tasks','projects','sprints','epics','releases','users'];
+  const COLLECTIONS = ['tasks','projects','sprints','epics','releases','users','products','tags'];
   // Active unsubscribe functions keyed by listener key (collection or "collection:projectId")
   const _unsubs = {};
   // Tracks IDs the local client has just written (to ignore echo-backs)
@@ -3018,6 +3094,10 @@ const RealtimeSync = (function(){
         else if(page==='dashboard'){ _invalidateChartFingerprints(); renderDashboard(); }
         else if(page==='reports')  { renderReports(); }
         break;
+      case 'products':
+      case 'tags':
+        if(page==='settings')      { renderAdminConfig(); }
+        break;
     }
   }
 
@@ -3027,8 +3107,8 @@ const RealtimeSync = (function(){
   //   project-keyed collections; fall back to root for users collection.
   // Returns array of {path, key} objects (key = unique listener registry id).
   function _listenTargets(collection){
-    // users collection is not project-scoped; always root
-    if(collection === 'users'){
+    // users, products, tags collections are not project-scoped; always root
+    if(collection === 'users' || collection === 'products' || collection === 'tags'){
       return [{ path: `sprintflow/${collection}`, key: collection }];
     }
     // Determine RBAC scope — RBAC may not be fully initialised yet (admin default)
@@ -4078,6 +4158,7 @@ function renderPage(page){
     else if(page==='teams')renderTeams();
     else if(page==='releases')renderReleaseBoard();
     else if(page==='settings')renderAdminConfig();
+    else if(page==='retrospectives')renderRetrospectives();
   }catch(err){
     console.error('renderPage error on page:',page,err);
   } finally {
@@ -4141,9 +4222,11 @@ function updateSidebarProject(){
 }
 
 function showProjectSwitcher(){
-  if(state.projects.length===0){showNotif('No projects yet','info');return;}
+  // RBAC FIX: only show projects the current user has access to
+  const _switcherProjects=RBAC.getVisibleProjects();
+  if(_switcherProjects.length===0){showNotif('No projects yet','info');return;}
   let html=`<div class="p-4"><div class="font-semibold text-slate-900 mb-3">Switch Project</div><div class="space-y-2">`;
-  html+=state.projects.map(p=>{
+  html+=_switcherProjects.map(p=>{
     const tasks=state.tasks.filter(t=>t.project===p.id).length;
     return `<div class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-200 transition-all" onclick="selectProject('${p.id}');closeModal()">
       <div style="width:36px;height:36px;background:${p.color};border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;flex-shrink:0">${p.key}</div>
@@ -4969,7 +5052,7 @@ function taskRow(t){
         ${hasSubtasks?`<span class="ml-2 text-xs text-indigo-500 font-semibold">${sp.done}/${sp.total} subtasks · ${sp.pct}%</span>`:''}
       </div>
       <div class="hidden sm:flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        ${(t.tags||[]).slice(0,2).map(tag=>`<span class="tag">${tag}</span>`).join('')}
+        ${(t.tags||[]).slice(0,2).map(tag=>_coloredChip(tag,_tagColorByName(tag),'tag')).join('')}
       </div>
       <span class="badge badge-${t.priority} hidden sm:inline-flex">${t.priority}</span>
       <span class="badge badge-${statusBadgeClass(t.status)}">${statusLabel(t.status)}</span>
@@ -4993,18 +5076,28 @@ function toggleBacklogSubtasks(taskId){
 
 // ─── SPRINT PLANNING ──────────────────────────────────────────────
 function renderSprintPlanning(){
-  const sprints=state.sprints;
-  const unassigned=state.tasks.filter(t=>!t.sprint);
+  // RBAC FIX: scope sprints and tasks to the current user's visible projects
+  const sprints=RBAC.getVisibleSprints();
+  const _visibleSprintIds=new Set(sprints.map(s=>s.id));
+  const _visibleTasks=RBAC.getVisibleTasks(state.tasks);
+  const unassigned=_visibleTasks.filter(t=>!t.sprint);
 
   // v27: Pre-index tasks by sprint to avoid O(n*m) filter-per-sprint
   const tasksBySprintId = new Map();
-  state.tasks.forEach(t=>{
+  _visibleTasks.forEach(t=>{
     if(!t.sprint) return;
+    if(!_visibleSprintIds.has(t.sprint)) return; // skip tasks from out-of-scope sprints
     if(!tasksBySprintId.has(t.sprint)) tasksBySprintId.set(t.sprint,[]);
     tasksBySprintId.get(t.sprint).push(t);
   });
 
-  const sprintHtml=sprints.length?sprints.map(s=>{
+  // ISSUE 4: Group sprints by status, render in strict order: active → planned → completed
+  const activeSprints_plan    = sprints.filter(s=>(s.status||'').toLowerCase()==='active');
+  const plannedSprints_plan   = sprints.filter(s=>(s.status||'').toLowerCase()==='planned');
+  const completedSprints_plan = sprints.filter(s=>(s.status||'').toLowerCase()==='completed');
+  const orderedSprints = [...activeSprints_plan, ...plannedSprints_plan, ...completedSprints_plan];
+
+  function sprintCardHtml(s){
     const proj=getProject(s.project);
     const tasks=tasksBySprintId.get(s.id)||[];
     const pts=tasks.reduce((a,t)=>a+(t.points||0),0);
@@ -5040,31 +5133,90 @@ function renderSprintPlanning(){
       </div>
       <div class="drop-zone mt-2 ${tasks.length===0?'active':''}" id="dropzone-${s.id}">↓ Drop tasks here</div>
     </div>`;
-  }).join(''):`<div class="empty-state">
+  }
+
+  let sprintHtml = '';
+  if(orderedSprints.length){
+    // Render section headers per group
+    if(activeSprints_plan.length){
+      sprintHtml += `<div class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 mt-1" style="letter-spacing:.08em">Active Sprints</div>`;
+      sprintHtml += activeSprints_plan.map(sprintCardHtml).join('');
+    }
+    if(plannedSprints_plan.length){
+      sprintHtml += `<div class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 mt-4" style="letter-spacing:.08em">Planned Sprints</div>`;
+      sprintHtml += plannedSprints_plan.map(sprintCardHtml).join('');
+    }
+    if(completedSprints_plan.length){
+      sprintHtml += `<div class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 mt-4" style="letter-spacing:.08em">Completed Sprints</div>`;
+      sprintHtml += completedSprints_plan.map(sprintCardHtml).join('');
+    }
+  } else {
+    sprintHtml = `<div class="empty-state">
     <div class="empty-state-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
     <div class="text-sm">No sprints yet</div>
     ${RBAC.isAdmin()||RBAC.isProgramManager()?`<button class="btn btn-primary text-xs mt-3" onclick="openCreateSprintModal()">Create first sprint</button>`:''}
   </div>`;
+  }
 
   document.getElementById('sprint-planning-list').innerHTML=sprintHtml;
 
-  document.getElementById('unassigned-tasks').innerHTML=unassigned.length
-    ?unassigned.map(t=>`<div class="task-card mb-2" draggable="true"
-        ondragstart="taskDragStart(event,'${t.id}')"
-        ondragend="taskDragEnd(event)"
-        onclick="openTaskModal('${t.id}')">
-        <div class="flex items-center gap-2 mb-1">
-          <span style="color:${typeColor(t.type)};font-size:13px">${typeIcon(t.type)}</span>
-          <span class="badge badge-${t.priority}">${t.priority}</span>
-          <span class="ml-auto text-xs font-semibold text-slate-500">${t.points}sp</span>
-        </div>
-        <div class="text-sm font-medium text-slate-800 mb-1">${t.title}</div>
-        <div class="flex items-center justify-between">
-          <span class="text-xs text-slate-500">${getProject(t.project)?getProject(t.project).key:'?'}</span>
-          ${t.assignee?userAvatar(t.assignee,20):''}
-        </div>
-      </div>`).join('')
-    :`<div class="text-center text-slate-400 text-sm py-6">All tasks assigned 🎉</div>`;
+  // ── Group unassigned tasks by project ────────────────────────────────────
+  function _unassignedTaskCard(t){
+    const _epic=t.epicId?getEpic(t.epicId):null;
+    const _epicBadge=_epic?`<span class="badge-epic" title="${_escHtml(_epic.title)}">${_escHtml(_epic.title)}</span>`:'';
+    return `<div class="task-card mb-2" draggable="true"
+      ondragstart="taskDragStart(event,'${t.id}')"
+      ondragend="taskDragEnd(event)"
+      onclick="openTaskModal('${t.id}')">
+      <div class="flex items-center gap-2 mb-1">
+        <span style="color:${typeColor(t.type)};font-size:13px">${typeIcon(t.type)}</span>
+        <span class="badge badge-${t.priority}">${t.priority}</span>
+        ${_epicBadge}
+        <span class="ml-auto text-xs font-semibold text-slate-500">${t.points}sp</span>
+      </div>
+      <div class="text-sm font-medium text-slate-800 mb-1">${t.title}</div>
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-slate-500">${getProject(t.project)?getProject(t.project).key:'?'}</span>
+        ${t.assignee?userAvatar(t.assignee,20):''}
+      </div>
+    </div>`;
+  }
+
+  let unassignedHtml = '';
+  if(!unassigned.length){
+    unassignedHtml = `<div class="text-center text-slate-400 text-sm py-6">All tasks assigned 🎉</div>`;
+  } else {
+    // Build ordered project groups (preserve visible project order)
+    const visibleProjects = RBAC.getVisibleProjects();
+    const projectOrder = visibleProjects.map(p=>p.id);
+    const byProject = new Map();
+    unassigned.forEach(t=>{
+      const pid = t.project||'__none__';
+      if(!byProject.has(pid)) byProject.set(pid,[]);
+      byProject.get(pid).push(t);
+    });
+    // Sort project ids by visible project order; unknowns go last
+    const sortedPids = [...byProject.keys()].sort((a,b)=>{
+      const ai=projectOrder.indexOf(a); const bi=projectOrder.indexOf(b);
+      return (ai===-1?9999:ai)-(bi===-1?9999:bi);
+    });
+    const multiProject = sortedPids.length > 1;
+    sortedPids.forEach(pid=>{
+      const proj = getProject(pid);
+      const tasks = byProject.get(pid);
+      if(multiProject){
+        const color = proj?proj.color:'#94a3b8';
+        const name  = proj?_escHtml(proj.name):'Unknown Project';
+        unassignedHtml += `<div style="margin-bottom:4px;margin-top:8px;display:flex;align-items:center;gap:6px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></span>
+          <span style="font-size:11px;font-weight:700;color:var(--text-secondary);letter-spacing:.04em;text-transform:uppercase;">${name}</span>
+          <span style="font-size:10px;font-weight:600;color:var(--text-muted);margin-left:2px">${tasks.length}</span>
+        </div>`;
+      }
+      unassignedHtml += tasks.map(_unassignedTaskCard).join('');
+    });
+  }
+  document.getElementById('unassigned-tasks').innerHTML=unassignedHtml;
 }
 
 function sprintTaskChip(t){
@@ -5108,12 +5260,35 @@ function sprintDrop(e,sprintId){
   const dz=document.getElementById('dropzone-'+sprintId);
   if(dz)dz.classList.remove('drag-over');
   if(!draggedTaskId)return;
+  // ISSUE 1: Block drop onto completed sprints
+  const targetSprint=getSprint(sprintId);
+  if(targetSprint&&targetSprint.status==='completed'){
+    showNotif('Cannot map tasks to completed sprint','error');
+    return;
+  }
   const task=getTask(draggedTaskId);
   if(task){
+    // Cross-project guard: task and sprint must belong to the same project
+    if(task.project && targetSprint && targetSprint.project && task.project !== targetSprint.project){
+      showNotif('This task belongs to a different project and cannot be assigned to this sprint.','error');
+      return;
+    }
+    // ISSUE 2: Block move if task's source sprint is completed
+    const sourceSprint=task.sprint?getSprint(task.sprint):null;
+    if(sourceSprint&&sourceSprint.status==='completed'){
+      showNotif('Tasks from completed sprints are locked','error');
+      return;
+    }
+    const _ntPrevSprintAssignee = task.assignee || null;
+    const _ntPrevSprintStatus   = task.status   || null;
     task.sprint=sprintId;
     // ── Firebase: persist task sprint assignment ──
     FirebaseDB.saveEntity('tasks', task).catch(e=>console.warn('[sprintDrop] Firebase error:',e));
     SaveManager.save();
+    // ── Notification: task moved into sprint ──
+    console.log('[NotificationTriggers] task trigger fired — sprintDrop', task.id);
+    try{ NotificationTriggers._onTaskSaved(task, { prevAssignee: _ntPrevSprintAssignee, prevStatus: _ntPrevSprintStatus }); }
+    catch(e){ console.error('Notification pipeline error', e); }
     renderSprintPlanning();
     showNotif(`Task moved to ${getSprint(sprintId)?.name||'sprint'} ✓`);
   }
@@ -5121,6 +5296,12 @@ function sprintDrop(e,sprintId){
 function removeTaskFromSprint(taskId){
   const task=getTask(taskId);
   if(task){
+    // ISSUE 2: Block removal if task's sprint is completed
+    const sourceSprint=task.sprint?getSprint(task.sprint):null;
+    if(sourceSprint&&sourceSprint.status==='completed'){
+      showNotif('Tasks from completed sprints are locked','error');
+      return;
+    }
     task.sprint=null;
     // ── Firebase: persist task removed from sprint ──
     FirebaseDB.saveEntity('tasks', task).catch(e=>console.warn('[removeTaskFromSprint] Firebase error:',e));
@@ -5237,6 +5418,41 @@ function renderKanban(){
   }
   const epicFilter=epicFilterEl?epicFilterEl.value:'all';
 
+  // ── Populate Assignee filter, scoped to selected project + sprint ──
+  const assigneeFilterEl=document.getElementById('kanban-assignee-filter');
+  if(assigneeFilterEl){
+    const prevAssignee=assigneeFilterEl.value;
+    // Determine the pool of tasks in the current project+sprint scope (pre-RBAC-filter)
+    const scopedForAssignees=RBAC.getVisibleTasks(state.tasks.filter(t=>{
+      if(t.sprint!==sprintId) return false;
+      return true;
+    }));
+    // Collect unique assignee IDs from those tasks
+    const assigneeIds=new Set(scopedForAssignees.map(t=>t.assignee).filter(Boolean));
+    // Get RBAC-visible users and intersect with task assignees
+    const visibleUsers=RBAC.isAdmin()
+      ? (state.users||[])
+      : (RBAC.getVisibleProjects
+          ? (()=>{
+              const vpIds=new Set((RBAC.getVisibleProjects()||[]).map(p=>p.id));
+              return (state.users||[]).filter(u=>{
+                const uProj=(u.projectIds||[]);
+                return uProj.some(id=>vpIds.has(id)) || assigneeIds.has(u.id);
+              });
+            })()
+          : (state.users||[]));
+    const assigneesInScope=visibleUsers.filter(u=>assigneeIds.has(u.id));
+    assigneesInScope.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    let assigneeHTML=`<option value="all">All Assignees</option>`;
+    assigneeHTML+=assigneesInScope.map(u=>`<option value="${u.id}"${u.id===prevAssignee?' selected':''}>${u.name||u.initials||u.id}</option>`).join('');
+    assigneeFilterEl.innerHTML=assigneeHTML;
+    // Clear stale selection if previously selected user no longer appears in scope
+    if(prevAssignee && prevAssignee!=='all' && !assigneesInScope.find(u=>u.id===prevAssignee)){
+      assigneeFilterEl.value='all';
+    }
+  }
+  const assigneeFilter=assigneeFilterEl?assigneeFilterEl.value:'all';
+
   const cols=[
     {id:'open',label:'Open',color:'#64748b'},
     {id:'dev-in-progress',label:'Dev In Progress',color:'#2563eb'},
@@ -5252,6 +5468,7 @@ function renderKanban(){
   // Pre-filter once, not inside each column loop
   let sprintTasks=RBAC.getVisibleTasks(state.tasks.filter(t=>t.sprint===sprintId));
   if(epicFilter!=='all') sprintTasks=sprintTasks.filter(t=>t.epicId===epicFilter);
+  if(assigneeFilter!=='all') sprintTasks=sprintTasks.filter(t=>t.assignee===assigneeFilter);
 
   // Pre-bucket tasks and subtasks by status for O(1) column lookup
   const tasksByStatus = new Map();
@@ -5354,7 +5571,7 @@ function kanbanCard(t){
       </div>
     </div>
     <div class="text-sm font-medium text-slate-800 mb-2 leading-snug">${t.title}</div>
-    ${(t.tags||[]).length?`<div class="flex flex-wrap gap-1 mb-2">${(t.tags||[]).slice(0,3).map(tag=>`<span class="tag">${tag}</span>`).join('')}</div>`:''}
+    ${(t.tags||[]).length?`<div class="flex flex-wrap gap-1 mb-2">${(t.tags||[]).slice(0,3).map(tag=>_coloredChip(tag,_tagColorByName(tag),'tag')).join('')}</div>`:''}
     <div class="flex items-center justify-between">
       <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${t.points}sp</span>
       <div class="flex items-center gap-1">
@@ -5806,7 +6023,29 @@ function renderProductivityTable(){
   const _rt=_rptFilteredTasks(RBAC.getVisibleTasks(state.tasks));
   const tbody=document.getElementById('rpt-prod-tbody');
   if(!tbody)return;
-  const rows=state.users.map(u=>{
+  // ── Derive member list from project membership, NOT from task assignment ──
+  // This ensures members with 0 tasks still appear when they belong to the selected project.
+  const _prodProjSel=document.getElementById('rpt-project-filter');
+  const _prodProjFilter=_prodProjSel?_prodProjSel.value:'all';
+  const _visibleProjects=RBAC.getVisibleProjects();
+  // Determine the scoped project set (single project or all visible)
+  const _scopedProjects=(_prodProjFilter&&_prodProjFilter!=='all')
+    ? _visibleProjects.filter(p=>p.id===_prodProjFilter)
+    : _visibleProjects;
+  // Collect all unique memberIds from the scoped projects
+  const _memberIdSet=new Set();
+  _scopedProjects.forEach(p=>{(p.memberIds||[]).forEach(id=>_memberIdSet.add(id));});
+  // Map to user objects; fall back to all visible users when no membership data exists
+  const _prodUsers=_memberIdSet.size>0
+    ? state.users.filter(u=>_memberIdSet.has(u.id))
+    : (_prodProjFilter==='all'?state.users:state.users);
+  // Build a lookup: userId → array of project names (from all visible projects, not just scoped)
+  const _userProjMap=new Map();
+  _visibleProjects.forEach(p=>{(p.memberIds||[]).forEach(uid=>{
+    if(!_userProjMap.has(uid)) _userProjMap.set(uid,[]);
+    _userProjMap.get(uid).push(p.name);
+  });});
+  const rows=_prodUsers.map(u=>{
     // Collect all tasks assigned to this member
     const assignedTasks=_rt.filter(t=>t.assignee===u.id);
     // Collect all subtasks assigned to this member (across all tasks)
@@ -5820,13 +6059,21 @@ function renderProductivityTable(){
     const assignedPts=assignedItems.reduce((a,i)=>a+(i.points||0),0);
     const reopen=assignedTasks.filter(t=>t.status==='reopen').length;
     const pct=assignedItems.length?Math.round((completed/assignedItems.length)*100):0;
-    return {u,completed,active,points,assignedPts,totalPts,reopen,pct,total:assignedItems.length};
+    const memberProjects=_userProjMap.get(u.id)||[];
+    return {u,completed,active,points,assignedPts,totalPts,reopen,pct,total:assignedItems.length,memberProjects};
   });
   const sortFn={completed:(a,b)=>b.completed-a.completed,active:(a,b)=>b.active-a.active,points:(a,b)=>b.points-a.points,reopen:(a,b)=>b.reopen-a.reopen,workload:(a,b)=>b.totalPts-a.totalPts,name:(a,b)=>a.u.name.localeCompare(b.u.name)};
   rows.sort(sortFn[_rptProdSort]||sortFn.completed);
   const maxPts=Math.max(1,...rows.map(r=>r.totalPts));
-  tbody.innerHTML=rows.map(r=>`<tr style="border-bottom:1px solid rgba(0,0,0,0.04)">
+  tbody.innerHTML=rows.map(r=>{
+    const projCell=r.memberProjects.length===0
+      ? `<span style="color:#94a3b8;font-size:12px">—</span>`
+      : r.memberProjects.length===1
+        ? `<span style="font-size:12px;color:#475569">${r.memberProjects[0]}</span>`
+        : `<span title="${r.memberProjects.join(', ')}" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#475569;cursor:default"><span style="background:rgba(99,102,241,0.1);color:#6366f1;font-weight:600;font-size:11px;padding:1px 6px;border-radius:4px">${r.memberProjects.length}</span><span style="color:#94a3b8">${r.memberProjects.slice(0,2).join(', ')}${r.memberProjects.length>2?'…':''}</span></span>`;
+    return `<tr style="border-bottom:1px solid rgba(0,0,0,0.04)">
     <td style="padding:10px 12px"><div style="display:flex;align-items:center;gap:8px">${userAvatar(r.u.id,28)}<span style="font-weight:600;color:#1e293b">${r.u.name}</span></div></td>
+    <td style="padding:10px 12px">${projCell}</td>
     <td style="padding:10px 12px;text-align:right;font-weight:700;color:#10b981">${r.completed}</td>
     <td style="padding:10px 12px;text-align:right;font-weight:600;color:#2563eb">${r.active}</td>
     <td style="padding:10px 12px;text-align:right;font-weight:700;color:#6366f1">${r.points}<span style="font-size:11px;font-weight:400;color:#94a3b8"> pts</span></td>
@@ -5836,7 +6083,7 @@ function renderProductivityTable(){
       <div style="flex:1;height:6px;background:rgba(0,0,0,0.07);border-radius:3px;overflow:hidden"><div style="height:100%;border-radius:3px;background:${r.u.color};width:${maxPts?Math.round((r.totalPts/maxPts)*100):0}%;transition:width 0.4s"></div></div>
       <span style="font-size:11px;font-weight:600;color:#64748b;white-space:nowrap">${r.totalPts}sp</span>
     </div></td>
-  </tr>`).join('')||`<tr><td colspan="7" style="padding:24px;text-align:center;color:#94a3b8;font-size:13px">No team members</td></tr>`;
+  </tr>`;}).join('')||`<tr><td colspan="8" style="padding:24px;text-align:center;color:#94a3b8;font-size:13px">No team members</td></tr>`;
   }catch(e){console.warn('[Render] renderProductivityTable error:',e);}
 }
 
@@ -5983,7 +6230,7 @@ function renderReports(){
   // ── Destroy existing report charts before recreating (prevents duplicate instances) ──
   // v27-fix: always destroy+recreate — fingerprint+early-return caused blank charts on
   // filter changes and page revisits due to stale/detached canvas contexts.
-  ['velocity','burndown','spillover','workload','typeChart','projDist','sprintHealth','relComp','relAging','epicCompletion','epicWorkload','epicVelocity','productBifurcation','tagBifurcation'].forEach(k=>{
+  ['velocity','burndown','spillover','workload','typeChart','projDist','sprintHealth','relComp','relAging','epicCompletion','epicWorkload','epicVelocity','productBifurcation','tagBifurcation','deliveryRisk'].forEach(k=>{
     if(charts[k]){try{charts[k].destroy();}catch(e){}delete charts[k];}
   });
 
@@ -5994,7 +6241,18 @@ function renderReports(){
   const vCtx=_getCtx('velocityChart');
   if(vCtx){
     const _vOpts=_chartOpts();
-    _vOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'start',offset:4,clamp:true,clip:false,color:'#fff',font:{size:10,weight:'700'},formatter:v=>v};_vOpts.layout={padding:{top:8}};
+    // Datalabels: only on Completed bars — placed above bar, clear of bar top
+    _vOpts.plugins.datalabels={
+      display:ctx=>ctx.datasetIndex===1&&ctx.dataset.data[ctx.dataIndex]>0,
+      anchor:'end',align:'end',offset:3,clamp:true,clip:false,
+      color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v
+    };
+    // Legend at bottom: frees chart-top space entirely
+    _vOpts.plugins.legend={position:'bottom',labels:{font:{family:'DM Sans',size:11},boxWidth:10,boxHeight:10,padding:16,color:'#6b7194'}};
+    // Top padding gives bars room to breathe above; grace expands y-max so labels never clip
+    _vOpts.layout={padding:{top:28,right:8,bottom:4,left:4}};
+    _vOpts.scales.y=Object.assign(_vOpts.scales.y||{},{beginAtZero:true,grace:'12%',ticks:{font:{family:'DM Sans',size:11},color:'#9399b0',padding:8}});
+    _vOpts.scales.x=Object.assign(_vOpts.scales.x||{},{ticks:{font:{family:'DM Sans',size:11},color:'#9399b0',padding:6,maxRotation:30,minRotation:0}});
   charts.velocity=new Chart(vCtx,{
     type:'bar',
     data:{
@@ -6017,14 +6275,30 @@ function renderReports(){
   const bCtx=_getCtx('burndownChart');
   if(bCtx){
     const _bOpts=_chartOpts();
-    _bOpts.plugins.datalabels={display:ctx=>{const v=ctx.dataset.data[ctx.dataIndex];return v!=null&&v>0;},align:'top',anchor:'end',offset:6,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v};_bOpts.layout={padding:{top:24}};
+    // Datalabels: Actual line only — non-null, non-zero values; offset above point
+    _bOpts.plugins.datalabels={
+      display:ctx=>{
+        if(ctx.datasetIndex!==1) return false; // Ideal line: no labels
+        const v=ctx.dataset.data[ctx.dataIndex];
+        return v!=null&&v>0;
+      },
+      align:'top',anchor:'end',offset:8,clamp:true,clip:false,
+      color:'#6366f1',font:{size:10,weight:'600'},formatter:v=>v,
+      backgroundColor:'rgba(255,255,255,0.82)',borderRadius:4,padding:{top:2,bottom:2,left:4,right:4}
+    };
+    // Legend at bottom: prevents overlap with high-value data points at chart top
+    _bOpts.plugins.legend={position:'bottom',labels:{font:{family:'DM Sans',size:11},boxWidth:10,boxHeight:10,padding:16,color:'#6b7194'}};
+    // Top padding ensures labels on high points are never clipped; grace expands y headroom
+    _bOpts.layout={padding:{top:28,right:12,bottom:4,left:4}};
+    _bOpts.scales.y=Object.assign(_bOpts.scales.y||{},{beginAtZero:true,grace:'10%',ticks:{font:{family:'DM Sans',size:11},color:'#9399b0',padding:8}});
+    _bOpts.scales.x=Object.assign(_bOpts.scales.x||{},{ticks:{font:{family:'DM Sans',size:11},color:'#9399b0',padding:6}});
     charts.burndown=new Chart(bCtx,{
     type:'line',
     data:{
       labels:['Day 1','Day 3','Day 5','Day 7','Day 9','Day 11','Day 14'],
       datasets:[
         {label:'Ideal',data:[totalPts,Math.round(totalPts*.77),Math.round(totalPts*.57),Math.round(totalPts*.43),Math.round(totalPts*.29),Math.round(totalPts*.14),0],borderColor:'#cbd5e1',borderDash:[5,5],borderWidth:2,tension:0,pointRadius:0},
-        {label:'Actual',data:[totalPts,null,Math.max(0,totalPts-donePts),null,null,null,null],borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,0.06)',fill:true,borderWidth:2.5,tension:0.3,pointRadius:3,pointBackgroundColor:'#6366f1'}
+        {label:'Actual',data:[totalPts,null,Math.max(0,totalPts-donePts),null,null,null,null],borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,0.06)',fill:true,borderWidth:2.5,tension:0.3,pointRadius:4,pointBackgroundColor:'#6366f1',pointBorderColor:'#fff',pointBorderWidth:1.5,pointHoverRadius:6}
       ]
     },
     options:_bOpts
@@ -6054,22 +6328,66 @@ function renderReports(){
   }
 
   // ── WORKLOAD ──
-  const users=(state.users||[]);
+  // Derive member list from project membership — respect the active project filter.
+  // Members with 0 story points in the filtered task set still appear (showing 0 SP).
+  const _wProjSel=document.getElementById('rpt-project-filter');
+  const _wProjFilter=_wProjSel?_wProjSel.value:'all';
+  const _wVisibleProjects=RBAC.getVisibleProjects();
+  const _wScopedProjects=(_wProjFilter&&_wProjFilter!=='all')
+    ? _wVisibleProjects.filter(p=>p.id===_wProjFilter)
+    : _wVisibleProjects;
+  const _wMemberIdSet=new Set();
+  _wScopedProjects.forEach(p=>{(p.memberIds||[]).forEach(id=>_wMemberIdSet.add(id));});
+  const users=_wMemberIdSet.size>0
+    ? (state.users||[]).filter(u=>_wMemberIdSet.has(u.id))
+    : (state.users||[]);
   // reportItems includes both tasks and subtasks (with inherited assignee/points fields)
   const wLoads=users.map(u=>reportItems.filter(item=>item.assignee===u.id).reduce((a,item)=>a+(item.points||0),0));
-  const wCtx=_getCtx('workloadChart');
-  if(wCtx){
-    const _wOpts=_chartOpts({plugins:{legend:{display:false}}});
-    _wOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'top',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v,padding:{top:2,bottom:2,left:3,right:3}};_wOpts.layout={padding:{top:24}};
-    charts.workload=new Chart(wCtx,{
-      type:'bar',
-      data:{
-        labels:users.map(u=>u.name.split(' ')[0]),
-        datasets:[{label:'Story Points',data:wLoads,backgroundColor:users.map(u=>u.color+'cc'),borderRadius:6}]
-      },
-      options:_wOpts
-    });
-  }
+
+  // ── WORKLOAD MEMBER FILTER (chart-level only — does NOT affect any other chart/table) ──
+  // Apply the chart-level member filter dropdown. This is purely a display filter:
+  // no calculations, no metrics, no report-level filters are changed.
+  (function _renderWorkloadChart(){
+    const _wmfSel=document.getElementById('workload-member-filter');
+    const _wmf=_wmfSel?_wmfSel.value:'all';
+    let _wUsers=users;
+    let _wLoads=wLoads;
+    if(_wmf==='assigned'){
+      // Assigned Members: Points Assigned > 0 OR at least one assigned task
+      const _idx=users.reduce((acc,u,i)=>{
+        const pts=wLoads[i];
+        const hasTasks=reportItems.some(item=>item.assignee===u.id);
+        if(pts>0||hasTasks) acc.push(i);
+        return acc;
+      },[]);
+      _wUsers=_idx.map(i=>users[i]);
+      _wLoads=_idx.map(i=>wLoads[i]);
+    } else if(_wmf==='unassigned'){
+      // Unassigned Members: Points Assigned = 0 AND no assigned tasks
+      const _idx=users.reduce((acc,u,i)=>{
+        const pts=wLoads[i];
+        const hasTasks=reportItems.some(item=>item.assignee===u.id);
+        if(pts===0&&!hasTasks) acc.push(i);
+        return acc;
+      },[]);
+      _wUsers=_idx.map(i=>users[i]);
+      _wLoads=_idx.map(i=>wLoads[i]);
+    }
+    const wCtx=_getCtx('workloadChart');
+    if(wCtx){
+      const _wOpts=_chartOpts({plugins:{legend:{display:false}}});
+      _wOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'top',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v,padding:{top:2,bottom:2,left:3,right:3}};_wOpts.layout={padding:{top:24}};
+      // Use full member name for readability now that chart is wider
+      charts.workload=new Chart(wCtx,{
+        type:'bar',
+        data:{
+          labels:_wUsers.map(u=>u.name),
+          datasets:[{label:'Story Points',data:_wLoads,backgroundColor:_wUsers.map(u=>u.color+'cc'),borderRadius:6}]
+        },
+        options:_wOpts
+      });
+    }
+  })();
 
   // ── TYPE CHART ──
   const story=reportItems.filter(t=>t.type==='story').length;
@@ -6087,6 +6405,55 @@ function renderReports(){
 
   // ── PRODUCTIVITY TABLE ──
   renderProductivityTable();
+
+  // ── DELIVERY RISK MEMBERS CHART ──
+  // Uses only existing filtered report data (reportItems, users, wLoads already derived above).
+  // No new filtering logic — respects all existing project/sprint/RBAC filters via reportItems.
+  // Eligibility: members with Points Assigned > 0 only.
+  // Formula: Completion % = (Points Completed ÷ Points Assigned) × 100
+  // Risk: High <50%, Medium 50–79%, Low ≥80%. Top 5 by highest risk (lowest completion %).
+  (function _renderDeliveryRiskChart(){
+    const _drEmptyEl=document.getElementById('delivery-risk-empty');
+    const _drListEl=document.getElementById('delivery-risk-list');
+
+    // Build per-member risk data from the same users + reportItems already in scope
+    // Risk % = 100 - Completion %   where Completion % = (completed / assigned) * 100
+    const _drMembers=users.reduce((acc,u)=>{
+      const assigned=reportItems.filter(item=>item.assignee===u.id).reduce((s,item)=>s+(item.points||0),0);
+      if(assigned<=0) return acc; // exclude members with 0 assigned points
+      const completed=reportItems.filter(item=>item.assignee===u.id&&DONE_STATUSES.includes(item.status)).reduce((s,item)=>s+(item.points||0),0);
+      const completionPct=Math.round((completed/assigned)*100);
+      const riskPct=100-completionPct;
+      acc.push({name:u.name,assigned,completed,completionPct,riskPct});
+      return acc;
+    },[]);
+
+    // Sort descending by risk % (highest risk first), take top 8
+    _drMembers.sort((a,b)=>b.riskPct-a.riskPct);
+    const _drTop=_drMembers.slice(0,8);
+
+    // Show/hide empty state
+    if(_drEmptyEl) _drEmptyEl.style.display=_drTop.length===0?'flex':'none';
+    if(_drListEl)  _drListEl.style.display =_drTop.length===0?'none':'flex';
+    if(_drTop.length===0) return;
+
+    // Risk band colors: High ≥70% → red, Medium 40–69% → amber, Low <40% → green
+    const _drBarColor=r=>r>=70?'rgba(239,68,68,0.80)':r>=40?'rgba(245,158,11,0.80)':'rgba(16,185,129,0.80)';
+    const _drLabelColor=r=>r>=70?'#dc2626':r>=40?'#d97706':'#059669';
+    const _drBadgeBg=r=>r>=70?'rgba(239,68,68,0.10)':r>=40?'rgba(245,158,11,0.10)':'rgba(16,185,129,0.10)';
+
+    if(_drListEl){
+      _drListEl.innerHTML=_drTop.map(m=>`
+        <div style="display:flex;align-items:center;gap:10px;min-height:28px">
+          <div style="flex:0 0 130px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:12px;font-weight:500;color:var(--text-primary)" title="${_escHtml(m.name)}">${_escHtml(m.name)}</div>
+          <div style="flex:0 0 42px;text-align:right;font-size:12px;font-weight:700;color:${_drLabelColor(m.riskPct)};background:${_drBadgeBg(m.riskPct)};border-radius:5px;padding:1px 6px">${m.riskPct}%</div>
+          <div style="flex:1;background:rgba(0,0,0,0.06);border-radius:999px;height:8px;overflow:hidden">
+            <div style="height:100%;width:${m.riskPct}%;background:${_drBarColor(m.riskPct)};border-radius:999px;transition:width 0.4s ease"></div>
+          </div>
+          <div style="flex:0 0 90px;font-size:11px;color:var(--text-tertiary);white-space:nowrap;text-align:right">${m.completed}/${m.assigned} pts</div>
+        </div>`).join('');
+    }
+  })();
 
   // ── PROJECT DIST CHART ──
   const pdCtx=_getCtx('projDistChart');
@@ -6340,6 +6707,70 @@ function renderReports(){
     });
   }
   }catch(e){console.warn('[Render] renderReports error:',e);}
+}
+
+// ── Workload chart-level member filter ────────────────────────────
+// Called ONLY by the Workload Distribution chart's own filter dropdown.
+// Does NOT touch report-level filters, other charts, or any table.
+function _applyWorkloadMemberFilter(){
+  // Rebuild just the workload chart using cached state — no full renderReports() call.
+  // If charts.workload exists we destroy it first, then re-render with the new filter.
+  if(charts.workload){try{charts.workload.destroy();}catch(e){}delete charts.workload;}
+
+  // Re-derive the same user+load arrays that renderReports() built.
+  // These are read-only references — no calculations are changed.
+  const fd=_getFilteredReportsData();
+  const _rt=fd.tasks;
+  const reportSubs=(_rt||[]).flatMap(t=>(t.subtasks||[]).map(st=>({
+    ...st,parentTaskId:t.id,project:st.project||t.project,sprint:st.sprint||t.sprint,epicId:st.epicId||t.epicId
+  })));
+  const reportItems=[...(_rt||[]),...reportSubs];
+
+  const _wProjSel=document.getElementById('rpt-project-filter');
+  const _wProjFilter=_wProjSel?_wProjSel.value:'all';
+  const _wVisibleProjects=RBAC.getVisibleProjects();
+  const _wScopedProjects=(_wProjFilter&&_wProjFilter!=='all')
+    ? _wVisibleProjects.filter(p=>p.id===_wProjFilter)
+    : _wVisibleProjects;
+  const _wMemberIdSet=new Set();
+  _wScopedProjects.forEach(p=>{(p.memberIds||[]).forEach(id=>_wMemberIdSet.add(id));});
+  const allUsers=_wMemberIdSet.size>0
+    ? (state.users||[]).filter(u=>_wMemberIdSet.has(u.id))
+    : (state.users||[]);
+  const allLoads=allUsers.map(u=>reportItems.filter(item=>item.assignee===u.id).reduce((a,item)=>a+(item.points||0),0));
+
+  // Apply the filter
+  const _wmfSel=document.getElementById('workload-member-filter');
+  const _wmf=_wmfSel?_wmfSel.value:'all';
+  let _wUsers=allUsers, _wLoads=allLoads;
+  if(_wmf==='assigned'){
+    const _idx=allUsers.reduce((acc,u,i)=>{
+      if(allLoads[i]>0||reportItems.some(item=>item.assignee===u.id)) acc.push(i);
+      return acc;
+    },[]);
+    _wUsers=_idx.map(i=>allUsers[i]); _wLoads=_idx.map(i=>allLoads[i]);
+  } else if(_wmf==='unassigned'){
+    const _idx=allUsers.reduce((acc,u,i)=>{
+      if(allLoads[i]===0&&!reportItems.some(item=>item.assignee===u.id)) acc.push(i);
+      return acc;
+    },[]);
+    _wUsers=_idx.map(i=>allUsers[i]); _wLoads=_idx.map(i=>allLoads[i]);
+  }
+
+  const wCtx=_getCtx('workloadChart');
+  if(wCtx){
+    const _wOpts=_chartOpts({plugins:{legend:{display:false}}});
+    _wOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'top',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v,padding:{top:2,bottom:2,left:3,right:3}};
+    _wOpts.layout={padding:{top:24}};
+    charts.workload=new Chart(wCtx,{
+      type:'bar',
+      data:{
+        labels:_wUsers.map(u=>u.name),
+        datasets:[{label:'Story Points',data:_wLoads,backgroundColor:_wUsers.map(u=>u.color+'cc'),borderRadius:6}]
+      },
+      options:_wOpts
+    });
+  }
 }
 
 // ─── TEAMS ────────────────────────────────────────────────────────
@@ -6612,11 +7043,11 @@ function openTaskModal(taskId){
         </div>
         <div>
           <label>Tags</label>
-          <div class="flex flex-wrap gap-1 mt-1">${(t.tags||[]).map(tag=>`<span class="tag">${tag}</span>`).join('')||'—'}</div>
+          <div class="flex flex-wrap gap-1 mt-1">${(t.tags||[]).map(tag=>_coloredChip(tag,_tagColorByName(tag),'tag')).join('')||'—'}</div>
         </div>
         <div>
           <label>Products</label>
-          <div class="flex flex-wrap gap-1 mt-1">${(t.products||[]).map(name=>`<span class="tag" style="background:var(--accent-ghost);color:var(--accent-dark);border:1px solid var(--accent-ring)">${name}</span>`).join('')||'—'}</div>
+          <div class="flex flex-wrap gap-1 mt-1">${(t.products||[]).map(name=>{ const c=_productColorByName(name); return c ? _coloredChip(name,c,'tag') : `<span class="tag" style="background:var(--accent-ghost);color:var(--accent-dark);border:1px solid var(--accent-ring)">${name}</span>`; }).join('')||'—'}</div>
         </div>
       </div>
       ${subtaskSection}
@@ -6652,6 +7083,8 @@ function openTaskModal(taskId){
 function updateTaskStatus(taskId,status){
   const task=getTask(taskId);
   if(!task){showNotif('⚠ Task not found','error');return;}
+  // ── Notification: snapshot pre-mutation status ──
+  const _ntPrevStatus = task.status || null;
   // ── RBAC: members can only update status on their own tasks ──
   if(!RBAC.canEditTask(task)){
     showNotif('⚠ You can only update status for tasks assigned to you','error');
@@ -6681,6 +7114,8 @@ function updateTaskStatus(taskId,status){
   renderPage(currentPage);
   const notifMsg=status==='rollback'?'Task rolled back to In QA':`Status updated to ${statusLabel(resolvedStatus)} ✓`;
   showNotif(notifMsg,'success');
+  // ── Notification triggers (standalone — no workflow impact) ──
+  NotificationTriggers._onTaskStatusChanged(task, _ntPrevStatus, resolvedStatus);
 }
 
 function deleteTask(taskId){
@@ -7052,6 +7487,9 @@ function saveSubtask(parentTaskId,subtaskId){
   if(!parent)return;
   const s=(parent.subtasks||[]).find(x=>x.id===subtaskId);
   if(!s)return;
+  // ── Notification: snapshot pre-save state before any mutation ──
+  const _ntPrevAssignee = s.assignee || null;
+  const _ntPrevStatus   = s.status   || null;
   // ── RBAC: members can only save subtasks assigned to themselves ──
   if(!RBAC.canEditSubtask(s)){
     showNotif('⚠ You can only edit subtasks assigned to you','error');
@@ -7096,6 +7534,8 @@ function saveSubtask(parentTaskId,subtaskId){
   renderPage(currentPage);
   openSubtaskModal(parentTaskId,subtaskId);
   showNotif('Subtask updated ✓');
+  // ── Notification triggers (standalone — no workflow impact) ──
+  NotificationTriggers._onSubtaskSaved(s, parent, { prevAssignee: _ntPrevAssignee, prevStatus: _ntPrevStatus });
 }
 
 function updateSubtaskStatus(parentTaskId,subtaskId,status){
@@ -7103,6 +7543,8 @@ function updateSubtaskStatus(parentTaskId,subtaskId,status){
   if(!parent)return;
   const s=(parent.subtasks||[]).find(x=>x.id===subtaskId);
   if(!s)return;
+  // ── Notification: snapshot pre-mutation status ──
+  const _ntPrevStatus = s.status || null;
   // ── RBAC: members can only update status on their own subtasks ──
   if(!RBAC.canEditSubtask(s)){
     showNotif('⚠ You can only update status for subtasks assigned to you','error');
@@ -7119,6 +7561,8 @@ function updateSubtaskStatus(parentTaskId,subtaskId,status){
     openSubtaskModal(parentTaskId,subtaskId);
     const notifMsg=status==='rollback'?'Task rolled back to In QA':`Subtask status → ${statusLabel(resolvedStatus)} ✓`;
     showNotif(notifMsg,'success');
+    // ── Notification triggers (standalone — no workflow impact) ──
+    NotificationTriggers._onSubtaskStatusChanged(s, parent, _ntPrevStatus, resolvedStatus);
   }
 }
 
@@ -7144,8 +7588,14 @@ function deleteSubtask(parentTaskId,subtaskId){
 
 // ─── CREATE TASK ──────────────────────────────────────────────────
 // Helper: build sprint options filtered by projectId
+// ISSUE 3: Show only active + planned sprints — exclude completed
 function _sprintOptionsForProject(projectId, selectedSprintId){
-  const filtered = state.sprints.filter(s => (s.status||'').toLowerCase()==='active' && (!projectId || s.project===projectId));
+  const filtered = state.sprints.filter(s => {
+    const st=(s.status||'').toLowerCase();
+    if(st==='completed') return false;
+    if(projectId && s.project!==projectId) return false;
+    return true;
+  });
   return `<option value="">Backlog</option>` + filtered.map(s=>`<option value="${s.id}"${s.id===selectedSprintId?' selected':''}>${s.name}</option>`).join('');
 }
 
@@ -7236,7 +7686,11 @@ function _msRender(id){
     if(!item) return '';
     const safeName = item.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const safeId   = selId.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    return `<span class="ms-chip">${item.name}${s.disabled?'':'<button type="button" class="ms-chip-x" tabindex="-1" onmousedown="event.preventDefault();_msRemoveId(\''+id+'\',\''+safeId+'\')">×</button>'}</span>`;
+    const chipColor = item.color || '';
+    const chipStyle = chipColor
+      ? `background:${chipColor}22;color:${chipColor};border-color:${chipColor}55`
+      : '';
+    return `<span class="ms-chip" style="${chipStyle}">${item.name}${s.disabled?'':'<button type="button" class="ms-chip-x" tabindex="-1" onmousedown="event.preventDefault();_msRemoveId(\''+id+'\',\''+safeId+'\')">×</button>'}</span>`;
   }).filter(Boolean).join('');
 
   // Dropdown options — filter by search query
@@ -7462,8 +7916,8 @@ function openCreateTaskModal(){
   ctOnSprintChange(document.getElementById('ct-sprint').value);
   ctOnProjectChange(firstProjectId);
   // Initialize Products + Tags multi-selects (project-filtered)
-  const _ctProductItems = (state.products||[]).filter(p=>(p.projectIds||[]).includes(firstProjectId)).map(p=>({id:p.id,name:p.name}));
-  const _ctTagItems     = (state.tags||[]).filter(t=>(t.projectIds||[]).includes(firstProjectId)).map(t=>({id:t.id,name:t.name}));
+  const _ctProductItems = (state.products||[]).filter(p=>(p.projectIds||[]).includes(firstProjectId)).map(p=>({id:p.id,name:p.name,color:p.color||''}));
+  const _ctTagItems     = (state.tags||[]).filter(t=>(t.projectIds||[]).includes(firstProjectId)).map(t=>({id:t.id,name:t.name,color:t.color||''}));
   initMultiSelect('ct-products', _ctProductItems, []);
   initMultiSelect('ct-tags',     _ctTagItems,     []);
 }
@@ -7504,11 +7958,11 @@ function ctOnProjectChange(projectId){
   ctOnSprintChange(sprintSel.value);
   // Refresh Products + Tags multi-selects to match new project
   if(_msState['ct-products']){
-    const newProducts = (state.products||[]).filter(p=>(p.projectIds||[]).includes(projectId)).map(p=>({id:p.id,name:p.name}));
+    const newProducts = (state.products||[]).filter(p=>(p.projectIds||[]).includes(projectId)).map(p=>({id:p.id,name:p.name,color:p.color||''}));
     _msRefreshItems('ct-products', newProducts, true);
   }
   if(_msState['ct-tags']){
-    const newTags = (state.tags||[]).filter(t=>(t.projectIds||[]).includes(projectId)).map(t=>({id:t.id,name:t.name}));
+    const newTags = (state.tags||[]).filter(t=>(t.projectIds||[]).includes(projectId)).map(t=>({id:t.id,name:t.name,color:t.color||''}));
     _msRefreshItems('ct-tags', newTags, true);
   }
 }
@@ -7630,6 +8084,10 @@ function createTask(){
     PendingSyncQueue.saveEntity('tasks', task);
   }
   SaveManager.save();
+  // ── Notification: task created (no previous assignee/status) ──
+  console.log('[NotificationTriggers] task trigger fired — createTask', task.id);
+  try{ NotificationTriggers._onTaskSaved(task, { prevAssignee: null, prevStatus: null }); }
+  catch(e){ console.error('Notification pipeline error', e); }
   closeModal();
   refreshAll();
   showNotif(`"${title}" created ✓`);
@@ -7804,8 +8262,8 @@ function openEditTaskModal(taskId){
     _etEndEl.min = _etStartEl.value;
   }
   const _etProjectId    = t.project || '';
-  const _etProductItems = (state.products||[]).filter(p=>(p.projectIds||[]).includes(_etProjectId)).map(p=>({id:p.id,name:p.name}));
-  const _etTagItems     = (state.tags||[]).filter(tg=>(tg.projectIds||[]).includes(_etProjectId)).map(tg=>({id:tg.id,name:tg.name}));
+  const _etProductItems = (state.products||[]).filter(p=>(p.projectIds||[]).includes(_etProjectId)).map(p=>({id:p.id,name:p.name,color:p.color||''}));
+  const _etTagItems     = (state.tags||[]).filter(tg=>(tg.projectIds||[]).includes(_etProjectId)).map(tg=>({id:tg.id,name:tg.name,color:tg.color||''}));
   const _frozen = freezeAll || freezeNonStatus;
   // Backward compat: use id-arrays if present; otherwise resolve legacy name-arrays
   const _etProductIds = (t.productIds||[]).length
@@ -7849,6 +8307,15 @@ function etOnProjectChange(projectId){
     epicSel.innerHTML = `<option value="">No Epic</option>` + projectEpics.map(e=>`<option value="${e.id}"${e.id===prevEpic?' selected':''}>◈ ${e.title}</option>`).join('');
   }
   etOnSprintChange(sprintSel.value);
+  // Refresh Products + Tags multi-selects to match new project
+  if(_msState['et-products']){
+    const newProducts = (state.products||[]).filter(p=>(p.projectIds||[]).includes(projectId)).map(p=>({id:p.id,name:p.name,color:p.color||''}));
+    _msRefreshItems('et-products', newProducts, true);
+  }
+  if(_msState['et-tags']){
+    const newTags = (state.tags||[]).filter(t=>(t.projectIds||[]).includes(projectId)).map(t=>({id:t.id,name:t.name,color:t.color||''}));
+    _msRefreshItems('et-tags', newTags, true);
+  }
 }
 
 // Edit task modal — sprint change handler
@@ -7895,6 +8362,9 @@ function estOnStartDateChange(startVal){
 function saveTask(taskId){
   const t=getTask(taskId);
   if(!t)return;
+  // ── Notification: snapshot pre-save state before any mutation ──
+  const _ntPrevAssignee = t.assignee || null;
+  const _ntPrevStatus   = t.status   || null;
   // ── Freeze guard: released tasks are fully frozen except rollback action ──
   if(t.status==='released'){
     const selectedStatus = document.getElementById('et-status') ? document.getElementById('et-status').value : '';
@@ -8012,6 +8482,8 @@ function saveTask(taskId){
   closeModal();
   refreshAll();
   showNotif('Changes saved ✓');
+  // ── Notification triggers (standalone — no workflow impact) ──
+  NotificationTriggers._onTaskSaved(t, { prevAssignee: _ntPrevAssignee, prevStatus: _ntPrevStatus });
 }
 
 // ─── CREATE SPRINT ────────────────────────────────────────────────
@@ -8040,7 +8512,7 @@ function openCreateSprintModal(){
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label>Start Date</label>
-            <input type="date" id="cs-start" value="${new Date().toISOString().split('T')[0]}"/>
+            <input type="date" id="cs-start" value="${new Date().toISOString().split('T')[0]}" onchange="csOnStartDateChange(this.value)"/>
           </div>
           <div>
             <label>End Date</label>
@@ -8062,9 +8534,24 @@ function openCreateSprintModal(){
   document.getElementById('cs-end').value=end.toISOString().split('T')[0];
 }
 
+function csOnStartDateChange(startVal){
+  const endEl = document.getElementById('cs-end');
+  if(!endEl) return;
+  endEl.min = startVal || '';
+  if(startVal && endEl.value && endEl.value < startVal){
+    endEl.value = '';
+  }
+}
+
 function createSprint(){
   const name=document.getElementById('cs-name').value.trim();
   if(!name){showNotif('⚠ Sprint name required','error');return;}
+  const startDate=document.getElementById('cs-start').value;
+  const endDate=document.getElementById('cs-end').value;
+  if(startDate && endDate && endDate < startDate){
+    showNotif('⚠ End date cannot be earlier than start date','error');
+    return;
+  }
   const now=_now();
   const sprint={
     id:spid(),
@@ -8092,6 +8579,10 @@ function createSprint(){
   }
   SaveManager.save();
   closeModal();
+  // ── Notification: sprint created ──
+  console.log('[NotificationTriggers] sprint trigger fired — createSprint', sprint.id);
+  try{ NotificationTriggers._onSprintSaved(sprint, { isNew: true, prevStatus: null }); }
+  catch(e){ console.error('Notification pipeline error', e); }
   refreshAll();
   showNotif(`${name} created ✓`);
 }
@@ -8203,6 +8694,7 @@ function saveSprint(sprintId){
     }
   }
   // ── Normal save path (no completion intercept needed) ─────────────
+  const _ntSprintPrevStatus = s.status; // capture BEFORE mutation
   s.name=name;
   s.project=document.getElementById('es-project').value;
   // Dates are frozen after creation — never overwrite from disabled fields
@@ -8223,6 +8715,21 @@ function saveSprint(sprintId){
   }
   SaveManager.save();
   closeModal();
+  // ── Retrospective: auto-create board when sprint first enters 'completed' ──
+  if(_ntSprintPrevStatus !== 'completed' && s.status === 'completed'){
+    console.log('[Retro] Sprint completed:', s.id);
+    const _retroAlready = (state.retrospectives||[]).find(r=>r.sprintId===s.id);
+    if(_retroAlready){
+      console.log('[Retro] Retrospective already exists:', s.id);
+    } else {
+      console.log('[Retro] Creating retrospective board:', s.id);
+      try{ RetroManager.createForSprint(s); } catch(e){ console.warn('[Retro] creation error:',e); }
+    }
+  }
+  // ── Notification: sprint updated / completed ──
+  console.log('[NotificationTriggers] sprint trigger fired — saveSprint', s.id);
+  try{ NotificationTriggers._onSprintSaved(s, { isNew: false, prevStatus: _ntSprintPrevStatus }); }
+  catch(e){ console.error('Notification pipeline error', e); }
   refreshAll();
   showNotif('Sprint updated ✓');
 }
@@ -8402,6 +8909,19 @@ function _executeSprintCompletion(){
 
   if(toMove.length) SaveManager.save();
   window._scPending=null; // clean up stash
+  // ── Retrospective: auto-create board on sprint completion ──────────
+  console.log('[Retro] Sprint completed:', s.id);
+  const _retroExists = (state.retrospectives||[]).find(r=>r.sprintId===s.id);
+  if(_retroExists){
+    console.log('[Retro] Retrospective already exists:', s.id);
+  } else {
+    console.log('[Retro] Creating retrospective board:', s.id);
+    try{ RetroManager.createForSprint(s); } catch(e){ console.warn('[Retro] creation error:',e); }
+  }
+  // ── Notification: sprint completed via completion modal ──
+  console.log('[NotificationTriggers] sprint trigger fired — _executeSprintCompletion', s.id);
+  try{ NotificationTriggers._onSprintSaved(s, { isNew: false, prevStatus: 'active' }); }
+  catch(e){ console.error('Notification pipeline error', e); }
   closeModal();
   refreshAll();
 
@@ -9036,20 +9556,24 @@ function renderEpics(){
   const currentProj=projFilterEl?projFilterEl.value:'all';
   const currentStatus=statusFilterEl?statusFilterEl.value:'all';
 
-  // Populate project dropdown
+  // Populate project dropdown — RBAC FIX: use visible projects only
+  const _visibleEpicProjects=RBAC.getVisibleProjects();
   if(projFilterEl){
-    projFilterEl.innerHTML=`<option value="all">All Projects</option>`+state.projects.map(p=>`<option value="${p.id}"${p.id===currentProj?' selected':''}>${p.name}</option>`).join('');
+    projFilterEl.innerHTML=`<option value="all">All Projects</option>`+_visibleEpicProjects.map(p=>`<option value="${p.id}"${p.id===currentProj?' selected':''}>${p.name}</option>`).join('');
   }
 
-  let epics=state.epics;
+  // RBAC FIX: start from RBAC-scoped epics, not raw state.epics
+  let epics=RBAC.getVisibleEpics();
   if(currentProj!=='all') epics=epics.filter(e=>{
     const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
     return epicProjects.includes(currentProj);
   });
   if(currentStatus!=='all') epics=epics.filter(e=>e.status===currentStatus);
 
+  // RBAC FIX: subtitle counts reflect visible scope, not global totals
+  const _allVisibleEpics=RBAC.getVisibleEpics();
   const subtitle=document.getElementById('epics-subtitle');
-  if(subtitle) subtitle.textContent=`${state.epics.length} epic${state.epics.length!==1?'s':''} across ${state.projects.length} project${state.projects.length!==1?'s':''}`;
+  if(subtitle) subtitle.textContent=`${_allVisibleEpics.length} epic${_allVisibleEpics.length!==1?'s':''} across ${_visibleEpicProjects.length} project${_visibleEpicProjects.length!==1?'s':''}`;
 
   const grid=document.getElementById('epics-grid');
   if(!epics.length){
@@ -9232,6 +9756,10 @@ function createEpic(){
   }
   SaveManager.save();
   closeModal();
+  // ── Notification: epic created ──
+  console.log('[NotificationTriggers] epic trigger fired — createEpic', epic.id);
+  try{ NotificationTriggers._onEpicSaved(epic, { isNew: true, prevStatus: null }); }
+  catch(e){ console.error('Notification pipeline error', e); }
   renderEpics();
   showNotif(`Epic "${title}" created ✓`);
 }
@@ -9389,6 +9917,10 @@ function saveEpic(epicId){
   }
   SaveManager.save();
   closeModal();
+  // ── Notification: epic updated / completed ──
+  console.log('[NotificationTriggers] epic trigger fired — saveEpic', e.id);
+  try{ NotificationTriggers._onEpicSaved(e, { isNew: false, prevStatus: undefined }); }
+  catch(e2){ console.error('Notification pipeline error', e2); }
   renderEpics();
   showNotif('Epic updated ✓');
 }
@@ -9492,7 +10024,13 @@ function getReleaseTasks(releaseId){
   const release=getRelease(releaseId);
   if(!release)return[];
   const taskIdSet=new Set(release.taskIds||[]);
-  return state.tasks.filter(t=>t.releaseId===releaseId||taskIdSet.has(t.id));
+  // RBAC FIX: scope task lookup to role-visible projects only.
+  // Admins receive all tasks; PMs and Members receive only tasks
+  // belonging to their mapped projects — preventing cross-project
+  // task data leaking through release card rows, progress bars,
+  // and story-point statistics.
+  const scopedTasks=RBAC.getVisibleTasks(state.tasks);
+  return scopedTasks.filter(t=>t.releaseId===releaseId||taskIdSet.has(t.id));
 }
 
 function getReleaseProgress(releaseId){
@@ -9629,9 +10167,12 @@ function releaseStatusBadge(s){return (RELEASE_STATUS_COLORS[s]||{badge:'release
 
 // ── Queue helpers ──────────────────────────────────────────────────
 function getQueueTasks(){
-  // All tasks whose status === 'released' (task-level status, lowercase) AND not mapped to any release
+  // All tasks whose status === 'released' (task-level status, lowercase) AND not mapped to any release.
+  // RBAC FIX: filter the task pool to role-visible projects first so that PMs
+  // and Members never see Release Queue items from projects outside their scope.
   const mappedIds=new Set((state.releases||[]).flatMap(r=>r.taskIds||[]));
-  return state.tasks.filter(t=>t.status==='released'&&!mappedIds.has(t.id));
+  const scopedTasks=RBAC.getVisibleTasks(state.tasks);
+  return scopedTasks.filter(t=>t.status==='released'&&!mappedIds.has(t.id));
 }
 
 function toggleReleaseQueue(){
@@ -9768,7 +10309,9 @@ function renderReleaseBoard(){
   const countEl=document.getElementById('rf-count');
   const sub=document.getElementById('releases-subtitle');
   const rbBadge=document.getElementById('rb-count-badge');
-  if(sub)sub.textContent=`${state.releases.length} release${state.releases.length!==1?'s':''}`;
+  // RBAC FIX: subtitle reflects visible releases only, not global total
+  const _visibleReleasesForSub=RBAC.getVisibleReleases();
+  if(sub)sub.textContent=`${_visibleReleasesForSub.length} release${_visibleReleasesForSub.length!==1?'s':''}`;
   if(countEl)countEl.textContent=releases.length+' shown';
   if(rbBadge)rbBadge.textContent=releases.length;
   if(!grid)return;
@@ -13344,17 +13887,42 @@ function _tagId(){ return 'TAG' + Date.now().toString(36).toUpperCase(); }
 function renderAdminConfig(){
   const section = document.getElementById('admin-config-section');
   if(!section) return;
-  // Only visible to admin
-  if(!RBAC.isAdmin()){
+  // Visible to Admin and Program Manager only
+  if(!RBAC.isAdmin() && !RBAC.isProgramManager()){
     section.style.display = 'none';
     return;
   }
   section.style.display = 'block';
   _renderProductsList();
   _renderTagsList();
+
+  // Program Managers: hide all admin-only Settings sections; show only Products & Tags
+  if(!RBAC.isAdmin() && RBAC.isProgramManager()){
+    document.querySelectorAll('#page-settings > .max-w-2xl > .settings-section, #page-settings > .max-w-2xl > .mt-4').forEach(el => {
+      el.style.display = 'none';
+    });
+    const subtitle = document.querySelector('#page-settings .page-subtitle');
+    if(subtitle) subtitle.textContent = 'Manage products and tags for your projects';
+  }
 }
 
 // ── Products list ──
+// ── Color helpers: resolve color for a tag/product by name (for task display spots) ──
+function _tagColorByName(name){
+  const t = (state.tags||[]).find(x=>x.name===name);
+  return t && t.color ? t.color : '';
+}
+function _productColorByName(name){
+  const p = (state.products||[]).find(x=>x.name===name);
+  return p && p.color ? p.color : '';
+}
+function _coloredChip(name, color, baseClass){
+  if(color){
+    return `<span class="${baseClass||'tag'}" style="background:${color}22;color:${color};border-color:${color}55">${name}</span>`;
+  }
+  return `<span class="${baseClass||'tag'}">${name}</span>`;
+}
+
 function _renderProductsList(){
   const el = document.getElementById('admin-products-list');
   if(!el) return;
@@ -13368,9 +13936,12 @@ function _renderProductsList(){
       const p = getProject(pid);
       return p ? `<span style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--accent-ghost);color:var(--accent-dark);border-radius:var(--r-pill);font-size:11px;font-weight:600;border:1px solid var(--accent-ring)">${_esc(p.name)}</span>` : '';
     }).filter(Boolean).join(' ');
+    const c = prd.color;
+    const colorSwatch = c ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${_esc(c)};border:1px solid rgba(0,0,0,0.14);flex-shrink:0;margin-right:6px"></span>` : '';
+    const nameStyle = c ? `display:inline-flex;align-items:center;padding:2px 9px 2px 7px;border-radius:var(--r-pill);font-size:13px;font-weight:600;background:${_esc(c)}22;color:${_esc(c)};border:1px solid ${_esc(c)}55` : `font-size:13.5px;font-weight:600;color:var(--text-primary)`;
     return `<div class="settings-row">
       <div style="flex:1;min-width:0">
-        <div style="font-size:13.5px;font-weight:600;color:var(--text-primary)">${_esc(prd.name)}</div>
+        <div style="${nameStyle}">${colorSwatch}${_esc(prd.name)}</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">${mappedNames || '<span style="font-size:11px;color:var(--text-tertiary)">No projects mapped</span>'}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
@@ -13395,9 +13966,12 @@ function _renderTagsList(){
       const p = getProject(pid);
       return p ? `<span style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--accent-ghost);color:var(--accent-dark);border-radius:var(--r-pill);font-size:11px;font-weight:600;border:1px solid var(--accent-ring)">${_esc(p.name)}</span>` : '';
     }).filter(Boolean).join(' ');
+    const c = tag.color;
+    const colorSwatch = c ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${_esc(c)};border:1px solid rgba(0,0,0,0.14);flex-shrink:0;margin-right:6px"></span>` : '';
+    const nameStyle = c ? `display:inline-flex;align-items:center;padding:2px 9px 2px 7px;border-radius:var(--r-pill);font-size:13px;font-weight:600;background:${_esc(c)}22;color:${_esc(c)};border:1px solid ${_esc(c)}55` : `font-size:13.5px;font-weight:600;color:var(--text-primary)`;
     return `<div class="settings-row">
       <div style="flex:1;min-width:0">
-        <div style="font-size:13.5px;font-weight:600;color:var(--text-primary)">${_esc(tag.name)}</div>
+        <div style="${nameStyle}">${colorSwatch}${_esc(tag.name)}</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">${mappedNames || '<span style="font-size:11px;color:var(--text-tertiary)">No projects mapped</span>'}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
@@ -13413,7 +13987,10 @@ function _esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 
 // ── Project multi-select HTML for modal ──
 function _projectMultiSelectHTML(selectedIds, prefix){
-  const projects = state.projects || [];
+  // Admin sees all projects; PM sees only their visible projects
+  const projects = RBAC.isAdmin()
+    ? (state.projects || [])
+    : (RBAC.getVisibleProjects ? RBAC.getVisibleProjects() : (state.projects || []));
   if(!projects.length) return '<div style="font-size:13px;color:var(--text-tertiary)">No projects available.</div>';
   return projects.map(p => {
     const checked = (selectedIds||[]).includes(p.id) ? 'checked' : '';
@@ -13431,23 +14008,73 @@ function _collectCheckedProjects(containerId){
   return Array.from(container.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value);
 }
 
-// ── Save products/tags to localStorage + Firebase (products/tags are local-only; no Firebase collection) ──
+// ── Save a single product or tag entity to Firebase + localStorage ──
 function _saveAdminConfig(){
   SaveManager.save();
+}
+
+function _fbSaveProduct(product){
+  SaveManager.save();
+  if(FirebaseDB.isReady()){
+    FirebaseDB.saveEntity('products', product).catch(e => console.warn('[AdminConfig] saveProduct Firebase error:', e));
+  }
+}
+
+function _fbDeleteProduct(productId){
+  SaveManager.save();
+  if(FirebaseDB.isReady()){
+    FirebaseDB.deleteEntity('products', productId).catch(e => console.warn('[AdminConfig] deleteProduct Firebase error:', e));
+  }
+}
+
+function _fbSaveTag(tag){
+  SaveManager.save();
+  if(FirebaseDB.isReady()){
+    FirebaseDB.saveEntity('tags', tag).catch(e => console.warn('[AdminConfig] saveTag Firebase error:', e));
+  }
+}
+
+function _fbDeleteTag(tagId){
+  SaveManager.save();
+  if(FirebaseDB.isReady()){
+    FirebaseDB.deleteEntity('tags', tagId).catch(e => console.warn('[AdminConfig] deleteTag Firebase error:', e));
+  }
 }
 
 // ─── PRODUCT CRUD ─────────────────────────────────────────────────
 
 function openProductModal(productId){
-  if(!RBAC.isAdmin()){ showNotif('Admin access required','error'); return; }
+  if(!RBAC.isAdmin() && !RBAC.isProgramManager()){ showNotif('Permission denied','error'); return; }
   const isEdit = !!productId;
   const prd = isEdit ? (state.products||[]).find(p => p.id === productId) : null;
+  const currentColor = (prd && prd.color) ? prd.color : '';
+  const PRESET_COLORS = ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#64748b'];
+  const presetSwatches = PRESET_COLORS.map(c =>
+    `<span onclick="document.getElementById('prd-color-input').value='${c}';document.getElementById('prd-color-preview').style.background='${c}'"
+      style="display:inline-block;width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${c===currentColor?'#0d0f14':'transparent'};transition:border-color 0.12s;flex-shrink:0" title="${c}"></span>`
+  ).join('');
   const html = `
     <div style="padding:24px 24px 20px">
       <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:18px">${isEdit ? 'Edit Product' : 'Add Product'}</div>
       <div style="margin-bottom:14px">
         <label>Product Name</label>
         <input id="prd-name-input" type="text" placeholder="e.g. Claims Portal" value="${isEdit ? _esc(prd.name) : ''}" style="margin-top:4px"/>
+      </div>
+      <div style="margin-bottom:14px">
+        <label>Color <span style="font-size:10px;font-weight:400;color:var(--text-tertiary)">(optional)</span></label>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+          ${presetSwatches}
+          <label style="display:inline-flex;align-items:center;gap:5px;margin:0;cursor:pointer;font-size:12px;color:var(--text-secondary);font-weight:500">
+            <span id="prd-color-preview" style="display:inline-block;width:22px;height:22px;border-radius:50%;background:${currentColor||'#e2e8f0'};border:2px solid rgba(0,0,0,0.10);flex-shrink:0;overflow:hidden;position:relative">
+              <input type="color" id="prd-color-input" value="${currentColor||'#6366f1'}"
+                oninput="document.getElementById('prd-color-preview').style.background=this.value"
+                style="position:absolute;inset:-4px;width:calc(100%+8px);height:calc(100%+8px);opacity:0;cursor:pointer;border:none;padding:0"/>
+            </span>
+            Custom
+          </label>
+          <button type="button" onclick="document.getElementById('prd-color-input').value='';document.getElementById('prd-color-preview').style.background='#e2e8f0'"
+            style="font-size:11px;color:var(--text-tertiary);background:none;border:none;cursor:pointer;padding:2px 4px;text-decoration:underline">Clear</button>
+        </div>
       </div>
       <div style="margin-bottom:18px">
         <label style="margin-bottom:8px">Mapped Projects</label>
@@ -13463,35 +14090,48 @@ function openProductModal(productId){
       </div>
     </div>`;
   openModal(html);
+  // Pre-fill color preview if editing
+  if(currentColor){
+    setTimeout(()=>{
+      const preview = document.getElementById('prd-color-preview');
+      if(preview) preview.style.background = currentColor;
+    }, 30);
+  }
   setTimeout(()=>{ const inp=document.getElementById('prd-name-input'); if(inp) inp.focus(); }, 80);
 }
 
 function saveProduct(productId){
-  if(!RBAC.isAdmin()) return;
+  if(!RBAC.isAdmin() && !RBAC.isProgramManager()) return;
   const nameEl = document.getElementById('prd-name-input');
   const name = (nameEl ? nameEl.value.trim() : '');
   if(!name){ showNotif('Product name is required','error'); if(nameEl) nameEl.focus(); return; }
   const projectIds = _collectCheckedProjects('prd-projects-container');
+  const colorEl = document.getElementById('prd-color-input');
+  const color = (colorEl && colorEl.value && colorEl.value !== '' && colorEl.value !== '#e2e8f0') ? colorEl.value : '';
   state.products = state.products || [];
+  let savedProduct;
   if(productId){
     const idx = state.products.findIndex(p => p.id === productId);
     if(idx > -1){
-      state.products[idx] = { ...state.products[idx], name, projectIds, updatedAt: _now() };
+      state.products[idx] = { ...state.products[idx], name, projectIds, color: color||undefined, updatedAt: _now() };
+      if(!state.products[idx].color) delete state.products[idx].color;
+      savedProduct = state.products[idx];
     }
   } else {
-    state.products.push({ id: _prdId(), name, projectIds, createdAt: _now(), updatedAt: _now() });
+    savedProduct = { id: _prdId(), name, projectIds, ...(color ? {color} : {}), createdAt: _now(), updatedAt: _now() };
+    state.products.push(savedProduct);
   }
-  _saveAdminConfig();
+  if(savedProduct) _fbSaveProduct(savedProduct);
   closeModal();
   _renderProductsList();
   showNotif(productId ? 'Product updated ✓' : 'Product added ✓');
 }
 
 function deleteProduct(productId){
-  if(!RBAC.isAdmin()) return;
+  if(!RBAC.isAdmin() && !RBAC.isProgramManager()) return;
   if(!confirm('Delete this product?')) return;
   state.products = (state.products || []).filter(p => p.id !== productId);
-  _saveAdminConfig();
+  _fbDeleteProduct(productId);
   _renderProductsList();
   showNotif('Product deleted');
 }
@@ -13499,15 +14139,37 @@ function deleteProduct(productId){
 // ─── TAG CRUD ─────────────────────────────────────────────────────
 
 function openTagModal(tagId){
-  if(!RBAC.isAdmin()){ showNotif('Admin access required','error'); return; }
+  if(!RBAC.isAdmin() && !RBAC.isProgramManager()){ showNotif('Permission denied','error'); return; }
   const isEdit = !!tagId;
   const tag = isEdit ? (state.tags||[]).find(t => t.id === tagId) : null;
+  const currentColor = (tag && tag.color) ? tag.color : '';
+  const PRESET_COLORS = ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#64748b'];
+  const presetSwatches = PRESET_COLORS.map(c =>
+    `<span onclick="document.getElementById('tag-color-input').value='${c}';document.getElementById('tag-color-preview').style.background='${c}'"
+      style="display:inline-block;width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${c===currentColor?'#0d0f14':'transparent'};transition:border-color 0.12s;flex-shrink:0" title="${c}"></span>`
+  ).join('');
   const html = `
     <div style="padding:24px 24px 20px">
       <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:18px">${isEdit ? 'Edit Tag' : 'Add Tag'}</div>
       <div style="margin-bottom:14px">
         <label>Tag Name</label>
         <input id="tag-name-input" type="text" placeholder="e.g. Critical" value="${isEdit ? _esc(tag.name) : ''}" style="margin-top:4px"/>
+      </div>
+      <div style="margin-bottom:14px">
+        <label>Color <span style="font-size:10px;font-weight:400;color:var(--text-tertiary)">(optional)</span></label>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+          ${presetSwatches}
+          <label style="display:inline-flex;align-items:center;gap:5px;margin:0;cursor:pointer;font-size:12px;color:var(--text-secondary);font-weight:500">
+            <span id="tag-color-preview" style="display:inline-block;width:22px;height:22px;border-radius:50%;background:${currentColor||'#e2e8f0'};border:2px solid rgba(0,0,0,0.10);flex-shrink:0;overflow:hidden;position:relative">
+              <input type="color" id="tag-color-input" value="${currentColor||'#6366f1'}"
+                oninput="document.getElementById('tag-color-preview').style.background=this.value"
+                style="position:absolute;inset:-4px;width:calc(100%+8px);height:calc(100%+8px);opacity:0;cursor:pointer;border:none;padding:0"/>
+            </span>
+            Custom
+          </label>
+          <button type="button" onclick="document.getElementById('tag-color-input').value='';document.getElementById('tag-color-preview').style.background='#e2e8f0'"
+            style="font-size:11px;color:var(--text-tertiary);background:none;border:none;cursor:pointer;padding:2px 4px;text-decoration:underline">Clear</button>
+        </div>
       </div>
       <div style="margin-bottom:18px">
         <label style="margin-bottom:8px">Mapped Projects</label>
@@ -13523,35 +14185,47 @@ function openTagModal(tagId){
       </div>
     </div>`;
   openModal(html);
+  if(currentColor){
+    setTimeout(()=>{
+      const preview = document.getElementById('tag-color-preview');
+      if(preview) preview.style.background = currentColor;
+    }, 30);
+  }
   setTimeout(()=>{ const inp=document.getElementById('tag-name-input'); if(inp) inp.focus(); }, 80);
 }
 
 function saveTag(tagId){
-  if(!RBAC.isAdmin()) return;
+  if(!RBAC.isAdmin() && !RBAC.isProgramManager()) return;
   const nameEl = document.getElementById('tag-name-input');
   const name = (nameEl ? nameEl.value.trim() : '');
   if(!name){ showNotif('Tag name is required','error'); if(nameEl) nameEl.focus(); return; }
   const projectIds = _collectCheckedProjects('tag-projects-container');
+  const colorEl = document.getElementById('tag-color-input');
+  const color = (colorEl && colorEl.value && colorEl.value !== '' && colorEl.value !== '#e2e8f0') ? colorEl.value : '';
   state.tags = state.tags || [];
+  let savedTag;
   if(tagId){
     const idx = state.tags.findIndex(t => t.id === tagId);
     if(idx > -1){
-      state.tags[idx] = { ...state.tags[idx], name, projectIds, updatedAt: _now() };
+      state.tags[idx] = { ...state.tags[idx], name, projectIds, color: color||undefined, updatedAt: _now() };
+      if(!state.tags[idx].color) delete state.tags[idx].color;
+      savedTag = state.tags[idx];
     }
   } else {
-    state.tags.push({ id: _tagId(), name, projectIds, createdAt: _now(), updatedAt: _now() });
+    savedTag = { id: _tagId(), name, projectIds, ...(color ? {color} : {}), createdAt: _now(), updatedAt: _now() };
+    state.tags.push(savedTag);
   }
-  _saveAdminConfig();
+  if(savedTag) _fbSaveTag(savedTag);
   closeModal();
   _renderTagsList();
   showNotif(tagId ? 'Tag updated ✓' : 'Tag added ✓');
 }
 
 function deleteTag(tagId){
-  if(!RBAC.isAdmin()) return;
+  if(!RBAC.isAdmin() && !RBAC.isProgramManager()) return;
   if(!confirm('Delete this tag?')) return;
   state.tags = (state.tags || []).filter(t => t.id !== tagId);
-  _saveAdminConfig();
+  _fbDeleteTag(tagId);
   _renderTagsList();
   showNotif('Tag deleted');
 }
@@ -13578,6 +14252,1100 @@ function _xlGetDataWithRange(mode, fromDate, toDate) {
   return data;
 }
 </script>
+<!-- ═══════════════════════════════════════════════════════════════════
+     NOTIFICATION SYSTEM — FOUNDATION LAYER (SprintFlow v28)
+     + NOTIFICATION TRIGGERS + RBAC VISIBILITY (SprintFlow v28.1)
+     ───────────────────────────────────────────────────────────────────
+     ISOLATION CONTRACT
+     ─ state.notifications : standalone object keyed by notif id
+     ─ Firebase path       : sprintflow/notifications/{id}
+     ─ No mutation of tasks / subtasks / projects / sprints / epics
+     ─ No calls to refreshAll() / renderXxx() / invalidateStateMaps()
+     ─ Incremental realtime via onChildAdded/Changed/Removed
+     ─ Zero UI side-effects on existing app
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+// ─── NOTIFICATION SYSTEM ─────────────────────────────────────────────────────
+// Standalone collection. Firebase: sprintflow/notifications/{id}
+// In-memory: state.notifications (object keyed by id)
+// User-scoped state: notification.userState[userId].{read,muted,deleted}
+// Global notification objects are NEVER mutated by per-user actions.
+// ─────────────────────────────────────────────────────────────────────────────
+const NotificationSystem = (function () {
+
+  let _db = null, _ref = null, _set = null, _update = null, _remove = null;
+  let _onChildAdded = null, _onChildChanged = null, _onChildRemoved = null;
+  let _unsubAdded = null, _unsubChanged = null, _unsubRemoved = null;
+  let _listenerActive = false;
+  let _bootSkip = true, _bootSkipTimer = null;
+  const _debounceTimers = {};
+  const DEBOUNCE_MS = 150;
+
+  function _isReady(){ return !!(_db && _ref && _set && _update && _onChildAdded && _onChildChanged && _onChildRemoved); }
+  function _safeRef(path){ if(!_isReady()) throw new Error('[NotificationSystem] Firebase not ready'); return _ref(_db,path); }
+  function _notifPath(id){ return 'sprintflow/notifications/'+id; }
+  function _collectionRef(){ return _safeRef('sprintflow/notifications'); }
+  function _store(){
+    if(!state.notifications||typeof state.notifications!=='object'||Array.isArray(state.notifications)) state.notifications={};
+    return state.notifications;
+  }
+  function _clean(obj){ const o={}; Object.keys(obj).forEach(k=>{if(obj[k]!==undefined)o[k]=obj[k];}); return o; }
+
+  // ── Per-user state accessor (backward-compatible) ────────────────────────────
+  // Returns the userState sub-object for the current user, or {} if missing.
+  function _us(notif){
+    const uid = state.currentUser ? state.currentUser.id : null;
+    if(!uid||!notif) return {};
+    return (notif.userState && notif.userState[uid]) || {};
+  }
+  // Ensure notif.userState[uid] exists and return it as a mutable ref.
+  function _usEnsure(notif){
+    const uid = state.currentUser ? state.currentUser.id : null;
+    if(!uid||!notif) return null;
+    if(!notif.userState) notif.userState = {};
+    if(!notif.userState[uid]) notif.userState[uid] = { read:false, muted:false, deleted:false };
+    return notif.userState[uid];
+  }
+
+  function _upsertLocal(notif){
+    if(!notif||!notif.id) return;
+    const store=_store();
+    const ex=store[notif.id];
+    if(ex&&(ex.updatedAt||ex.createdAt||0)>(notif.updatedAt||notif.createdAt||0)) return;
+    // Merge carefully: preserve local userState sub-keys not yet in incoming snapshot
+    const merged = Object.assign({},ex||{},notif);
+    if(ex&&ex.userState&&notif.userState){
+      merged.userState = Object.assign({},ex.userState,notif.userState);
+      // Merge individual user sub-objects so no per-user keys are overwritten
+      Object.keys(notif.userState).forEach(uid=>{
+        merged.userState[uid] = Object.assign({},ex.userState[uid]||{},notif.userState[uid]);
+      });
+    }
+    store[notif.id]=merged;
+  }
+  function _removeLocal(id){ if(!id) return; delete _store()[id]; }
+
+  // ── createNotification ──────────────────────────────────────────────────────
+  async function createNotification(fields){
+    if(!fields||!fields.type||!fields.userId||!fields.title||!fields.message){
+      console.warn('[NotificationSystem] createNotification: missing required fields',fields); return null;
+    }
+    const id='notif_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+    const now=Date.now();
+    const VALID_TYPES=['assignment','update','reminder'];
+    const VALID_CATS=['assigned','updated','reminder'];
+    const notif={
+      id,
+      type      : VALID_TYPES.includes(fields.type)?fields.type:'update',
+      category  : VALID_CATS.includes(fields.category)?fields.category:(fields.type==='assignment'?'assigned':fields.type==='reminder'?'reminder':'updated'),
+      userId    : fields.userId||'',
+      taskId    : fields.taskId||'',
+      subtaskId : fields.subtaskId||'',
+      projectId : fields.projectId||'',
+      sprintId  : fields.sprintId||'',
+      title     : String(fields.title).slice(0,200),
+      message   : String(fields.message).slice(0,1000),
+      createdBy : fields.createdBy||(state.currentUser?state.currentUser.id:''),
+      createdAt : now,
+      updatedAt : now,
+      userState : {},   // per-user state: {[userId]:{read,muted,deleted}}
+    };
+    _upsertLocal(notif);
+    console.log('[NotificationSystem] Notification created:', notif);
+    if(_isReady()){
+      try{ await _set(_safeRef(_notifPath(id)),_clean(notif)); console.log('[NotificationSystem] created',id); }
+      catch(e){ console.warn('[NotificationSystem] Firebase write failed',e.message||e); }
+    }
+    return notif;
+  }
+
+  // ── markNotificationRead (user-scoped) ───────────────────────────────────────
+  async function markNotificationRead(id){
+    if(!id) return false;
+    const notif=_store()[id];
+    if(!notif){ console.warn('[NotificationSystem] markNotificationRead: not found',id); return false; }
+    const uid = state.currentUser ? state.currentUser.id : null;
+    if(!uid) return false;
+    const us = _usEnsure(notif);
+    if(!us) return false;
+    if(us.read) return true; // already read
+    us.read = true;
+    const now = Date.now();
+    notif.updatedAt = now;
+    // Write ONLY the user-scoped sub-path — never overwrites other users' state
+    if(_isReady()){
+      try{
+        await _update(_safeRef(_notifPath(id)+'/userState/'+uid), { read:true });
+        await _update(_safeRef(_notifPath(id)), { updatedAt:now });
+      } catch(e){ console.warn('[NotificationSystem] markRead failed',id,e.message||e); }
+    }
+    return true;
+  }
+
+  // ── markAllNotificationsRead (user-scoped) ────────────────────────────────────
+  async function markAllNotificationsRead(userId){
+    const uid=userId||(state.currentUser?state.currentUser.id:null);
+    if(!uid){ console.warn('[NotificationSystem] markAllNotificationsRead: no userId'); return 0; }
+    // Visible (non-deleted, non-muted) unread notifications for this user
+    const targets=getVisibleNotifications(null,{unreadOnly:true,limit:9999});
+    if(!targets.length) return 0;
+    const now=Date.now();
+    await Promise.allSettled(targets.map(async notif=>{
+      const us = _usEnsure(notif);
+      if(!us) return;
+      us.read = true;
+      notif.updatedAt = now;
+      if(_isReady()){
+        try{
+          await _update(_safeRef(_notifPath(notif.id)+'/userState/'+uid), { read:true });
+          await _update(_safeRef(_notifPath(notif.id)), { updatedAt:now });
+        } catch(e){ console.warn('[NotificationSystem] markAll failed',notif.id,e.message||e); }
+      }
+    }));
+    console.log('[NotificationSystem] markAllRead:',targets.length,'for',uid);
+    return targets.length;
+  }
+
+  // ── deleteAllNotifications (user-scoped, Admin/PM only) ──────────────────────
+  // Sets userState[uid].deleted=true for every visible notification.
+  // Does NOT remove from Firebase or affect other users.
+  async function deleteAllNotifications(){
+    if(!RBAC.isAdmin() && !RBAC.isProgramManager()){
+      console.warn('[NotificationSystem] deleteAllNotifications: Team Member cannot delete');
+      return false;
+    }
+    const uid = state.currentUser ? state.currentUser.id : null;
+    if(!uid) return false;
+    const targets = getVisibleNotifications(null,{limit:9999});
+    if(!targets.length) return true;
+    const now = Date.now();
+    await Promise.allSettled(targets.map(async notif=>{
+      const us = _usEnsure(notif);
+      if(!us) return;
+      us.deleted = true;
+      notif.updatedAt = now;
+      if(_isReady()){
+        try{
+          await _update(_safeRef(_notifPath(notif.id)+'/userState/'+uid), { deleted:true });
+          await _update(_safeRef(_notifPath(notif.id)), { updatedAt:now });
+        } catch(e){ console.warn('[NotificationSystem] deleteAll failed',notif.id,e.message||e); }
+      }
+    }));
+    console.log('[NotificationSystem] deleteAll: hidden',targets.length,'for',uid);
+    return true;
+  }
+
+  // ── getVisibleNotifications — RBAC-aware, user-state filtered ────────────────
+  // Admin    : all notifications (not deleted/muted for this user)
+  // PM       : mapped project + own + no-project (not deleted/muted for this user)
+  // Member   : only own (not deleted for this user)
+  function getVisibleNotifications(userId, options){
+    const opts=options||{};
+    const unreadOnly=opts.unreadOnly===true;
+    const limit=typeof opts.limit==='number'?opts.limit:100;
+    const sortDesc=opts.sortDesc!==false;
+    const cu=state.currentUser;
+
+    let results=Object.values(_store()).filter(n=>{
+      if(!n||!n.id) return false;
+
+      // ── Per-user state (backward-compatible: missing userState = all defaults false) ──
+      const us = _us(n);
+      if(us.deleted) return false;  // hidden for this user
+      if(us.muted)   return false;  // muted for this user
+      if(unreadOnly && us.read) return false;
+
+      // ── RBAC visibility gate ──
+      if(!cu) return false;
+      if(RBAC.isAdmin()){
+        if(userId && n.userId!==userId) return false;
+        return true;
+      }
+      if(RBAC.isProgramManager()){
+        // PM only sees their OWN notifications — not notifications belonging to
+        // other users on their projects. ownNotif is the sole ownership gate.
+        const ownNotif = n.userId === cu.id;
+        if(!ownNotif) return false;
+        if(userId && n.userId!==userId) return false;
+        return true;
+      }
+      // Team member: only own notifications
+      return n.userId===cu.id;
+    });
+
+    results.sort((a,b)=>sortDesc?(b.createdAt||0)-(a.createdAt||0):(a.createdAt||0)-(b.createdAt||0));
+    const visibleNotifications = results.slice(0,limit);
+    console.log('[NotificationSystem] Current user:', cu);
+    console.log('[NotificationSystem] Visible notifications:', visibleNotifications);
+    return visibleNotifications;
+  }
+
+  // ── Realtime listeners ──────────────────────────────────────────────────────
+  function _attachListeners(){
+    if(_listenerActive) return;
+    if(!_isReady()){ console.warn('[NotificationSystem] attachListeners: not ready'); return; }
+    let colRef;
+    try{ colRef=_collectionRef(); } catch(e){ console.warn('[NotificationSystem] colRef failed',e.message||e); return; }
+
+    _bootSkip=true;
+    clearTimeout(_bootSkipTimer);
+    _bootSkipTimer=setTimeout(()=>{ _bootSkip=false; },1500);
+
+    _unsubAdded=_onChildAdded(colRef,(snap)=>{
+      if(_bootSkip) return;
+      try{
+        const item=snap.val(); if(!item||!item.id) return;
+        clearTimeout(_debounceTimers[item.id]);
+        _debounceTimers[item.id]=setTimeout(()=>{
+          _upsertLocal(item);
+          console.log('[NotificationSystem] rt:added',item.id);
+          if(typeof NotificationUI !== 'undefined') NotificationUI.renderNotifications();
+        },DEBOUNCE_MS);
+      }catch(e){ console.warn('[NotificationSystem] onChildAdded error',e); }
+    },(e)=>console.warn('[NotificationSystem] onChildAdded attach error',e));
+
+    _unsubChanged=_onChildChanged(colRef,(snap)=>{
+      try{
+        const item=snap.val(); if(!item||!item.id) return;
+        clearTimeout(_debounceTimers[item.id]);
+        _debounceTimers[item.id]=setTimeout(()=>{
+          _upsertLocal(item);
+          console.log('[NotificationSystem] rt:changed',item.id);
+          if(typeof NotificationUI !== 'undefined') NotificationUI.renderNotifications();
+        },DEBOUNCE_MS);
+      }catch(e){ console.warn('[NotificationSystem] onChildChanged error',e); }
+    },(e)=>console.warn('[NotificationSystem] onChildChanged attach error',e));
+
+    _unsubRemoved=_onChildRemoved(colRef,(snap)=>{
+      try{
+        const item=snap.val(); const id=(item&&item.id)?item.id:snap.key; if(!id) return;
+        clearTimeout(_debounceTimers[id]);
+        _debounceTimers[id]=setTimeout(()=>{
+          _removeLocal(id);
+          console.log('[NotificationSystem] rt:removed',id);
+          if(typeof NotificationUI !== 'undefined') NotificationUI.renderNotifications();
+        },DEBOUNCE_MS);
+      }catch(e){ console.warn('[NotificationSystem] onChildRemoved error',e); }
+    },(e)=>console.warn('[NotificationSystem] onChildRemoved attach error',e));
+
+    _listenerActive=true;
+    console.log('[NotificationSystem] Realtime listeners active');
+  }
+
+  function _detachListeners(){
+    Object.keys(_debounceTimers).forEach(k=>{ clearTimeout(_debounceTimers[k]); delete _debounceTimers[k]; });
+    clearTimeout(_bootSkipTimer);
+    try{ if(_unsubAdded)   _unsubAdded();   }catch(e){ console.error('Notification pipeline error',e); }
+    try{ if(_unsubChanged) _unsubChanged(); }catch(e){ console.error('Notification pipeline error',e); }
+    try{ if(_unsubRemoved) _unsubRemoved(); }catch(e){ console.error('Notification pipeline error',e); }
+    _unsubAdded=_unsubChanged=_unsubRemoved=null;
+    _listenerActive=false;
+    console.log('[NotificationSystem] Realtime listeners detached');
+  }
+
+  async function _loadInitialNotifications(){
+    if(!_isReady()) return;
+    const uid=state.currentUser?state.currentUser.id:null;
+    if(!uid) return;
+    try{
+      const _get=window._rtGet;
+      if(!_get){ console.log('[NotificationSystem] _loadInitial: _rtGet not available'); return; }
+      const _q=window._rtQuery, _ob=window._rtOrderByChild, _eq=window._rtEqualTo;
+      let isAdmin=false, isPM=false;
+      try{ isAdmin=RBAC.isAdmin(); isPM=RBAC.isProgramManager(); }catch(e){}
+      const loadAll = isAdmin || isPM;
+      const snap = loadAll
+        ? await _get(_collectionRef())
+        : (_q&&_ob&&_eq)
+          ? await _get(_q(_collectionRef(),_ob('userId'),_eq(uid)))
+          : await _get(_collectionRef());
+      if(snap&&snap.exists()){
+        const val=snap.val()||{};
+        const items=Array.isArray(val)?val:Object.values(val);
+        items.filter(Boolean).forEach(n=>_upsertLocal(n));
+        console.log('[NotificationSystem] initial load:',items.length,'notifications');
+        console.log('[NotificationSystem] Notification snapshot:',state.notifications);
+      }
+    }catch(e){ console.warn('[NotificationSystem] _loadInitial error',e.message||e); }
+  }
+
+  // ── Lifecycle ───────────────────────────────────────────────────────────────
+  async function init(db,sdkFns){
+    if(!db||!sdkFns){ console.warn('[NotificationSystem] init: missing args'); return; }
+    _db=db; _ref=sdkFns.ref; _set=sdkFns.set; _update=sdkFns.update; _remove=sdkFns.remove||null;
+    _onChildAdded   = sdkFns.onChildAdded   || window._rtOnChildAdded   || null;
+    _onChildChanged = sdkFns.onChildChanged || window._rtOnChildChanged || null;
+    _onChildRemoved = sdkFns.onChildRemoved || window._rtOnChildRemoved || null;
+    if(!_isReady()){ console.warn('[NotificationSystem] init: SDK incomplete — listeners not started'); return; }
+    state.notifications=state.notifications||{};
+    await _loadInitialNotifications();
+    _attachListeners();
+    if(typeof NotificationUI !== 'undefined') NotificationUI.renderNotifications();
+    console.log('[NotificationSystem] Initialized for user:',(state.currentUser&&state.currentUser.id));
+  }
+
+  function stop(){
+    _detachListeners();
+    state.notifications={};
+    _db=_ref=_set=_update=_remove=null;
+    _onChildAdded=_onChildChanged=_onChildRemoved=null;
+    console.log('[NotificationSystem] Stopped');
+  }
+
+  // ── muteNotification (user-scoped) ────────────────────────────────────────
+  // Admin and PM can mute for themselves only — does NOT affect other users.
+  // Team Member cannot mute.
+  async function muteNotification(id){
+    if(!id) return false;
+    if(!RBAC.isAdmin() && !RBAC.isProgramManager()){
+      console.warn('[NotificationSystem] muteNotification: Team Member cannot mute');
+      return false;
+    }
+    const notif = _store()[id];
+    if(!notif){ console.warn('[NotificationSystem] muteNotification: not found', id); return false; }
+    const uid = state.currentUser ? state.currentUser.id : null;
+    if(!uid) return false;
+    const us = _usEnsure(notif);
+    if(!us) return false;
+    if(us.muted) return true; // already muted for this user
+    us.muted = true;
+    const now = Date.now();
+    notif.updatedAt = now;
+    if(_isReady()){
+      try{
+        await _update(_safeRef(_notifPath(id)+'/userState/'+uid), { muted:true });
+        await _update(_safeRef(_notifPath(id)), { updatedAt:now });
+      }
+      catch(e){ console.warn('[NotificationSystem] muteNotification Firebase write failed', id, e.message||e); }
+    }
+    console.log('[NotificationSystem] muted for user',uid,':', id);
+    return true;
+  }
+
+  return { init, stop, createNotification, markNotificationRead, markAllNotificationsRead, deleteAllNotifications, getVisibleNotifications, muteNotification };
+})();
+
+window.NotificationSystem = NotificationSystem;
+
+// ─── NOTIFICATION TRIGGERS ───────────────────────────────────────────────────
+// Appended after saveTask / saveSubtask / updateTaskStatus / updateSubtaskStatus.
+// Never modifies existing function bodies — only calls createNotification().
+// ─────────────────────────────────────────────────────────────────────────────
+const NotificationTriggers = (function(){
+
+  // Guard: skip if NotificationSystem not ready or no current user
+  function _ready(){ return !!(state.currentUser && typeof NotificationSystem !== 'undefined'); }
+
+  function _actorId(){ return state.currentUser ? state.currentUser.id : ''; }
+  function _actorName(){ return state.currentUser ? (state.currentUser.name || state.currentUser.email || 'Someone') : 'Someone'; }
+
+  // Resolve display name for a user id
+  function _userName(uid){
+    if(!uid) return 'Unassigned';
+    const u=(state.users||[]).find(x=>x&&x.id===uid);
+    return u ? (u.name||u.email||uid) : uid;
+  }
+
+  // statusLabel fallback (already exists globally, but guard in case called before ready)
+  function _statusLabel(s){
+    try{ return statusLabel(s); } catch(e){ return s||''; }
+  }
+
+  // ── Fire-and-forget createNotification wrapper ───────────────────────────
+  function _fire(fields){
+    if(!_ready()) return;
+    // Never fire a notification if there's no target user
+    if(!fields.userId) return;
+    // Don't notify yourself for your own edits (optional — keeps noise down)
+    // (assignment to yourself is still notified if actor ≠ assignee)
+    try{
+      NotificationSystem.createNotification(fields).catch(e=>console.error('Notification pipeline error',e));
+    } catch(e){ console.error('Notification pipeline error',e); }
+  }
+
+  // ── Task saved (from saveTask modal) ─────────────────────────────────────
+  // Handles: assignment change, status change, general update
+  function _onTaskSaved(task, prev){
+    if(!task||!task.id) return;
+    const actor = _actorId();
+    const prevAssignee = prev.prevAssignee || null;
+    const prevStatus   = prev.prevStatus   || null;
+    const base = { taskId:task.id, projectId:task.project||'', sprintId:task.sprint||'', createdBy:actor };
+
+    // 1. Assignment notification — new assignee differs from previous
+    if(task.assignee && task.assignee !== prevAssignee){
+      // 1a. Notify the assignee (only if they are not the actor)
+      if(task.assignee !== actor){
+        _fire({
+          ...base,
+          type    : 'assignment',
+          category: 'assigned',
+          userId  : task.assignee,
+          title   : 'Task assigned to you',
+          message : `"${task.title}" was assigned to you by ${_actorName()}.`,
+        });
+      }
+      // 1b. Notify the actor (assigner) so they see "You assigned X to Y", not "assigned to you"
+      _fire({
+        ...base,
+        type    : 'assignment',
+        category: 'assigned',
+        userId  : actor,
+        title   : 'Task assigned',
+        message : `You assigned "${task.title}" to ${_userName(task.assignee)}.`,
+      });
+    }
+
+    // 2. Status-change notification — notify the assignee (if not the actor)
+    if(prevStatus && task.status !== prevStatus && task.assignee){
+      _fire({
+        ...base,
+        type    : 'update',
+        category: 'updated',
+        userId  : task.assignee,
+        title   : 'Task status changed',
+        message : `"${task.title}" moved from ${_statusLabel(prevStatus)} to ${_statusLabel(task.status)}.`,
+      });
+    }
+
+    // 3. General update — notify the assignee when something else changed
+    // (skip if it was purely an assignment or status change already fired above)
+    const pureAssignChange = task.assignee !== prevAssignee && task.status === prevStatus;
+    const pureStatusChange = task.assignee === prevAssignee && task.status !== prevStatus;
+    if(!pureAssignChange && !pureStatusChange && task.assignee && task.assignee !== actor){
+      _fire({
+        ...base,
+        type    : 'update',
+        category: 'updated',
+        userId  : task.assignee,
+        title   : 'Task updated',
+        message : `"${task.title}" was updated by ${_actorName()}.`,
+      });
+    }
+  }
+
+  // ── Task status changed (from updateTaskStatus — kanban/inline) ───────────
+  function _onTaskStatusChanged(task, prevStatus, newStatus){
+    if(!task||!task.id) return;
+    if(prevStatus === newStatus) return;
+    if(!task.assignee) return;
+    _fire({
+      type    : 'update',
+      category: 'updated',
+      userId  : task.assignee,
+      taskId  : task.id,
+      projectId: task.project||'',
+      sprintId : task.sprint||'',
+      createdBy: _actorId(),
+      title   : 'Task status changed',
+      message : `"${task.title}" moved from ${_statusLabel(prevStatus)} to ${_statusLabel(newStatus)}.`,
+    });
+  }
+
+  // ── Subtask saved (from saveSubtask modal) ────────────────────────────────
+  function _onSubtaskSaved(subtask, parentTask, prev){
+    if(!subtask||!subtask.id||!parentTask) return;
+    const actor = _actorId();
+    const prevAssignee = prev.prevAssignee || null;
+    const prevStatus   = prev.prevStatus   || null;
+    const base = {
+      taskId    : parentTask.id,
+      subtaskId : subtask.id,
+      projectId : parentTask.project||'',
+      sprintId  : parentTask.sprint||'',
+      createdBy : actor,
+    };
+
+    // 1. Assignment
+    if(subtask.assignee && subtask.assignee !== prevAssignee){
+      // 1a. Notify the assignee (only if they are not the actor)
+      if(subtask.assignee !== actor){
+        _fire({
+          ...base,
+          type    : 'assignment',
+          category: 'assigned',
+          userId  : subtask.assignee,
+          title   : 'Subtask assigned to you',
+          message : `Subtask "${subtask.title}" (in "${parentTask.title}") was assigned to you by ${_actorName()}.`,
+        });
+      }
+      // 1b. Notify the actor (assigner) so they see "You assigned X to Y", not "assigned to you"
+      _fire({
+        ...base,
+        type    : 'assignment',
+        category: 'assigned',
+        userId  : actor,
+        title   : 'Subtask assigned',
+        message : `You assigned subtask "${subtask.title}" (in "${parentTask.title}") to ${_userName(subtask.assignee)}.`,
+      });
+    }
+
+    // 2. Status change
+    if(prevStatus && subtask.status !== prevStatus && subtask.assignee){
+      _fire({
+        ...base,
+        type    : 'update',
+        category: 'updated',
+        userId  : subtask.assignee,
+        title   : 'Subtask status changed',
+        message : `Subtask "${subtask.title}" moved from ${_statusLabel(prevStatus)} to ${_statusLabel(subtask.status)}.`,
+      });
+    }
+
+    // 3. General update
+    const pureAssign = subtask.assignee !== prevAssignee && subtask.status === prevStatus;
+    const pureStatus = subtask.assignee === prevAssignee && subtask.status !== prevStatus;
+    if(!pureAssign && !pureStatus && subtask.assignee && subtask.assignee !== actor){
+      _fire({
+        ...base,
+        type    : 'update',
+        category: 'updated',
+        userId  : subtask.assignee,
+        title   : 'Subtask updated',
+        message : `Subtask "${subtask.title}" (in "${parentTask.title}") was updated by ${_actorName()}.`,
+      });
+    }
+  }
+
+  // ── Subtask status changed (from updateSubtaskStatus — inline) ───────────
+  function _onSubtaskStatusChanged(subtask, parentTask, prevStatus, newStatus){
+    if(!subtask||!subtask.id||!parentTask) return;
+    if(prevStatus === newStatus) return;
+    if(!subtask.assignee) return;
+    _fire({
+      type      : 'update',
+      category  : 'updated',
+      userId    : subtask.assignee,
+      taskId    : parentTask.id,
+      subtaskId : subtask.id,
+      projectId : parentTask.project||'',
+      sprintId  : parentTask.sprint||'',
+      createdBy : _actorId(),
+      title     : 'Subtask status changed',
+      message   : `Subtask "${subtask.title}" moved from ${_statusLabel(prevStatus)} to ${_statusLabel(newStatus)}.`,
+    });
+  }
+
+  // ── Sprint saved (create / update / complete) ────────────────────────────
+  function _onSprintSaved(sprint, prev){
+    if(!sprint||!sprint.id) return;
+    if(!_ready()) return;
+    const actor    = _actorId();
+    const actorName= _actorName();
+    const isNew    = !!(prev && prev.isNew);
+    const prevStatus = prev && prev.prevStatus != null ? prev.prevStatus : null;
+    const isCompleted = (sprint.status||'').toLowerCase() === 'completed';
+
+    // Notify ALL users visible to the project (admin sees all; PM sees mapped projects)
+    // We fan out to: project manager(s) with this project mapped, plus admin users
+    const adminUsers = (state.users||[]).filter(u=>u&&u.role==='admin');
+    const pmUsers    = (state.users||[]).filter(u=>u&&u.role==='program_manager');
+    const targets = new Set();
+    adminUsers.forEach(u=>targets.add(u.id));
+    pmUsers.forEach(u=>{
+      // Only notify PM if this sprint's project is in their mapped projects
+      const mapped = Array.isArray(u.projectIds) ? u.projectIds : (u.projects||[]);
+      if(!sprint.project || mapped.includes(sprint.project)) targets.add(u.id);
+    });
+
+    const base = { taskId:'', projectId:sprint.project||'', sprintId:sprint.id, createdBy:actor };
+    targets.forEach(uid=>{
+      if(uid===actor) return; // don't self-notify
+      if(isNew){
+        _fire({ ...base, type:'update', category:'updated', userId:uid,
+          title:'Sprint created',
+          message:`Sprint "${sprint.name}" was created by ${actorName}.` });
+      } else if(isCompleted && prevStatus && prevStatus!=='completed'){
+        _fire({ ...base, type:'update', category:'updated', userId:uid,
+          title:'Sprint completed',
+          message:`Sprint "${sprint.name}" was marked completed by ${actorName}.` });
+      } else if(!isNew){
+        _fire({ ...base, type:'update', category:'updated', userId:uid,
+          title:'Sprint updated',
+          message:`Sprint "${sprint.name}" was updated by ${actorName}.` });
+      }
+    });
+  }
+
+  // ── Epic saved (create / update / complete) ──────────────────────────────
+  function _onEpicSaved(epic, prev){
+    if(!epic||!epic.id) return;
+    if(!_ready()) return;
+    const actor    = _actorId();
+    const actorName= _actorName();
+    const isNew    = !!(prev && prev.isNew);
+    const isCompleted = (epic.status||'').toLowerCase() === 'completed';
+    const epicProjectIds = epic.projectIds || (epic.projectId ? [epic.projectId] : []);
+
+    const adminUsers = (state.users||[]).filter(u=>u&&u.role==='admin');
+    const pmUsers    = (state.users||[]).filter(u=>u&&u.role==='program_manager');
+    const targets = new Set();
+    adminUsers.forEach(u=>targets.add(u.id));
+    pmUsers.forEach(u=>{
+      const mapped = Array.isArray(u.projectIds) ? u.projectIds : (u.projects||[]);
+      const overlaps = !epicProjectIds.length || epicProjectIds.some(pid=>mapped.includes(pid));
+      if(overlaps) targets.add(u.id);
+    });
+    // Also notify the epic owner if set
+    if(epic.ownerId && epic.ownerId !== actor) targets.add(epic.ownerId);
+
+    const base = { taskId:'', projectId:epic.projectId||epicProjectIds[0]||'', sprintId:'', createdBy:actor };
+    targets.forEach(uid=>{
+      if(uid===actor) return;
+      if(isNew){
+        _fire({ ...base, type:'update', category:'updated', userId:uid,
+          title:'Epic created',
+          message:`Epic "${epic.title}" was created by ${actorName}.` });
+      } else if(isCompleted){
+        _fire({ ...base, type:'update', category:'updated', userId:uid,
+          title:'Epic completed',
+          message:`Epic "${epic.title}" was marked completed by ${actorName}.` });
+      } else {
+        _fire({ ...base, type:'update', category:'updated', userId:uid,
+          title:'Epic updated',
+          message:`Epic "${epic.title}" was updated by ${actorName}.` });
+      }
+    });
+  }
+
+  return { _onTaskSaved, _onTaskStatusChanged, _onSubtaskSaved, _onSubtaskStatusChanged, _onSprintSaved, _onEpicSaved };
+})();
+
+window.NotificationTriggers = NotificationTriggers;
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     REMINDER ENGINE (SprintFlow v28.2)
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+const ReminderEngine = (function(){
+  const CHECK_INTERVAL_MS = 30 * 60 * 1000;
+  const CLEANUP_AGE_MS    = 60 * 24 * 60 * 60 * 1000;
+  let _intervalId = null, _running = false;
+
+  function _isReady(){
+    return !!(state.currentUser && typeof NotificationSystem !== 'undefined' && typeof FirebaseDB !== 'undefined');
+  }
+  function _remainingDays(endDate){
+    if(!endDate) return null;
+    const end = new Date(endDate);
+    if(isNaN(end.getTime())) return null;
+    const today = new Date(); today.setHours(0,0,0,0);
+    end.setHours(0,0,0,0);
+    return Math.ceil((end - today) / 86400000);
+  }
+  function _persistTaskFlag(task){
+    try{ if(typeof FirebaseDB !== 'undefined' && FirebaseDB.updateTask) FirebaseDB.updateTask(task.id,{reminderSent:task.reminderSent}).catch(()=>{}); } catch(e){}
+  }
+  function _persistSubtaskFlag(parentTask){
+    try{ if(typeof FirebaseDB !== 'undefined' && FirebaseDB.updateTask) FirebaseDB.updateTask(parentTask.id,{subtasks:parentTask.subtasks}).catch(()=>{}); } catch(e){}
+  }
+  async function _cleanup(){
+    if(!state.notifications||typeof state.notifications!=='object') return;
+    const cutoff = Date.now() - CLEANUP_AGE_MS;
+    const stale  = Object.values(state.notifications).filter(n=>n&&n.createdAt&&n.createdAt<cutoff);
+    if(!stale.length) return;
+    for(const notif of stale){
+      delete state.notifications[notif.id];
+      try{
+        if(window.db && window._rtRef && typeof window._rtRemove === 'function'){
+          await window._rtRemove(window._rtRef(window.db,'sprintflow/notifications/'+notif.id));
+        }
+      } catch(e){}
+    }
+    console.log('[ReminderEngine] cleanup: removed',stale.length,'stale notification(s)');
+  }
+  async function _check(){
+    if(!_isReady()) return;
+    await _cleanup();
+    const tasks = state.tasks || [];
+    const cu    = state.currentUser;
+    for(const task of tasks){
+      if(!task||!task.id) continue;
+      task.reminderSent = task.reminderSent||{};
+      const days = _remainingDays(task.endDate||task.dueDate);
+      const uid  = task.assignee||cu.id;
+      if(days !== null){
+        if(days===2 && !task.reminderSent.twoDay){
+          await NotificationSystem.createNotification({type:'reminder',category:'reminder',userId:uid,taskId:task.id,projectId:task.project||'',sprintId:task.sprint||'',createdBy:'system',title:'Task due in 2 days',message:`"${task.title}" is due in 2 days.`});
+          task.reminderSent.twoDay=true; _persistTaskFlag(task);
+          console.log('[ReminderEngine] 2-day reminder → task',task.id);
+        }
+        if(days===1 && !task.reminderSent.oneDay){
+          await NotificationSystem.createNotification({type:'reminder',category:'reminder',userId:uid,taskId:task.id,projectId:task.project||'',sprintId:task.sprint||'',createdBy:'system',title:'Task due tomorrow',message:`"${task.title}" is due tomorrow.`});
+          task.reminderSent.oneDay=true; _persistTaskFlag(task);
+          console.log('[ReminderEngine] 1-day reminder → task',task.id);
+        }
+      }
+      let subDirty = false;
+      for(const sub of (task.subtasks||[])){
+        if(!sub||!sub.id) continue;
+        sub.reminderSent = sub.reminderSent||{};
+        const sd  = _remainingDays(sub.endDate||sub.dueDate);
+        const su  = sub.assignee||uid;
+        if(sd===null) continue;
+        if(sd===2 && !sub.reminderSent.twoDay){
+          await NotificationSystem.createNotification({type:'reminder',category:'reminder',userId:su,taskId:task.id,subtaskId:sub.id,projectId:task.project||'',sprintId:task.sprint||'',createdBy:'system',title:'Subtask due in 2 days',message:`Subtask "${sub.title}" (in "${task.title}") is due in 2 days.`});
+          sub.reminderSent.twoDay=true; subDirty=true;
+          console.log('[ReminderEngine] 2-day reminder → subtask',sub.id);
+        }
+        if(sd===1 && !sub.reminderSent.oneDay){
+          await NotificationSystem.createNotification({type:'reminder',category:'reminder',userId:su,taskId:task.id,subtaskId:sub.id,projectId:task.project||'',sprintId:task.sprint||'',createdBy:'system',title:'Subtask due tomorrow',message:`Subtask "${sub.title}" (in "${task.title}") is due tomorrow.`});
+          sub.reminderSent.oneDay=true; subDirty=true;
+          console.log('[ReminderEngine] 1-day reminder → subtask',sub.id);
+        }
+      }
+      if(subDirty) _persistSubtaskFlag(task);
+    }
+  }
+  function start(){
+    if(_running) return; _running=true;
+    _check().catch(e=>console.warn('[ReminderEngine] initial check error:',e));
+    _intervalId=setInterval(()=>_check().catch(e=>console.warn('[ReminderEngine] interval error:',e)),CHECK_INTERVAL_MS);
+    console.log('[ReminderEngine] started');
+  }
+  function stop(){ if(_intervalId){clearInterval(_intervalId);_intervalId=null;} _running=false; console.log('[ReminderEngine] stopped'); }
+  function runNow(){ return _check(); }
+  return { start, stop, runNow };
+})();
+window.ReminderEngine = ReminderEngine;
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     NOTIFICATION UI — Bell + Dropdown (SprintFlow v28.3)
+     Isolated: only reads state.notifications + calls NotificationSystem.
+     No refreshAll(). No page navigation. Incremental realtime render.
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+const NotificationUI = (function(){
+  const RENDER_LIMIT = 50;
+  let _activeTab = 'assigned'; // 'assigned' | 'updated' | 'reminder'
+  let _open      = false;
+
+  // ── DOM refs (resolved lazily) ─────────────────────────────────────────────
+  function _bell()   { return document.getElementById('notif-bell-btn'); }
+  function _badge()  { return document.getElementById('notif-bell-badge'); }
+  function _panel()  { return document.getElementById('notif-dropdown'); }
+  function _list()   { return document.getElementById('notif-list'); }
+
+  // ── helpers ────────────────────────────────────────────────────────────────
+  function _relTime(ts){
+    if(!ts) return '';
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if(diff < 60)   return 'just now';
+    if(diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if(diff < 86400)return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  }
+  function _canMute(){ return typeof RBAC !== 'undefined' && (RBAC.isAdmin() || RBAC.isProgramManager()); }
+
+  // ── unread count — respects user-scoped muted/deleted via getVisibleNotifications ──
+  function _unreadCount(){
+    if(typeof NotificationSystem === 'undefined') return 0;
+    const cu = state && state.currentUser ? state.currentUser.id : null;
+    if(!cu) return 0;
+    return NotificationSystem.getVisibleNotifications(null,{unreadOnly:true,limit:999}).length;
+  }
+
+  // ── update badge ───────────────────────────────────────────────────────────
+  function _updateBadge(){
+    const b = _badge(); if(!b) return;
+    const n = _unreadCount();
+    if(n > 0){ b.textContent = n > 99 ? '99+' : String(n); b.style.display = 'flex'; }
+    else       { b.style.display = 'none'; }
+  }
+
+  // ── render the notification list for active tab ────────────────────────────
+  function renderNotifications(){
+    console.log('[NotificationUI] renderNotifications called');
+    _updateBadge();
+    // Show/hide Delete All button based on RBAC
+    const delBtn = document.getElementById('notif-delete-all-btn');
+    if(delBtn){
+      const canDel = typeof RBAC !== 'undefined' && (RBAC.isAdmin() || RBAC.isProgramManager());
+      delBtn.style.display = canDel ? 'inline-flex' : 'none';
+    }
+    if(!_open) return;
+    const list = _list(); if(!list) return;
+
+    if(typeof NotificationSystem === 'undefined'){
+      list.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--text-tertiary);font-size:13px">Notification system not ready.</div>';
+      return;
+    }
+
+    const all = NotificationSystem.getVisibleNotifications(null,{limit:RENDER_LIMIT,sortDesc:true});
+    console.log('[NotificationUI] visible notifications count:', all.length);
+    const filtered = all.filter(n => {
+      if(_activeTab === 'assigned') return n.category === 'assigned';
+      if(_activeTab === 'updated')  return n.category === 'updated';
+      if(_activeTab === 'reminder') return n.category === 'reminder';
+      return true;
+    });
+
+    if(!filtered.length){
+      list.innerHTML = `<div style="padding:32px 16px;text-align:center;color:var(--text-tertiary)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 8px;display:block;opacity:0.35"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <div style="font-size:12.5px">No notifications here</div>
+      </div>`;
+      return;
+    }
+
+    const canMute = _canMute();
+    const canDelete = typeof RBAC !== 'undefined' && (RBAC.isAdmin() || RBAC.isProgramManager());
+    const uid = state && state.currentUser ? state.currentUser.id : null;
+    list.innerHTML = filtered.map(n => {
+      // Per-user read state (backward-compat: missing userState = unread)
+      const us = (n.userState && uid && n.userState[uid]) || {};
+      const isRead = !!us.read;
+      const taskLabel = n.subtaskId
+        ? `<span style="font-size:10.5px;color:var(--text-tertiary);display:block;margin-top:2px">Subtask · Task ${n.taskId ? n.taskId.slice(-6).toUpperCase() : ''}</span>`
+        : n.taskId
+          ? `<span style="font-size:10.5px;color:var(--text-tertiary);display:block;margin-top:2px">Task ${n.taskId.slice(-6).toUpperCase()}</span>`
+          : '';
+      const catColor = n.category==='assigned' ? '#5b5fc7'
+                     : n.category==='reminder'  ? '#f79009'
+                     : '#0ea5e9';
+      const muteBtn = canMute && !us.muted
+        ? `<button onclick="NotificationUI.muteOne('${n.id}',event)" title="Mute this notification"
+             style="flex-shrink:0;background:none;border:none;cursor:pointer;padding:3px 5px;border-radius:5px;
+                    color:var(--text-tertiary);font-size:10px;transition:background 0.12s,color 0.12s;line-height:1"
+             onmouseenter="this.style.background='rgba(0,0,0,0.05)';this.style.color='var(--text-secondary)'"
+             onmouseleave="this.style.background='none';this.style.color='var(--text-tertiary)'">
+             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+           </button>`
+        : '';
+      return `<div data-notif-id="${n.id}"
+        style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
+               border-bottom:1px solid rgba(0,0,0,0.045);cursor:pointer;
+               background:${isRead ? 'transparent' : 'rgba(91,95,199,0.04)'};
+               transition:background 0.12s"
+        onmouseenter="if(!${isRead})this.style.background='rgba(91,95,199,0.07)';else this.style.background='rgba(0,0,0,0.018)'"
+        onmouseleave="this.style.background='${isRead ? 'transparent' : 'rgba(91,95,199,0.04)'}'"
+        onclick="NotificationUI.markRead('${n.id}',event)">
+        <!-- unread dot -->
+        <div style="flex-shrink:0;margin-top:5px;width:7px;height:7px;border-radius:50%;
+                    background:${isRead ? 'transparent' : catColor};
+                    box-shadow:${isRead ? 'none' : '0 0 0 2px '+catColor+'33'}"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12.5px;font-weight:${isRead?'500':'600'};color:var(--text-primary);
+                      line-height:1.3;margin-bottom:2px">${n.title}</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.45;
+                      white-space:pre-wrap;word-break:break-word">${n.message}</div>
+          ${taskLabel}
+          <div style="font-size:10.5px;color:var(--text-tertiary);margin-top:4px">${_relTime(n.createdAt)}</div>
+        </div>
+        ${muteBtn}
+      </div>`;
+    }).join('');
+  }
+
+  // ── toggle open/close ──────────────────────────────────────────────────────
+  function toggle(e){
+    if(e) e.stopPropagation();
+    _open = !_open;
+    const panel = _panel();
+    if(!panel) return;
+    if(_open){
+      panel.style.display = 'block';
+      renderNotifications();
+    } else {
+      panel.style.display = 'none';
+    }
+  }
+
+  function close(){
+    _open = false;
+    const panel = _panel();
+    if(panel) panel.style.display = 'none';
+  }
+
+  // ── tab switch ─────────────────────────────────────────────────────────────
+  function switchTab(tab){
+    _activeTab = tab;
+    // Update tab button active states
+    ['assigned','updated','reminder'].forEach(t => {
+      const btn = document.getElementById('notif-tab-'+t);
+      if(!btn) return;
+      if(t === tab){
+        btn.style.color      = 'var(--accent)';
+        btn.style.borderBottom = '2px solid var(--accent)';
+        btn.style.fontWeight = '600';
+      } else {
+        btn.style.color      = 'var(--text-tertiary)';
+        btn.style.borderBottom = '2px solid transparent';
+        btn.style.fontWeight = '500';
+      }
+    });
+    renderNotifications();
+  }
+
+  // ── mark single read ───────────────────────────────────────────────────────
+  function markRead(id, e){
+    if(e) e.stopPropagation();
+    if(typeof NotificationSystem === 'undefined') return;
+    const notif = state.notifications && state.notifications[id];
+    const uid = state && state.currentUser ? state.currentUser.id : null;
+    const us = (notif && uid && notif.userState && notif.userState[uid]) || {};
+    if(notif && !us.read){
+      NotificationSystem.markNotificationRead(id).then(()=>{ renderNotifications(); }).catch(()=>{});
+    }
+  }
+
+  // ── mark all read ──────────────────────────────────────────────────────────
+  function markAllRead(e){
+    if(e) e.stopPropagation();
+    if(typeof NotificationSystem === 'undefined') return;
+    const cu = state && state.currentUser ? state.currentUser.id : null;
+    NotificationSystem.markAllNotificationsRead(cu).then(()=>{ renderNotifications(); }).catch(()=>{});
+  }
+
+  // ── delete all (user-scoped, Admin/PM only) ────────────────────────────────
+  function deleteAll(e){
+    if(e) e.stopPropagation();
+    if(typeof NotificationSystem === 'undefined') return;
+    if(typeof RBAC === 'undefined' || (!RBAC.isAdmin() && !RBAC.isProgramManager())) return;
+    NotificationSystem.deleteAllNotifications().then(()=>{ renderNotifications(); }).catch(()=>{});
+  }
+
+  // ── mute single ────────────────────────────────────────────────────────────
+  function muteOne(id, e){
+    if(e) e.stopPropagation();
+    if(typeof NotificationSystem === 'undefined') return;
+    NotificationSystem.muteNotification(id).then(()=>{ renderNotifications(); }).catch(()=>{});
+  }
+
+  // ── inject bell HTML into topbar ───────────────────────────────────────────
+  function _injectBell(){
+    const rightGroup = document.querySelector('#topbar > div[style*="margin-left:auto"]');
+    if(!rightGroup || document.getElementById('notif-bell-btn')) return;
+
+    const bellWrap = document.createElement('div');
+    bellWrap.id    = 'notif-bell-wrap';
+    bellWrap.style.cssText = 'position:relative;display:inline-flex;align-items:center';
+    bellWrap.innerHTML = `
+      <button id="notif-bell-btn"
+        onclick="NotificationUI.toggle(event)"
+        title="Notifications"
+        style="position:relative;width:34px;height:34px;border-radius:var(--r-md);
+               border:1px solid rgba(0,0,0,0.08);background:rgba(255,255,255,0.92);
+               cursor:pointer;display:flex;align-items:center;justify-content:center;
+               transition:background 0.14s,border-color 0.14s,box-shadow 0.14s;
+               box-shadow:0 1px 3px rgba(0,0,0,0.04),inset 0 1px 0 rgba(255,255,255,0.85)"
+        onmouseenter="this.style.background='rgba(255,255,255,1)';this.style.borderColor='rgba(91,95,199,0.22)';this.style.boxShadow='0 2px 8px rgba(91,95,199,0.1)'"
+        onmouseleave="this.style.background='rgba(255,255,255,0.92)';this.style.borderColor='rgba(0,0,0,0.08)';this.style.boxShadow='0 1px 3px rgba(0,0,0,0.04),inset 0 1px 0 rgba(255,255,255,0.85)'">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 01-3.46 0"/>
+        </svg>
+        <span id="notif-bell-badge"
+          style="display:none;position:absolute;top:-5px;right:-5px;
+                 min-width:17px;height:17px;border-radius:9px;
+                 background:#ef4444;color:#fff;font-size:9px;font-weight:800;
+                 align-items:center;justify-content:center;
+                 padding:0 3px;border:2px solid #fff;
+                 font-family:'DM Sans',sans-serif;line-height:1">0</span>
+      </button>
+
+      <!-- ── Notification dropdown panel ── -->
+      <div id="notif-dropdown"
+        style="display:none;position:absolute;top:calc(100% + 8px);right:0;
+               width:360px;max-width:calc(100vw - 24px);
+               background:rgba(255,255,255,0.97);
+               border:1px solid rgba(255,255,255,0.82);
+               border-radius:14px;
+               box-shadow:0 20px 56px rgba(0,0,0,0.13),0 6px 20px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.035);
+               z-index:9600;overflow:hidden;
+               backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+               animation:notifDropIn 0.2s cubic-bezier(.34,1.2,.64,1)"
+        onclick="event.stopPropagation()">
+
+        <!-- Header -->
+        <div style="padding:12px 14px 0;border-bottom:1px solid rgba(0,0,0,0.06)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:13.5px;font-weight:700;color:var(--text-primary);letter-spacing:-.015em">Notifications</span>
+            <div style="display:flex;align-items:center;gap:4px">
+              <button id="notif-delete-all-btn"
+                onclick="NotificationUI.deleteAll(event)"
+                style="display:none;font-size:11px;font-weight:600;color:#ef4444;background:none;border:none;
+                       cursor:pointer;padding:3px 7px;border-radius:5px;font-family:'DM Sans',sans-serif;
+                       transition:background 0.12s"
+                onmouseenter="this.style.background='rgba(239,68,68,0.08)'"
+                onmouseleave="this.style.background='none'">Clear all</button>
+              <button onclick="NotificationUI.markAllRead(event)"
+                style="font-size:11px;font-weight:600;color:var(--accent);background:none;border:none;
+                       cursor:pointer;padding:3px 7px;border-radius:5px;font-family:'DM Sans',sans-serif;
+                       transition:background 0.12s"
+                onmouseenter="this.style.background='rgba(91,95,199,0.08)'"
+                onmouseleave="this.style.background='none'">Mark all read</button>
+            </div>
+          </div>
+          <!-- Tabs -->
+          <div style="display:flex;gap:0">
+            <button id="notif-tab-assigned" onclick="NotificationUI.switchTab('assigned')"
+              style="flex:1;background:none;border:none;border-bottom:2px solid var(--accent);
+                     padding:6px 4px;font-size:11.5px;font-weight:600;color:var(--accent);
+                     cursor:pointer;font-family:'DM Sans',sans-serif;transition:color 0.12s;
+                     white-space:nowrap">Assigned</button>
+            <button id="notif-tab-updated" onclick="NotificationUI.switchTab('updated')"
+              style="flex:1;background:none;border:none;border-bottom:2px solid transparent;
+                     padding:6px 4px;font-size:11.5px;font-weight:500;color:var(--text-tertiary);
+                     cursor:pointer;font-family:'DM Sans',sans-serif;transition:color 0.12s;
+                     white-space:nowrap">Updated</button>
+            <button id="notif-tab-reminder" onclick="NotificationUI.switchTab('reminder')"
+              style="flex:1;background:none;border:none;border-bottom:2px solid transparent;
+                     padding:6px 4px;font-size:11.5px;font-weight:500;color:var(--text-tertiary);
+                     cursor:pointer;font-family:'DM Sans',sans-serif;transition:color 0.12s;
+                     white-space:nowrap">Reminders</button>
+          </div>
+        </div>
+
+        <!-- Notification list -->
+        <div id="notif-list"
+          style="max-height:380px;overflow-y:auto;overscroll-behavior:contain">
+        </div>
+      </div>`;
+
+    // Insert before the "New Task" button (first child of right group)
+    rightGroup.insertBefore(bellWrap, rightGroup.firstChild);
+  }
+
+  // ── inject animation keyframes once ────────────────────────────────────────
+  function _injectStyles(){
+    if(document.getElementById('notif-ui-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'notif-ui-styles';
+    s.textContent = `
+      @keyframes notifDropIn{from{opacity:0;transform:translateY(-8px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+      #notif-list::-webkit-scrollbar{width:4px}
+      #notif-list::-webkit-scrollbar-thumb{background:#cdd2e4;border-radius:2px}
+      #notif-list::-webkit-scrollbar-track{background:transparent}
+    `;
+    document.head.appendChild(s);
+  }
+
+  // ── global click-outside handler ───────────────────────────────────────────
+  function _bindClickOutside(){
+    document.addEventListener('click', function(e){
+      const wrap = document.getElementById('notif-bell-wrap');
+      if(_open && wrap && !wrap.contains(e.target)) close();
+    }, { passive: true });
+  }
+
+  // ── init — called after app ready ─────────────────────────────────────────
+  function init(){
+    _injectStyles();
+    _injectBell();
+    _bindClickOutside();
+    _updateBadge();
+    console.log('[NotificationUI] initialized');
+  }
+
+  return { init, renderNotifications, toggle, close, switchTab, markRead, markAllRead, deleteAll, muteOne };
+})();
+
+window.NotificationUI = NotificationUI;
+</script>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
   import {
@@ -13703,6 +15471,8 @@ function _xlGetDataWithRange(mode, fromDate, toDate) {
         showApp(user);
         // Only load Firebase data after successful auth
         // Store onValue + child listeners + query helpers globally so RealtimeSync can access them
+        window._rtRef            = ref;
+        window._rtRemove         = remove;
         window._rtOnValue        = onValue;
         window._rtOnChildAdded   = onChildAdded;
         window._rtOnChildChanged = onChildChanged;
@@ -13710,6 +15480,7 @@ function _xlGetDataWithRange(mode, fromDate, toDate) {
         window._rtQuery          = query;
         window._rtOrderByChild   = orderByChild;
         window._rtEqualTo        = equalTo;
+        window._rtGet            = get; // for NotificationSystem initial load
         FirebaseDB.init(db, { ref, set, update, remove, get, onValue });
         FirebaseDB.loadAppData().then(() => {
           invalidateStateMaps();
@@ -13719,6 +15490,12 @@ function _xlGetDataWithRange(mode, fromDate, toDate) {
           refreshAll();
           // ── Start realtime listeners after initial load ──
           RealtimeSync.start();
+          // ── Start notification system (standalone — no app rerenders) ──
+          NotificationSystem.init(db, { ref, set, update, remove, onChildAdded, onChildChanged, onChildRemoved });
+          // ── Start reminder engine ──
+          ReminderEngine.start();
+          // ── Initialize notification bell UI ──
+          NotificationUI.init();
           console.log('[SprintFlow] App state loaded from Firebase');
         }).catch(e => {
           // Even if Firebase fails, resolve RBAC from local state
@@ -13726,11 +15503,17 @@ function _xlGetDataWithRange(mode, fromDate, toDate) {
           _applyExportMenuRBAC();
           console.warn('[SprintFlow] Firebase loadAppData failed, running on local state:', e.message || e);
           refreshAll();
+          NotificationSystem.init(db, { ref, set, update, remove, onChildAdded, onChildChanged, onChildRemoved });
+          ReminderEngine.start();
+          NotificationUI.init();
         });
       } else {
         // Clear RBAC on logout, detach realtime listeners
         state.currentUser = null;
         RealtimeSync.stop();
+        NotificationSystem.stop(); // detach notification listeners, clear state
+        ReminderEngine.stop();
+        NotificationUI.close();
         showLogin();
       }
     });
@@ -13742,6 +15525,445 @@ function _xlGetDataWithRange(mode, fromDate, toDate) {
     console.warn('[SprintFlow] Firebase initialization failed — running in offline/localStorage mode:', e.message || e);
     // Without auth, still show the login screen (stays visible by default)
   }
+</script>
+
+<!-- ─── SPRINT RETROSPECTIVE MODULE ──────────────────────────────── -->
+<script>
+// ── RetroManager ──────────────────────────────────────────────────
+// Isolated, lightweight retrospective module.
+// Collections: state.retrospectives / state.retrospectiveEntries
+// Firebase collections: retrospectives / retrospectiveEntries
+// Does NOT touch tasks / sprints / reports / dashboard / kanban.
+// ─────────────────────────────────────────────────────────────────
+
+const RetroManager = (function(){
+
+  const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+  const CATEGORIES  = ['What Went Well','What Went Wrong','What Should Improve','Other Suggestions'];
+
+  // ── Ensure state collections exist ────────────────────────────
+  function _ensureCollections(){
+    if(!state.retrospectives)    state.retrospectives    = [];
+    if(!state.retrospectiveEntries) state.retrospectiveEntries = [];
+  }
+
+  // ── ID helpers ────────────────────────────────────────────────
+  function _rid(){ return 'retro-'+Date.now().toString(36)+Math.random().toString(36).substr(2,4); }
+  function _reid(){ return 're-'+Date.now().toString(36)+Math.random().toString(36).substr(2,5); }
+
+  // ── Is board locked (2-day window expired)? ──────────────────
+  function isLocked(retro){
+    if(retro.locked) return true;
+    return Date.now() > retro.expiresAt;
+  }
+
+  // ── Persist retro to Firebase + localStorage ──────────────────
+  function _persist(retro){
+    SyncState.markPending(retro.id);
+    if(FirebaseDB.isReady()){
+      FirebaseDB.saveEntity('retrospectives', retro).then(ok=>{
+        if(ok) SyncState.markSynced(retro.id);
+        else { SyncState.markFailed(retro.id); PendingSyncQueue.saveEntity('retrospectives', retro); }
+      }).catch(()=>{ SyncState.markFailed(retro.id); PendingSyncQueue.saveEntity('retrospectives', retro); });
+    } else {
+      PendingSyncQueue.saveEntity('retrospectives', retro);
+    }
+    SaveManager.save();
+  }
+
+  function _persistEntry(entry){
+    SyncState.markPending(entry.id);
+    if(FirebaseDB.isReady()){
+      FirebaseDB.saveEntity('retrospectiveEntries', entry).then(ok=>{
+        if(ok) SyncState.markSynced(entry.id);
+        else { SyncState.markFailed(entry.id); PendingSyncQueue.saveEntity('retrospectiveEntries', entry); }
+      }).catch(()=>{ SyncState.markFailed(entry.id); PendingSyncQueue.saveEntity('retrospectiveEntries', entry); });
+    } else {
+      PendingSyncQueue.saveEntity('retrospectiveEntries', entry);
+    }
+    SaveManager.save();
+  }
+
+  function _deleteEntryPersist(entryId){
+    state.retrospectiveEntries = state.retrospectiveEntries.filter(e=>e.id!==entryId);
+    if(FirebaseDB.isReady()){
+      FirebaseDB.deleteEntity('retrospectiveEntries', entryId).catch(()=>{});
+    } else {
+      PendingSyncQueue.deleteEntity('retrospectiveEntries', entryId);
+    }
+    SaveManager.save();
+  }
+
+  // ── Auto-create retro on sprint completion (called once) ──────
+  function createForSprint(sprint){
+    _ensureCollections();
+    // Idempotent: only create once per sprint
+    if(state.retrospectives.find(r=>r.sprintId===sprint.id)) return;
+    const now = Date.now();
+    const retro = {
+      id:        _rid(),
+      sprintId:  sprint.id,
+      projectId: sprint.project,
+      createdAt: now,
+      locked:    false,
+      expiresAt: now + TWO_DAYS_MS,
+      exportedAt: null
+    };
+    state.retrospectives.push(retro);
+    _persist(retro);
+    showNotif('Retrospective board opened for "'+sprint.name+'"','success');
+  }
+
+  // ── Add entry (anonymous) ─────────────────────────────────────
+  function addEntry(retroId, category, text){
+    _ensureCollections();
+    const retro = state.retrospectives.find(r=>r.id===retroId);
+    if(!retro){ showNotif('Retrospective not found','error'); return; }
+    if(isLocked(retro)){ showNotif('This retrospective is closed','error'); return; }
+    if(!text || !text.trim()){ showNotif('Entry cannot be empty','error'); return; }
+    const entry = {
+      id:        _reid(),
+      retroId,
+      sprintId:  retro.sprintId,
+      projectId: retro.projectId,
+      category,
+      text:      text.trim(),
+      createdAt: Date.now()
+    };
+    state.retrospectiveEntries.push(entry);
+    _persistEntry(entry);
+    return entry;
+  }
+
+  // ── Delete single entry ───────────────────────────────────────
+  function deleteEntry(entryId){
+    _ensureCollections();
+    _deleteEntryPersist(entryId);
+  }
+
+  // ── Delete entire retrospective board ─────────────────────────
+  function deleteRetro(retroId){
+    _ensureCollections();
+    const retro = state.retrospectives.find(r=>r.id===retroId);
+    if(!retro) return;
+    // Remove ONLY entries belonging to THIS retro board (scoped by retroId + sprintId)
+    const toRemove = state.retrospectiveEntries
+      .filter(e => e.retroId === retroId && e.sprintId === retro.sprintId)
+      .map(e => e.id);
+    toRemove.forEach(id=>_deleteEntryPersist(id));
+    // Remove ONLY this retro record — other sprint boards unaffected
+    state.retrospectives = state.retrospectives.filter(r=>r.id!==retroId);
+    if(FirebaseDB.isReady()){
+      FirebaseDB.deleteEntity('retrospectives', retroId).catch(()=>{});
+    } else {
+      PendingSyncQueue.deleteEntity('retrospectives', retroId);
+    }
+    SaveManager.save();
+  }
+
+  // ── Export retrospective as Excel ─────────────────────────────
+  function exportExcel(retroId){
+    _ensureCollections();
+    if(!window.XLSX){ showNotif('Excel library not loaded','error'); return; }
+    const retro   = state.retrospectives.find(r=>r.id===retroId);
+    if(!retro){ showNotif('Retrospective not found','error'); return; }
+    const sprint  = getSprint(retro.sprintId);
+    const project = getProject(retro.projectId);
+    // Triple-scoped: retroId + sprintId + projectId — export ONLY this board's entries
+    const entries = state.retrospectiveEntries.filter(e=>
+      e.retroId    === retroId &&
+      e.sprintId   === retro.sprintId
+    );
+
+    const aoa = [
+      ['Sprint','Project','Category','Entry','Created At'],
+      ...entries.map(e=>[
+        sprint ? sprint.name  : retro.sprintId,
+        project? project.name : retro.projectId,
+        e.category,
+        e.text,
+        new Date(e.createdAt).toLocaleString()
+      ])
+    ];
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{wch:20},{wch:20},{wch:22},{wch:60},{wch:22}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Retrospective');
+    const ts = new Date().toISOString().replace(/[:.]/g,'-').substr(0,19);
+    XLSX.writeFile(wb, `Retrospective_${sprint?sprint.name.replace(/\s+/g,'_'):'Sprint'}_${ts}.xlsx`);
+
+    // Mark exported
+    retro.exportedAt = Date.now();
+    _persist(retro);
+
+    // Post-export cleanup confirmation
+    openModal(`
+      <div class="p-6" style="max-width:420px">
+        <h2 class="text-lg font-bold text-slate-900 mb-3">Export Successful</h2>
+        <p class="text-sm text-slate-600 mb-5">Delete retrospective data now to optimize storage?<br><span class="text-xs text-slate-400 mt-1 block">Sprint and task data will NOT be affected.</span></p>
+        <div class="flex justify-end gap-3">
+          <button class="btn btn-secondary" onclick="closeModal();renderRetrospectives()">Keep Until Manual Delete</button>
+          <button class="btn btn-danger" onclick="RetroManager.deleteRetro('${retroId}');closeModal();renderRetrospectives();showNotif('Retrospective deleted')">Delete &amp; Close</button>
+        </div>
+      </div>
+    `);
+  }
+
+  // ── Check and apply lock if 2-day window passed ───────────────
+  function checkLock(retro){
+    if(!retro.locked && Date.now() > retro.expiresAt){
+      retro.locked = true;
+      _persist(retro);
+    }
+    return retro.locked;
+  }
+
+  // ── Getters ───────────────────────────────────────────────────
+  function getEntries(retroId){
+    _ensureCollections();
+    const retro = (state.retrospectives||[]).find(r=>r.id===retroId);
+    if(!retro) return [];
+    // Triple-scoped: retroId + sprintId + projectId — prevents any cross-board bleed
+    return (state.retrospectiveEntries||[]).filter(e=>
+      e.retroId === retroId &&
+      e.sprintId === retro.sprintId
+    );
+  }
+
+  function getVisibleRetros(){
+    _ensureCollections();
+    const all = state.retrospectives || [];
+    if(RBAC.isAdmin()) return all;
+    // PM and Team Member: only retros from their visible projects
+    const visibleProjIds = (RBAC.getVisibleProjects()||[]).map(p=>p.id);
+    return all.filter(r=>visibleProjIds.includes(r.projectId));
+  }
+
+  return { createForSprint, addEntry, deleteEntry, deleteRetro, exportExcel, checkLock, isLocked, getEntries, getVisibleRetros, CATEGORIES };
+})();
+
+// ── Retro filter helpers ──────────────────────────────────────────
+
+// Populate project filter (Admin: all visible; PM: only mapped)
+function _populateRetroProjectFilter(){
+  const projSel = document.getElementById('retro-project-filter');
+  if(!projSel) return;
+  const prev = projSel.value || 'all';
+  const visibleProjs = RBAC.getVisibleProjects() || [];
+  // Only show projects that actually have at least one retro board
+  const retroProjIds = new Set((state.retrospectives||[]).map(r=>r.projectId));
+  const withRetros = visibleProjs.filter(p => retroProjIds.has(p.id));
+  let html = `<option value="all">All Projects</option>`;
+  withRetros.forEach(p => {
+    html += `<option value="${p.id}"${p.id===prev?' selected':''}>${_escHtml(p.name)}</option>`;
+  });
+  projSel.innerHTML = html;
+  // Reset stale selection
+  if(prev !== 'all' && !withRetros.find(p=>p.id===prev)) projSel.value = 'all';
+}
+
+// Populate sprint filter — only completed sprints that have a retro board
+function _populateRetroSprintFilter(){
+  const projSel   = document.getElementById('retro-project-filter');
+  const sprintSel = document.getElementById('retro-sprint-filter');
+  if(!sprintSel) return;
+  const prev      = sprintSel.value || 'all';
+  const projFilter = projSel ? projSel.value : 'all';
+
+  // Collect sprint IDs that have retro boards visible to this user
+  const visibleRetros = RetroManager.getVisibleRetros();
+  const retroSprintIds = new Set(visibleRetros.map(r=>r.sprintId));
+
+  // Only completed sprints that have a retro, scoped to selected project
+  const sprintsWithRetro = (RBAC.getVisibleSprints()||[]).filter(s =>
+    (s.status||'').toLowerCase() === 'completed' &&
+    retroSprintIds.has(s.id) &&
+    (projFilter === 'all' || s.project === projFilter)
+  );
+
+  let html = `<option value="all">All Sprints</option>`;
+  sprintsWithRetro.forEach(s => {
+    html += `<option value="${s.id}"${s.id===prev?' selected':''}>${_escHtml(s.name)}</option>`;
+  });
+  sprintSel.innerHTML = html;
+  // Reset stale selection
+  if(prev !== 'all' && !sprintsWithRetro.find(s=>s.id===prev)) sprintSel.value = 'all';
+}
+
+// Called when project filter changes — repopulate sprint filter then re-render
+function _onRetroProjectFilterChange(){
+  _populateRetroSprintFilter();
+  renderRetrospectives();
+}
+
+// ── Render: Retrospectives page ───────────────────────────────────
+function renderRetrospectives(){
+  const container = document.getElementById('retro-list-container');
+  if(!container) return;
+
+  // Populate / refresh filter dropdowns
+  _populateRetroProjectFilter();
+  _populateRetroSprintFilter();
+
+  // Read current filter values
+  const projFilter   = (document.getElementById('retro-project-filter') ||{}).value || 'all';
+  const sprintFilter = (document.getElementById('retro-sprint-filter')  ||{}).value || 'all';
+
+  // Get RBAC-scoped retros (Admin: all; PM: mapped projects only)
+  let retros = RetroManager.getVisibleRetros();
+
+  // Apply project filter
+  if(projFilter !== 'all'){
+    retros = retros.filter(r => r.projectId === projFilter);
+  }
+
+  // Apply sprint filter — shows ONLY the selected sprint's board
+  if(sprintFilter !== 'all'){
+    retros = retros.filter(r => r.sprintId === sprintFilter);
+  }
+
+  // Check locks on load (no polling)
+  retros.forEach(r => RetroManager.checkLock(r));
+
+  if(!retros.length){
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+      <div class="text-sm text-slate-500">No retrospectives yet. They appear automatically when a sprint is completed.</div>
+    </div>`;
+    return;
+  }
+
+  // Sort: open first, then locked; within each group newest first
+  const sorted = [...retros].sort((a,b)=>{
+    const aL = RetroManager.isLocked(a), bL = RetroManager.isLocked(b);
+    if(aL !== bL) return aL ? 1 : -1;
+    return b.createdAt - a.createdAt;
+  });
+
+  container.innerHTML = sorted.map(retro => {
+    const sprint  = getSprint(retro.sprintId);
+    const project = getProject(retro.projectId);
+    const locked  = RetroManager.isLocked(retro);
+    // Entries strictly scoped to THIS retro board by retroId + sprintId + projectId
+    const entries = RetroManager.getEntries(retro.id);
+    const expiresIn = Math.max(0, Math.ceil((retro.expiresAt - Date.now()) / (1000*60*60)));
+
+    const statusBadge = locked
+      ? `<span class="badge" style="background:#fee2e2;color:#dc2626;font-size:10px">Locked</span>`
+      : `<span class="badge badge-active" style="font-size:10px">Open · closes in ${expiresIn}h</span>`;
+
+    const categorySections = RetroManager.CATEGORIES.map(cat => {
+      const catEntries = entries.filter(e=>e.category===cat);
+      return `
+        <div class="mb-3">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1" style="letter-spacing:.07em">${cat}</div>
+          <div class="space-y-1" id="retro-cat-${retro.id}-${cat.replace(/\s+/g,'_')}">
+            ${catEntries.length
+              ? catEntries.map(e=>`
+                  <div class="flex items-start gap-2 bg-slate-50 rounded-lg px-3 py-2" style="border:1px solid rgba(0,0,0,0.06)">
+                    <span class="flex-1 text-sm text-slate-700" style="word-break:break-word">${_escHtml(e.text)}</span>
+                    ${!locked?(RBAC.isAdmin()||RBAC.isProgramManager()?`<button onclick="RetroManager.deleteEntry('${e.id}');renderRetrospectives()" title="Delete entry" style="color:#94a3b8;cursor:pointer;flex-shrink:0;margin-top:1px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''): ''}
+                  </div>`)
+                .join('')
+              : `<div class="text-xs text-slate-400 italic px-1">No entries yet</div>`
+            }
+          </div>
+          ${!locked?`<button class="btn btn-secondary mt-1" style="padding:3px 10px;font-size:11px;margin-top:6px" onclick="openRetroAddEntry('${retro.id}','${_escAttr(cat)}')">+ Add</button>`:''}
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="sprint-card mb-5" data-retro-id="${retro.id}" data-sprint-id="${retro.sprintId}" data-project-id="${retro.projectId}">
+        <div class="flex items-start justify-between mb-3 flex-wrap gap-2">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-semibold text-slate-900">${sprint?_escHtml(sprint.name):'Sprint'}</span>
+              ${statusBadge}
+            </div>
+            <div class="text-xs text-slate-500 mt-0.5">${project?_escHtml(project.name):''} · ${entries.length} entr${entries.length===1?'y':'ies'} · Created ${new Date(retro.createdAt).toLocaleDateString()}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            ${(RBAC.isAdmin()||RBAC.isProgramManager())?`
+              <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" onclick="RetroManager.exportExcel('${retro.id}')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;display:inline"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export
+              </button>
+              <button class="btn btn-danger" style="padding:4px 10px;font-size:11px" onclick="confirmDeleteRetro('${retro.id}')">Delete</button>
+            `:''}
+          </div>
+        </div>
+        <div class="mt-2">${categorySections}</div>
+      </div>`;
+  }).join('');
+}
+
+function _escHtml(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function _escAttr(str){
+  return String(str||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Modal: add retrospective entry ───────────────────────────────
+function openRetroAddEntry(retroId, preselectedCategory){
+  const retro = (state.retrospectives||[]).find(r=>r.id===retroId);
+  if(!retro){ showNotif('Retrospective not found','error'); return; }
+  if(RetroManager.isLocked(retro)){ showNotif('This retrospective is closed','error'); return; }
+
+  const categoryOptions = RetroManager.CATEGORIES.map(c=>
+    `<option value="${_escAttr(c)}"${c===preselectedCategory?' selected':''}>${_escHtml(c)}</option>`
+  ).join('');
+
+  openModal(`
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-bold text-slate-900">Add Retrospective Entry</h2>
+        <button onclick="closeModal()" style="color:var(--text-muted);cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label>Category</label>
+          <select id="retro-entry-cat">${categoryOptions}</select>
+        </div>
+        <div>
+          <label>Your feedback <span style="font-size:10px;color:#94a3b8;font-weight:400">(anonymous)</span></label>
+          <textarea id="retro-entry-text" rows="3" placeholder="Share your thoughts..." style="resize:vertical"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4" style="border-top:1px solid rgba(0,0,0,0.05)">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="_submitRetroEntry('${retroId}')">Submit (Anonymous)</button>
+      </div>
+    </div>
+  `);
+  setTimeout(()=>document.getElementById('retro-entry-text')?.focus(),80);
+}
+
+function _submitRetroEntry(retroId){
+  const cat  = document.getElementById('retro-entry-cat')?.value;
+  const text = document.getElementById('retro-entry-text')?.value?.trim();
+  if(!text){ showNotif('Please enter some feedback','error'); return; }
+  const entry = RetroManager.addEntry(retroId, cat, text);
+  if(entry){
+    closeModal();
+    renderRetrospectives();
+    showNotif('Entry submitted anonymously ✓');
+  }
+}
+
+// ── Confirm delete retrospective ──────────────────────────────────
+function confirmDeleteRetro(retroId){
+  if(!RBAC.isAdmin()&&!RBAC.isProgramManager()){ showNotif('⚠ Permission denied','error'); return; }
+  openModal(`
+    <div class="p-6" style="max-width:400px">
+      <h2 class="text-lg font-bold text-slate-900 mb-3">Delete Retrospective?</h2>
+      <p class="text-sm text-slate-600 mb-5">This will permanently remove the retrospective board and all its entries. Sprint and task data will NOT be affected.</p>
+      <div class="flex justify-end gap-3">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-danger" onclick="RetroManager.deleteRetro('${retroId}');closeModal();renderRetrospectives();showNotif('Retrospective deleted')">Delete Permanently</button>
+      </div>
+    </div>
+  `);
+}
 </script>
 </body>
 </html>
