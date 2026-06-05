@@ -1310,8 +1310,58 @@ document.addEventListener('DOMContentLoaded', function() {
     padding:8px 11px;font-size:12px;
     color:var(--text-tertiary);font-style:italic;
   }
+  /* ── SHARED MULTI-SELECT FILTER DROPDOWN ── */
+  .sf-msdrop{
+    position:fixed;z-index:10002;
+    background:rgba(255,255,255,0.98);
+    border:1px solid rgba(0,0,0,0.09);
+    border-radius:var(--r-lg);
+    box-shadow:0 12px 36px rgba(0,0,0,0.14),0 3px 10px rgba(0,0,0,0.07);
+    min-width:220px;max-width:300px;
+    padding:6px 0;
+    display:none;
+  }
+  .sf-msdrop-search{
+    display:flex;align-items:center;gap:6px;
+    padding:7px 10px;
+    border-bottom:1px solid rgba(0,0,0,0.06);
+    margin-bottom:3px;
+  }
+  .sf-msdrop-search input{
+    flex:1;border:none;outline:none;font-size:12.5px;
+    font-family:'DM Sans',sans-serif;color:var(--text-primary);
+    background:transparent;
+  }
+  .sf-msdrop-scroll{max-height:220px;overflow-y:auto;}
+  .sf-msdrop-scroll::-webkit-scrollbar{width:4px}
+  .sf-msdrop-scroll::-webkit-scrollbar-thumb{background:#cdd2e4;border-radius:2px}
+  .sf-msdrop-item{
+    display:flex;align-items:center;gap:9px;
+    padding:7px 12px;cursor:pointer;
+    font-size:12.5px;font-weight:500;color:var(--text-primary);
+    transition:background 0.1s;
+    user-select:none;
+  }
+  .sf-msdrop-item:hover{background:var(--accent-ghost);}
+  .sf-msdrop-item.sf-msdrop-all{
+    font-weight:600;color:var(--text-secondary);
+    border-bottom:1px solid rgba(0,0,0,0.06);
+    margin-bottom:3px;padding-bottom:9px;
+  }
+  .sf-msdrop-check{
+    width:15px;height:15px;border-radius:4px;flex-shrink:0;
+    border:1.5px solid rgba(0,0,0,0.2);
+    display:flex;align-items:center;justify-content:center;
+    transition:background 0.12s,border-color 0.12s;
+  }
+  .sf-msdrop-check.on{background:var(--accent);border-color:var(--accent);}
+  .sf-msdrop-foot{
+    border-top:1px solid rgba(0,0,0,0.06);
+    padding:7px 10px 5px;
+    display:flex;justify-content:flex-end;gap:6px;
+    margin-top:3px;
+  }
 </style>
-</head>
 <body class="flex overflow-hidden h-screen">
 
 <!-- ══ FIREBASE AUTH LOGIN SCREEN ══ -->
@@ -1391,6 +1441,10 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="nav-item" data-page="reports">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       <span class="nav-label">Reports</span>
+    </div>
+    <div class="nav-item" data-page="release-reports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      <span class="nav-label">Release Reports</span>
     </div>
     <div class="nav-item" data-page="teams">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
@@ -1768,13 +1822,20 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
             </div>
           </div>
-          <!-- Project and Sprint dropdowns (RIGHT of Filters) -->
-          <select id="rpt-project-filter" class="sf-select" onchange="_debouncedRenderReports()">
-            <option value="all">All Projects</option>
-          </select>
-          <select id="rpt-sprint-filter" class="sf-select" onchange="_debouncedRenderReports()">
-            <option value="all">All Sprints</option>
-          </select>
+          <!-- Project multi-select button -->
+          <div style="position:relative;display:inline-block">
+            <button id="rpt-proj-btn" onclick="_rptToggleProjDrop(event)" class="sf-select" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-width:130px;justify-content:space-between;height:var(--control-h);padding:0 10px;font-size:12.5px;font-weight:500;background:rgba(255,255,255,0.92);border:1px solid rgba(0,0,0,0.08);border-radius:var(--r-md);box-shadow:0 1px 3px rgba(0,0,0,0.04),inset 0 1px 0 rgba(255,255,255,0.85)">
+              <span id="rpt-proj-label">All Projects</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+          <!-- Sprint multi-select button -->
+          <div style="position:relative;display:inline-block">
+            <button id="rpt-spr-btn" onclick="_rptToggleSprintDrop(event)" class="sf-select" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-width:130px;justify-content:space-between;height:var(--control-h);padding:0 10px;font-size:12.5px;font-weight:500;background:rgba(255,255,255,0.92);border:1px solid rgba(0,0,0,0.08);border-radius:var(--r-md);box-shadow:0 1px 3px rgba(0,0,0,0.04),inset 0 1px 0 rgba(255,255,255,0.85)">
+              <span id="rpt-spr-label">All Sprints</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
           <button class="btn btn-secondary text-xs" onclick="renderReports()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.09-4.92"/></svg>
             Refresh
@@ -1848,7 +1909,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <!-- KPI CARDS ROW 2 -->
       <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="stat-card"><div class="metric-label">Sprint Completion</div><div class="metric-number" id="rpt-kpi-sprint-comp">0%</div><div class="progress-bar mt-2" style="height:6px"><div class="progress-fill" id="rpt-kpi-sprint-comp-bar" style="width:0%;background:#5b5fc7"></div></div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#5b5fc7;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="metric-label">Release Readiness</div><div class="metric-number" id="rpt-kpi-release-ready">0%</div><div class="progress-bar mt-2" style="height:6px"><div class="progress-fill" id="rpt-kpi-release-ready-bar" style="width:0%;background:#10b981"></div></div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#10b981;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Open Subtasks</div><div class="metric-number" id="rpt-kpi-open-subtasks">0</div><div class="metric-sub" id="rpt-kpi-open-subtasks-sub">In progress backlog</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#f59e0b;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
         <div class="stat-card"><div class="metric-label">QA Reopen Rate</div><div class="metric-number" id="rpt-kpi-reopen">0%</div><div class="metric-sub" id="rpt-kpi-reopen-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#ef4444;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
         <div class="stat-card"><div class="metric-label">Avg Task Completion</div><div class="metric-number" id="rpt-kpi-avg-time">—</div><div class="metric-sub" id="rpt-kpi-avg-time-sub">story points avg</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#8b5cf6;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
       </div>
@@ -1983,24 +2044,48 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       </div>
 
-      <!-- ═══ RELEASE ANALYTICS ═══ -->
-      <div class="section-label">Release Analytics</div>
+      <!-- ═══ THEME ANALYTICS ═══ -->
+      <div class="section-label">Theme Analytics</div>
+      <!-- Theme KPI cards -->
       <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <div class="stat-card"><div class="metric-label">Release Completion</div><div class="metric-number" id="rpt-rel-comp">0%</div><div class="progress-bar mt-2" style="height:6px"><div class="progress-fill" id="rpt-rel-comp-bar" style="width:0%;background:#5b5fc7"></div></div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#5b5fc7;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="metric-label">Pending Tasks</div><div class="metric-number" id="rpt-rel-pending">0</div><div class="metric-sub" id="rpt-rel-pending-sub">—</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#f59e0b;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="metric-label">Release Throughput</div><div class="metric-number" id="rpt-rel-throughput">0</div><div class="metric-sub">releases total</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#10b981;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
-        <div class="stat-card"><div class="metric-label">Release Blockers</div><div class="metric-number" id="rpt-rel-blockers">0</div><div class="metric-sub" id="rpt-rel-blockers-sub">missing notes/tasks</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#ef4444;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Tasks With Theme</div><div class="metric-number" id="rpt-theme-tasks">0</div><div class="metric-sub" id="rpt-theme-tasks-sub">parent tasks</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#6366f1;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Subtasks With Theme</div><div class="metric-number" id="rpt-theme-subtasks">0</div><div class="metric-sub" id="rpt-theme-subtasks-sub">inherited from parent</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#8b5cf6;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Total Work Items</div><div class="metric-number" id="rpt-theme-total-items">0</div><div class="metric-sub" id="rpt-theme-total-items-sub">tasks + subtasks</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#0ea5e9;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
+        <div class="stat-card"><div class="metric-label">Theme Coverage</div><div class="metric-number" id="rpt-theme-coverage">0%</div><div class="progress-bar mt-2" style="height:6px"><div class="progress-fill" id="rpt-theme-coverage-bar" style="width:0%;background:#8b5cf6"></div></div><div class="metric-sub" id="rpt-theme-coverage-sub" style="margin-top:4px">of all work items</div><div style="position:absolute;top:0;right:0;width:60px;height:60px;background:#10b981;border-radius:50%;opacity:0.07;transform:translate(15px,-15px)"></div></div>
       </div>
+      <!-- Theme charts row -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="card">
-          <div class="card-title" style="margin-bottom:4px">Release Completion %</div>
-          <div class="card-subtitle" style="margin-bottom:16px">Task completion per release</div>
-          <div class="chart-container"><canvas id="relCompChart"></canvas></div>
+          <div class="card-title" style="margin-bottom:4px">Work Items by Theme</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Tasks and subtasks distribution across themes</div>
+          <div class="chart-container"><canvas id="themeTaskChart"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-title" style="margin-bottom:4px">Release Aging</div>
-          <div class="card-subtitle" style="margin-bottom:16px">Days since creation by release</div>
-          <div class="chart-container"><canvas id="relAgingChart"></canvas></div>
+          <div class="card-title" style="margin-bottom:4px">Story Points by Theme</div>
+          <div class="card-subtitle" style="margin-bottom:16px">Story point allocation across themes</div>
+          <div class="chart-container"><canvas id="themeSpChart"></canvas></div>
+        </div>
+      </div>
+        <div class="card mb-6">
+        <div class="card-title mb-1">Theme Breakdown</div>
+        <div class="card-subtitle mb-4">Tasks, subtasks and story points per theme with status split</div>
+        <div style="overflow:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13px" id="rpt-theme-table">
+            <thead>
+              <tr style="border-bottom:2px solid rgba(0,0,0,0.07)">
+                <th style="text-align:left;padding:9px 12px;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Theme</th>
+                <th style="text-align:left;padding:9px 12px;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Projects</th>
+                <th style="text-align:right;padding:9px 12px;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Tasks</th>
+                <th style="text-align:right;padding:9px 12px;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Subtasks</th>
+                <th style="text-align:right;padding:9px 12px;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Total Items</th>
+                <th style="text-align:right;padding:9px 12px;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Story Points</th>
+                <th style="text-align:right;padding:9px 12px;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Open</th>
+                <th style="text-align:right;padding:9px 12px;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">In Progress</th>
+                <th style="text-align:right;padding:9px 12px;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Completed</th>
+              </tr>
+            </thead>
+            <tbody id="rpt-theme-tbody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -2179,10 +2264,215 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           </div>
 
+          <!-- Themes -->
+          <div class="settings-section" style="margin-top:20px">
+            <div class="settings-header" style="display:flex;align-items:center;justify-content:space-between">
+              <span>🎨 Themes</span>
+              <button class="btn btn-primary" style="height:30px;font-size:12px;padding:0 12px" id="btn-add-theme" onclick="openThemeModal()">+ Add Theme</button>
+            </div>
+            <div id="admin-themes-list">
+              <div class="settings-row" style="justify-content:center;color:var(--text-tertiary);font-size:13px">No themes yet.</div>
+            </div>
+          </div>
+
         </div><!-- /admin-config-section -->
 
       </div>
     </div>
+
+    <!-- RELEASE REPORTS PAGE -->
+    <div class="page" id="page-release-reports">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Release Reports</div>
+          <div class="page-subtitle" id="rr-scope-subtitle">Project &amp; Sprint based released task reporting</div>
+        </div>
+        <div class="flex gap-2 items-center" style="flex-wrap:nowrap">
+          <!-- Project multi-select button -->
+          <div style="position:relative;display:inline-block">
+            <button id="rr-proj-btn" onclick="_rrToggleProjDrop(event)" class="sf-select" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-width:130px;justify-content:space-between;height:var(--control-h);padding:0 10px;font-size:12.5px;font-weight:500;background:rgba(255,255,255,0.92);border:1px solid rgba(0,0,0,0.08);border-radius:var(--r-md);box-shadow:0 1px 3px rgba(0,0,0,0.04),inset 0 1px 0 rgba(255,255,255,0.85)">
+              <span id="rr-proj-label">All Projects</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+          <!-- Sprint multi-select button -->
+          <div style="position:relative;display:inline-block">
+            <button id="rr-spr-btn" onclick="_rrToggleSprintDrop(event)" class="sf-select" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-width:130px;justify-content:space-between;height:var(--control-h);padding:0 10px;font-size:12.5px;font-weight:500;background:rgba(255,255,255,0.92);border:1px solid rgba(0,0,0,0.08);border-radius:var(--r-md);box-shadow:0 1px 3px rgba(0,0,0,0.04),inset 0 1px 0 rgba(255,255,255,0.85)">
+              <span id="rr-spr-label">All Sprints</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+          <button class="btn btn-secondary text-xs" onclick="renderReleaseReports()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.09-4.92"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-primary text-xs" onclick="exportReleaseReportsPDF()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="rr-summary-cards">
+        <div class="stat-card">
+          <div class="metric-label">Released Tasks</div>
+          <div class="metric-number" id="rr-kpi-tasks">0</div>
+          <div style="position:absolute;top:0;right:0;width:56px;height:56px;background:#10b981;border-radius:50%;opacity:0.08;transform:translate(14px,-14px)"></div>
+        </div>
+        <div class="stat-card">
+          <div class="metric-label">Released Story Points</div>
+          <div class="metric-number" id="rr-kpi-points">0</div>
+          <div style="position:absolute;top:0;right:0;width:56px;height:56px;background:#6366f1;border-radius:50%;opacity:0.08;transform:translate(14px,-14px)"></div>
+        </div>
+        <div class="stat-card">
+          <div class="metric-label">Projects Included</div>
+          <div class="metric-number" id="rr-kpi-projects">0</div>
+          <div style="position:absolute;top:0;right:0;width:56px;height:56px;background:#0ea5e9;border-radius:50%;opacity:0.08;transform:translate(14px,-14px)"></div>
+        </div>
+        <div class="stat-card">
+          <div class="metric-label">Sprints Included</div>
+          <div class="metric-number" id="rr-kpi-sprints">0</div>
+          <div style="position:absolute;top:0;right:0;width:56px;height:56px;background:#f59e0b;border-radius:50%;opacity:0.08;transform:translate(14px,-14px)"></div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div id="rr-empty-state" style="display:none">
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <div class="text-sm text-slate-500">No released tasks found for selected Projects/Sprints.</div>
+        </div>
+      </div>
+
+      <!-- Report content (hidden when empty) -->
+      <div id="rr-content">
+        <!-- Project Release Breakdown -->
+        <div class="section-label">Project Release Breakdown</div>
+        <div class="card mb-6" style="overflow:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13px" id="rr-project-table">
+            <thead>
+              <tr style="border-bottom:2px solid rgba(0,0,0,0.07)">
+                <th style="text-align:left;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Project</th>
+                <th style="text-align:right;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Released Tasks</th>
+                <th style="text-align:right;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Released Story Points</th>
+              </tr>
+            </thead>
+            <tbody id="rr-project-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Sprint Release Breakdown -->
+        <div class="section-label">Sprint Release Breakdown</div>
+        <div class="card mb-6" style="overflow:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13px" id="rr-sprint-table">
+            <thead>
+              <tr style="border-bottom:2px solid rgba(0,0,0,0.07)">
+                <th style="text-align:left;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Sprint</th>
+                <th style="text-align:left;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Project</th>
+                <th style="text-align:right;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Released Tasks</th>
+                <th style="text-align:right;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Released Story Points</th>
+              </tr>
+            </thead>
+            <tbody id="rr-sprint-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Released Task Details -->
+        <div class="section-label">Released Task Details</div>
+        <div class="card mb-6" style="overflow:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px" id="rr-task-table">
+            <thead>
+              <tr style="border-bottom:2px solid rgba(0,0,0,0.07)">
+                <th style="text-align:left;padding:10px 12px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Task ID</th>
+                <th style="text-align:left;padding:10px 12px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Title</th>
+                <th style="text-align:left;padding:10px 12px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Project</th>
+                <th style="text-align:left;padding:10px 12px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Sprint</th>
+                <th style="text-align:left;padding:10px 12px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Epic</th>
+                <th style="text-align:left;padding:10px 12px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Priority</th>
+                <th style="text-align:right;padding:10px 12px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Points</th>
+                <th style="text-align:left;padding:10px 12px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Status</th>
+              </tr>
+            </thead>
+            <tbody id="rr-task-tbody"></tbody>
+          </table>
+        </div>
+        <!-- ── Theme Release Analysis ── -->
+        <div id="rr-theme-section">
+          <div class="section-label" style="margin-top:8px">Theme Release Analysis</div>
+
+          <!-- Theme Summary Cards -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="rr-theme-cards">
+            <div class="stat-card">
+              <div class="metric-label">Total Themes Released</div>
+              <div class="metric-number" id="rr-th-count">0</div>
+              <div style="position:absolute;top:0;right:0;width:56px;height:56px;background:#8b5cf6;border-radius:50%;opacity:0.08;transform:translate(14px,-14px)"></div>
+            </div>
+            <div class="stat-card">
+              <div class="metric-label">Top Theme</div>
+              <div class="metric-number" id="rr-th-top" style="font-size:16px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
+              <div style="position:absolute;top:0;right:0;width:56px;height:56px;background:#10b981;border-radius:50%;opacity:0.08;transform:translate(14px,-14px)"></div>
+            </div>
+            <div class="stat-card">
+              <div class="metric-label">Released Work Items</div>
+              <div class="metric-number" id="rr-th-items">0</div>
+              <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px" id="rr-th-items-sub">Tasks + Subtasks</div>
+              <div style="position:absolute;top:0;right:0;width:56px;height:56px;background:#0ea5e9;border-radius:50%;opacity:0.08;transform:translate(14px,-14px)"></div>
+            </div>
+            <div class="stat-card">
+              <div class="metric-label">Released Story Points</div>
+              <div class="metric-number" id="rr-th-points">0</div>
+              <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">Tasks + Subtasks SP</div>
+              <div style="position:absolute;top:0;right:0;width:56px;height:56px;background:#f59e0b;border-radius:50%;opacity:0.08;transform:translate(14px,-14px)"></div>
+            </div>
+          </div>
+
+          <!-- Theme empty state -->
+          <div id="rr-theme-empty" style="display:none">
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              </div>
+              <div class="text-sm text-slate-500">No released Theme data found.</div>
+            </div>
+          </div>
+
+          <!-- Theme charts + table (hidden when empty) -->
+          <div id="rr-theme-content">
+            <!-- Two charts side by side -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div class="card">
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:12px;letter-spacing:.03em;text-transform:uppercase">Released Work Items by Theme</div>
+                <div class="chart-container" style="height:220px"><canvas id="rrThemeItemsChart"></canvas></div>
+              </div>
+              <div class="card">
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:12px;letter-spacing:.03em;text-transform:uppercase">Released Story Points by Theme</div>
+                <div class="chart-container" style="height:220px"><canvas id="rrThemePointsChart"></canvas></div>
+              </div>
+            </div>
+
+            <!-- Theme Breakdown Table -->
+            <div class="card mb-6" style="overflow:auto">
+              <table style="width:100%;border-collapse:collapse;font-size:13px" id="rr-theme-table">
+                <thead>
+                  <tr style="border-bottom:2px solid rgba(0,0,0,0.07)">
+                    <th style="text-align:left;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Theme</th>
+                    <th style="text-align:left;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Projects</th>
+                    <th style="text-align:right;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Released Tasks</th>
+                    <th style="text-align:right;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Released Subtasks</th>
+                    <th style="text-align:right;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Total Released Work Items</th>
+                    <th style="text-align:right;padding:10px 14px;font-weight:700;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Released Story Points</th>
+                  </tr>
+                </thead>
+                <tbody id="rr-theme-tbody"></tbody>
+              </table>
+            </div>
+          </div><!-- /rr-theme-content -->
+        </div><!-- /rr-theme-section -->
+      </div><!-- /rr-content -->
+    </div><!-- /page-release-reports -->
 
     <!-- RELEASE BOARD -->
     <div class="page" id="page-releases">
@@ -2321,6 +2611,7 @@ state.epics    = state.epics    || [];
 state.comments = state.comments || [];
 state.products = state.products || [];
 state.tags     = state.tags     || [];
+state.themes   = state.themes   || [];
 state.notifications = state.notifications || {}; // standalone collection — never merged into tasks
 state.retrospectives        = state.retrospectives        || [];
 state.retrospectiveEntries  = state.retrospectiveEntries  || [];
@@ -2337,7 +2628,7 @@ const RBAC = (function(){
   // admin       → all pages
   // program_manager → all except settings and teams
   // team_member → dashboard, backlog, kanban, sprint-planning, releases, reports (filtered), retrospectives (view + add entries only)
-  const MEMBER_BLOCKED   = new Set(['settings','teams','projects','epics','releases']);
+  const MEMBER_BLOCKED   = new Set(['settings','teams','projects','epics','releases','reports','release-reports','sprint-planning']);
   const PM_BLOCKED       = new Set(['teams']);
 
   // ── Internal helpers ──────────────────────────────────────────
@@ -2634,7 +2925,7 @@ const FirebaseDB = (function(){
     const map = {
       projects:'projects', users:'users', sprints:'sprints',
       tasks:'tasks', epics:'epics', releases:'releases', subtasks:'subtasks',
-      products:'products', tags:'tags'
+      products:'products', tags:'tags', themes:'themes'
     };
     if(!map[collection]) throw new Error('[FirebaseDB] Unknown collection: '+collection);
     return map[collection];
@@ -2719,7 +3010,8 @@ const FirebaseDB = (function(){
         usersSnap,
         releasesSnap,
         productsSnap,
-        tagsSnap
+        tagsSnap,
+        themesSnap
       ] = await Promise.all([
         _fetchCollection('tasks'),
         _fetchCollection('projects'),
@@ -2729,6 +3021,7 @@ const FirebaseDB = (function(){
         _fetchCollection('releases'),
         _get(_safeRef('sprintflow/products')),
         _get(_safeRef('sprintflow/tags')),
+        _get(_safeRef('sprintflow/themes')),
       ]);
       // If every collection is empty the database has not been seeded yet
       const anyExists = tasksSnap.exists()    || projectsSnap.exists() || sprintsSnap.exists()
@@ -2755,6 +3048,7 @@ const FirebaseDB = (function(){
         releases : _mergeArr(releasesSnap.val(),  state.releases),
         products : _mergeArr(productsSnap && productsSnap.exists() ? productsSnap.val() : null, state.products),
         tags     : _mergeArr(tagsSnap     && tagsSnap.exists()     ? tagsSnap.val()     : null, state.tags),
+        themes   : _mergeArr(themesSnap   && themesSnap.exists()   ? themesSnap.val()   : null, state.themes),
       };
       // Normalise projects
       merged.projects.forEach(p=>{ if(!p.memberIds) p.memberIds=[]; });
@@ -2792,8 +3086,8 @@ const FirebaseDB = (function(){
       state.comments = state.comments || [];
       state.products = state.products || [];
       state.tags     = state.tags     || [];
+      state.themes   = state.themes   || [];
       invalidateStateMaps();
-      console.info('[FirebaseDB] loadAppData: state populated from Firebase');
       return state;
     } catch(e) {
       console.error('[FirebaseDB] loadAppData error:', e.message || e);
@@ -2927,6 +3221,7 @@ const FirebaseDB = (function(){
         releases : _toObj(state.releases),
         products : _toObj(state.products),
         tags     : _toObj(state.tags),
+        themes   : _toObj(state.themes),
       };
       await _set(_safeRef('sprintflow'), payload);
       console.info('[FirebaseDB] syncAppState: full state pushed to Firebase');
@@ -2948,7 +3243,7 @@ const FirebaseDB = (function(){
 // and updatedAt-based conflict rejection.
 // ──────────────────────────────────────────────────────────────────
 const RealtimeSync = (function(){
-  const COLLECTIONS = ['tasks','projects','sprints','epics','releases','users','products','tags'];
+  const COLLECTIONS = ['tasks','projects','sprints','epics','releases','users','products','tags','themes'];
   // Active unsubscribe functions keyed by listener key (collection or "collection:projectId")
   const _unsubs = {};
   // Tracks IDs the local client has just written (to ignore echo-backs)
@@ -3062,6 +3357,7 @@ const RealtimeSync = (function(){
         else if(page==='sprints')  { renderSprintPlanning(); }
         else if(page==='releases') { renderReleaseBoard(); renderReleaseQueue(); }
         else if(page==='reports')  { renderReports(); }
+        else if(page==='release-reports') { renderReleaseReports(); }
         else if(page==='dashboard'){ _invalidateChartFingerprints(); renderDashboard(); }
         else if(page==='epics')    { renderEpics(); }
         break;
@@ -3096,6 +3392,7 @@ const RealtimeSync = (function(){
         break;
       case 'products':
       case 'tags':
+      case 'themes':
         if(page==='settings')      { renderAdminConfig(); }
         break;
     }
@@ -3108,7 +3405,7 @@ const RealtimeSync = (function(){
   // Returns array of {path, key} objects (key = unique listener registry id).
   function _listenTargets(collection){
     // users, products, tags collections are not project-scoped; always root
-    if(collection === 'users' || collection === 'products' || collection === 'tags'){
+    if(collection === 'users' || collection === 'products' || collection === 'tags' || collection === 'themes'){
       return [{ path: `sprintflow/${collection}`, key: collection }];
     }
     // Determine RBAC scope — RBAC may not be fully initialised yet (admin default)
@@ -4155,6 +4452,7 @@ function renderPage(page){
     else if(page==='sprint-planning')renderSprintPlanning();
     else if(page==='kanban')renderKanban();
     else if(page==='reports')renderReports();
+    else if(page==='release-reports')renderReleaseReports();
     else if(page==='teams')renderTeams();
     else if(page==='releases')renderReleaseBoard();
     else if(page==='settings')renderAdminConfig();
@@ -4835,8 +5133,10 @@ function renderBacklog(){
       if(t.sprint&&groups[t.sprint])groups[t.sprint].push(t);
       else groups['__backlog__'].push(t);
     });
-    const activeSprints=_visSprints.filter(s=>s.status==='active');
-    const plannedSprints=_visSprints.filter(s=>s.status==='planned');
+    // When a project filter is active, only show sprints belonging to that project
+    const _sprintsInScope = currentProj==='all' ? _visSprints : _visSprints.filter(s=>s.project===currentProj);
+    const activeSprints=_sprintsInScope.filter(s=>s.status==='active');
+    const plannedSprints=_sprintsInScope.filter(s=>s.status==='planned');
     [...activeSprints,...plannedSprints].forEach(s=>{
       const sTasks=groups[s.id]||[];
       const proj=getProject(s.project);
@@ -5053,6 +5353,7 @@ function taskRow(t){
       </div>
       <div class="hidden sm:flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         ${(t.tags||[]).slice(0,2).map(tag=>_coloredChip(tag,_tagColorByName(tag),'tag')).join('')}
+        ${t.themeName?_coloredChip(t.themeName,t.themeColor||'var(--accent)','tag'):''}
       </div>
       <span class="badge badge-${t.priority} hidden sm:inline-flex">${t.priority}</span>
       <span class="badge badge-${statusBadgeClass(t.status)}">${statusLabel(t.status)}</span>
@@ -5567,11 +5868,12 @@ function kanbanCard(t){
       ${epic?`<span class="epic-badge ml-1" style="background:${epic.color}22;color:${epic.color};border:1px solid ${epic.color}44;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px" title="${epic.title}">◈ ${epic.title}</span>`:''}
       <div style="margin-left:auto;display:flex;align-items:center;gap:5px">
         ${syncDotHtml}
+        <button class="sf-share-btn" onclick="event.stopPropagation();shareTaskLink('${t.id}')" title="Copy link" style="background:none;border:none;cursor:pointer;padding:1px;line-height:1;color:#cbd5e1;border-radius:4px;transition:color 0.12s" onmouseenter="this.style.color='#6366f1'" onmouseleave="this.style.color='#cbd5e1'"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
         <div style="width:8px;height:8px;border-radius:50%;background:${prioColors[t.priority]||'#94a3b8'}" title="${t.priority}"></div>
       </div>
     </div>
     <div class="text-sm font-medium text-slate-800 mb-2 leading-snug">${t.title}</div>
-    ${(t.tags||[]).length?`<div class="flex flex-wrap gap-1 mb-2">${(t.tags||[]).slice(0,3).map(tag=>_coloredChip(tag,_tagColorByName(tag),'tag')).join('')}</div>`:''}
+    ${(t.tags||[]).length||t.themeName?`<div class="flex flex-wrap gap-1 mb-2">${(t.tags||[]).slice(0,3).map(tag=>_coloredChip(tag,_tagColorByName(tag),'tag')).join('')}${t.themeName?_coloredChip(t.themeName,t.themeColor||'var(--accent)','tag'):''}</div>`:''}
     <div class="flex items-center justify-between">
       <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${t.points}sp</span>
       <div class="flex items-center gap-1">
@@ -5597,6 +5899,7 @@ function kanbanSubtaskCard(sub,parent){
   const sa=_kanbanRenderUserCache?_kanbanRenderUserCache.get(sub.assignee):getUser(sub.assignee);
   const prioColors={critical:'#be185d',high:'#dc2626',medium:'#d97706',low:'#16a34a'};
   const proj=_kanbanRenderProjectCache?_kanbanRenderProjectCache.get(parent.project):getProject(parent.project);
+  const epic=parent.epicId?(_kanbanRenderEpicCache?_kanbanRenderEpicCache.get(parent.epicId):getEpic(parent.epicId)):null;
   return `<div class="kanban-subtask-card" draggable="true"
     ondragstart="kanbanSubDragStart(event,'${sub.id}','${parent.id}')"
     ondragend="kanbanSubDragEnd(event)"
@@ -5604,9 +5907,14 @@ function kanbanSubtaskCard(sub,parent){
     <div class="flex items-center gap-1.5 mb-1.5">
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2.5"><path d="M9 20H5a2 2 0 01-2-2V6a2 2 0 012-2h4m4-2h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M9 12h6"/></svg>
       <span class="text-xs text-indigo-400 font-semibold truncate" style="max-width:130px" title="${parent.title||''}">${proj?proj.key:'?'} · ${parent.title||'—'}</span>
-      <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:${prioColors[sub.priority]||'#94a3b8'};flex-shrink:0" title="${sub.priority||''}"></div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0">
+        <button class="sf-share-btn" onclick="event.stopPropagation();shareSubtaskLink('${parent.id}','${sub.id}')" title="Copy link" style="background:none;border:none;cursor:pointer;padding:1px;line-height:1;color:#cbd5e1;border-radius:4px;transition:color 0.12s" onmouseenter="this.style.color='#6366f1'" onmouseleave="this.style.color='#cbd5e1'"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+        <div style="width:6px;height:6px;border-radius:50%;background:${prioColors[sub.priority]||'#94a3b8'}" title="${sub.priority||''}"></div>
+      </div>
     </div>
+    ${epic?`<div class="mb-1.5"><span class="epic-badge ml-1" style="background:${epic.color}22;color:${epic.color};border:1px solid ${epic.color}44;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px" title="${_escHtml(epic.title)}">◈ ${_escHtml(epic.title)}</span></div>`:''}
     <div class="text-xs font-semibold text-slate-700 mb-1.5 leading-snug">${sub.title||'—'}</div>
+    ${(sub.products||[]).length||(sub.tags||[]).length||sub.themeName?`<div class="flex flex-wrap gap-1 mb-1.5">${(sub.products||[]).map(name=>{const c=_productColorByName(name);return c?_coloredChip(name,c,'tag'):`<span class="tag" style="font-size:10px;background:var(--accent-ghost);color:var(--accent-dark);border:1px solid var(--accent-ring)">${name}</span>`;}).join('')}${(sub.tags||[]).slice(0,2).map(tag=>_coloredChip(tag,_tagColorByName(tag),'tag')).join('')}${sub.themeName?_coloredChip(sub.themeName,sub.themeColor||'var(--accent)','tag'):''}</div>`:''}
     <div class="flex items-center justify-between">
       <span class="text-xs text-slate-400">${sub.points||0}sp</span>
       ${sa?userAvatar(sub.assignee,18):`<div class="avatar" style="width:18px;height:18px;background:#f1f5f9;border:1px dashed #cbd5e1"></div>`}
@@ -5838,11 +6146,9 @@ function removeRptAdvFilter(key){
 }
 
 function _rptActiveFilterCount(){
-  const projSel=document.getElementById('rpt-project-filter');
-  const sprintSel=document.getElementById('rpt-sprint-filter');
   let count=0;
-  if(projSel&&projSel.value!=='all') count++;
-  if(sprintSel&&sprintSel.value!=='all') count++;
+  if(_rptSelProjs.size)   count++;
+  if(_rptSelSprints.size) count++;
   Object.values(_rptAdvFilters).forEach(v=>{ if(v&&v!=='all') count++; });
   return count;
 }
@@ -5884,17 +6190,15 @@ function _rptUpdateActiveChips(){
 // ── CENTRALIZED: filteredReportsData ──
 // All reports widgets MUST consume this — never raw state arrays.
 function _getFilteredReportsData(){
-  const projSel=document.getElementById('rpt-project-filter');
-  const sprintSel=document.getElementById('rpt-sprint-filter');
-  const pid=projSel?projSel.value:'all';
-  const sid=sprintSel?sprintSel.value:'all';
+  const pids=_rptGetProjIds();   // [] = All, else array of selected project IDs
+  const sids=_rptGetSprintIds(); // [] = All, else array of selected sprint IDs
   const f=_rptAdvFilters;
 
   let tasks=RBAC.getVisibleTasks(state.tasks);
   // project filter
-  if(pid&&pid!=='all') tasks=tasks.filter(t=>t.project===pid);
+  if(pids.length) tasks=tasks.filter(t=>pids.includes(t.project));
   // sprint filter
-  if(sid&&sid!=='all') tasks=tasks.filter(t=>t.sprint===sid);
+  if(sids.length) tasks=tasks.filter(t=>sids.includes(t.sprint));
   // status
   if(f.status&&f.status!=='all') tasks=tasks.filter(t=>t.status===f.status);
   // priority
@@ -5913,25 +6217,23 @@ function _getFilteredReportsData(){
   }
 
   let sprints=RBAC.getVisibleSprints();
-  if(pid&&pid!=='all') sprints=sprints.filter(s=>s.project===pid);
-  if(sid&&sid!=='all') sprints=sprints.filter(s=>s.id===sid);
+  if(pids.length) sprints=sprints.filter(s=>pids.includes(s.project));
+  if(sids.length) sprints=sprints.filter(s=>sids.includes(s.id));
 
   let epics=RBAC.getVisibleEpics();
-  if(pid&&pid!=='all') epics=epics.filter(e=>{
+  if(pids.length) epics=epics.filter(e=>{
     const epicProjects=e.projectIds||(e.projectId?[e.projectId]:[]);
-    return epicProjects.includes(pid);
+    return epicProjects.some(pid=>pids.includes(pid));
   });
   if(f.epic&&f.epic!=='all') epics=epics.filter(e=>e.id===f.epic);
 
   let projects=RBAC.getVisibleProjects();
-  if(pid&&pid!=='all') projects=projects.filter(p=>p.id===pid);
+  if(pids.length) projects=projects.filter(p=>pids.includes(p.id));
 
   let releases=RBAC.getVisibleReleases();
-  if(pid&&pid!=='all') releases=releases.filter(r=>r.projectId===pid);
+  if(pids.length) releases=releases.filter(r=>pids.includes(r.projectId));
   if(f.release&&f.release!=='all') releases=releases.filter(r=>r.id===f.release);
-  // When task-level filters are active, also filter release task lists to only matching tasks
   const filteredTaskIds=new Set(tasks.map(t=>t.id));
-  // (releases themselves stay, but downstream task lookups use filteredTaskIds)
 
   return {tasks,sprints,epics,projects,releases,filteredTaskIds};
 }
@@ -5939,14 +6241,12 @@ function _getFilteredReportsData(){
 // Legacy helpers kept for backward compatibility — now delegate to centralized filter
 function _rptFilteredTasks(tasks){
   // Not used directly in renderReports anymore, kept for renderProductivityTable compatibility
-  const projSel=document.getElementById('rpt-project-filter');
-  const sprintSel=document.getElementById('rpt-sprint-filter');
-  const pid=projSel?projSel.value:'all';
-  const sid=sprintSel?sprintSel.value:'all';
+  const pids=_rptGetProjIds();
+  const sids=_rptGetSprintIds();
   const f=_rptAdvFilters;
   let filtered=tasks;
-  if(pid&&pid!=='all') filtered=filtered.filter(t=>t.project===pid);
-  if(sid&&sid!=='all') filtered=filtered.filter(t=>t.sprint===sid);
+  if(pids.length) filtered=filtered.filter(t=>pids.includes(t.project));
+  if(sids.length) filtered=filtered.filter(t=>sids.includes(t.sprint));
   if(f.status&&f.status!=='all') filtered=filtered.filter(t=>t.status===f.status);
   if(f.priority&&f.priority!=='all') filtered=filtered.filter(t=>t.priority===f.priority);
   if(f.assignee&&f.assignee!=='all') filtered=filtered.filter(t=>t.assignee===f.assignee);
@@ -5961,13 +6261,11 @@ function _rptFilteredTasks(tasks){
 }
 
 function _rptFilteredSprints(sprints){
-  const projSel=document.getElementById('rpt-project-filter');
-  const sprintSel=document.getElementById('rpt-sprint-filter');
-  const pid=projSel?projSel.value:'all';
-  const sid=sprintSel?sprintSel.value:'all';
+  const pids=_rptGetProjIds();
+  const sids=_rptGetSprintIds();
   let filtered=sprints;
-  if(pid&&pid!=='all') filtered=filtered.filter(s=>s.project===pid);
-  if(sid&&sid!=='all') filtered=filtered.filter(s=>s.id===sid);
+  if(pids.length) filtered=filtered.filter(s=>pids.includes(s.project));
+  if(sids.length) filtered=filtered.filter(s=>sids.includes(s.id));
   return filtered;
 }
 
@@ -6025,12 +6323,11 @@ function renderProductivityTable(){
   if(!tbody)return;
   // ── Derive member list from project membership, NOT from task assignment ──
   // This ensures members with 0 tasks still appear when they belong to the selected project.
-  const _prodProjSel=document.getElementById('rpt-project-filter');
-  const _prodProjFilter=_prodProjSel?_prodProjSel.value:'all';
+  const _pids=_rptGetProjIds();
   const _visibleProjects=RBAC.getVisibleProjects();
-  // Determine the scoped project set (single project or all visible)
-  const _scopedProjects=(_prodProjFilter&&_prodProjFilter!=='all')
-    ? _visibleProjects.filter(p=>p.id===_prodProjFilter)
+  // Determine the scoped project set (selected projects or all visible)
+  const _scopedProjects=_pids.length
+    ? _visibleProjects.filter(p=>_pids.includes(p.id))
     : _visibleProjects;
   // Collect all unique memberIds from the scoped projects
   const _memberIdSet=new Set();
@@ -6096,49 +6393,6 @@ function renderReports(){
     if(RBAC.isAdmin()) subEl.textContent = 'Project health, team productivity & release insights — All Projects';
     else subEl.textContent = 'Project health, team productivity & release insights — Your Projects Only';
   }
-  // ── Populate project filter ──
-  const projSel=document.getElementById('rpt-project-filter');
-  if(projSel){
-    const prev=projSel.value;
-    const _allProj=RBAC.getVisibleProjects();
-    const _activeProj=_allProj.filter(p=>(p.status||'').toLowerCase()==='active');
-    const _completedProj=_allProj.filter(p=>(p.status||'').toLowerCase()==='completed');
-    let _projHTML=`<option value="all">All Projects</option>`;
-    if(_activeProj.length){
-      _projHTML+=`<optgroup label="── Active Projects ──">`;
-      _projHTML+=_activeProj.map(p=>`<option value="${p.id}"${p.id===prev?' selected':''}>${p.name}</option>`).join('');
-      _projHTML+=`</optgroup>`;
-    }
-    if(_completedProj.length){
-      _projHTML+=`<optgroup label="── Completed Projects ──">`;
-      _projHTML+=_completedProj.map(p=>`<option value="${p.id}"${p.id===prev?' selected':''}>${p.name}</option>`).join('');
-      _projHTML+=`</optgroup>`;
-    }
-    projSel.innerHTML=_projHTML;
-  }
-  // ── Populate sprint filter ──
-  const sprintSel=document.getElementById('rpt-sprint-filter');
-  if(sprintSel){
-    const prevSprint=sprintSel.value;
-    let projFilter=projSel?projSel.value:'all';
-    if(!projFilter) projFilter='all';
-    const _allSpr=RBAC.getVisibleSprints().filter(s=>projFilter==='all'||s.project===projFilter);
-    const _activeSpr=_allSpr.filter(s=>(s.status||'').toLowerCase()==='active');
-    const _completedSpr=_allSpr.filter(s=>(s.status||'').toLowerCase()==='completed');
-    let _sprHTML=`<option value="all">All Sprints</option>`;
-    if(_activeSpr.length){
-      _sprHTML+=`<optgroup label="── Active Sprints ──">`;
-      _sprHTML+=_activeSpr.map(s=>`<option value="${s.id}"${s.id===prevSprint?' selected':''}>${s.name}</option>`).join('');
-      _sprHTML+=`</optgroup>`;
-    }
-    if(_completedSpr.length){
-      _sprHTML+=`<optgroup label="── Completed Sprints ──">`;
-      _sprHTML+=_completedSpr.map(s=>`<option value="${s.id}"${s.id===prevSprint?' selected':''}>${s.name}</option>`).join('');
-      _sprHTML+=`</optgroup>`;
-    }
-    sprintSel.innerHTML=_sprHTML;
-  }
-
   // ── Sync badge & chips with current applied filters ──
   _rptUpdateActiveBadge();
   _rptUpdateActiveChips();
@@ -6164,9 +6418,15 @@ function renderReports(){
 
   // ── KPI: row 1 ──
   const activeSprints=_rs.filter(s=>s.status==='active');
+  // Open Tasks: tasks + subtasks where status === 'open'
   const openTasks=reportItems.filter(item=>item.status==='open').length;
-  const releasedTasks=reportItems.filter(item=>DONE_STATUSES.includes(item.status)).length;
-  const openBugs=_rt.filter(t=>t.type==='bug'&&!DONE_STATUSES.includes(t.status)).length;
+  // CHANGE 3 FIX: Released Tasks must count ONLY status==='released' (not ready-for-prod).
+  // reportItems includes both parent tasks and subtasks, so both are counted.
+  const releasedTasks=reportItems.filter(item=>item.status==='released').length;
+  // CHANGE 4 FIX: Open Bugs — include bug-type parent tasks AND bug-type subtasks
+  const openBugs=reportItems.filter(item=>item.type==='bug'&&!DONE_STATUSES.includes(item.status)).length;
+  // CHANGE 2: Open Subtasks — subtasks where status is not a final/released state
+  const openSubtasks=reportSubs.filter(st=>st.status!=='released'&&!DONE_STATUSES.includes(st.status)).length;
   const setEl=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   setEl('rpt-kpi-projects',_rp.length);
   setEl('rpt-kpi-projects-sub',`${_rp.filter(p=>p.status==='active').length} active`);
@@ -6177,7 +6437,10 @@ function renderReports(){
   setEl('rpt-kpi-released',releasedTasks);
   setEl('rpt-kpi-released-sub',reportItems.length?`${Math.round((releasedTasks/reportItems.length)*100)}% of total`:'—');
   setEl('rpt-kpi-bugs',openBugs);
-  setEl('rpt-kpi-bugs-sub',`${_rt.filter(t=>t.type==='bug'&&t.priority==='critical').length} critical`);
+  setEl('rpt-kpi-bugs-sub',`${reportItems.filter(item=>item.type==='bug'&&item.priority==='critical').length} critical`);
+  // CHANGE 2: Wire Open Subtasks card
+  setEl('rpt-kpi-open-subtasks',openSubtasks);
+  setEl('rpt-kpi-open-subtasks-sub','In progress backlog');
 
   // ── KPI: row 2 ──
   // Sprint completion — reuse sprintProgress() for consistency, include subtasks
@@ -6192,8 +6455,7 @@ function renderReports(){
   const relTasks=_rl.flatMap(r=>r.taskIds||[]).map(id=>_rt.find(t=>t.id===id)).filter(Boolean);
   const relDone=relTasks.filter(t=>t&&DONE_STATUSES.includes(t.status)).length;
   const relReady=relTasks.length?Math.round((relDone/relTasks.length)*100):0;
-  setEl('rpt-kpi-release-ready',relReady+'%');
-  const rrBar=document.getElementById('rpt-kpi-release-ready-bar');if(rrBar)rrBar.style.width=relReady+'%';
+  // NOTE: Release Readiness card removed (CHANGE 1). Calculation variables retained for downstream use (health dots, etc).
 
   // ── QA REOPEN RATE ─────────────────────────────────────────────
   // Definition: items that entered QA (in-qa / qa-in-progress) and then
@@ -6230,7 +6492,7 @@ function renderReports(){
   // ── Destroy existing report charts before recreating (prevents duplicate instances) ──
   // v27-fix: always destroy+recreate — fingerprint+early-return caused blank charts on
   // filter changes and page revisits due to stale/detached canvas contexts.
-  ['velocity','burndown','spillover','workload','typeChart','projDist','sprintHealth','relComp','relAging','epicCompletion','epicWorkload','epicVelocity','productBifurcation','tagBifurcation','deliveryRisk'].forEach(k=>{
+  ['velocity','burndown','spillover','workload','typeChart','projDist','sprintHealth','themeTask','themeSp','epicCompletion','epicWorkload','epicVelocity','productBifurcation','tagBifurcation','deliveryRisk'].forEach(k=>{
     if(charts[k]){try{charts[k].destroy();}catch(e){}delete charts[k];}
   });
 
@@ -6330,11 +6592,10 @@ function renderReports(){
   // ── WORKLOAD ──
   // Derive member list from project membership — respect the active project filter.
   // Members with 0 story points in the filtered task set still appear (showing 0 SP).
-  const _wProjSel=document.getElementById('rpt-project-filter');
-  const _wProjFilter=_wProjSel?_wProjSel.value:'all';
+  const _wPids=_rptGetProjIds();
   const _wVisibleProjects=RBAC.getVisibleProjects();
-  const _wScopedProjects=(_wProjFilter&&_wProjFilter!=='all')
-    ? _wVisibleProjects.filter(p=>p.id===_wProjFilter)
+  const _wScopedProjects=_wPids.length
+    ? _wVisibleProjects.filter(p=>_wPids.includes(p.id))
     : _wVisibleProjects;
   const _wMemberIdSet=new Set();
   _wScopedProjects.forEach(p=>{(p.memberIds||[]).forEach(id=>_wMemberIdSet.add(id));});
@@ -6534,58 +6795,134 @@ function renderReports(){
     }).join('')||`<tr><td colspan="7" style="padding:24px;text-align:center;color:#94a3b8;font-size:13px">No projects</td></tr>`;
   }
 
-  // ── RELEASE KPIs — use fd.filteredTaskIds for task-level filter awareness ──
-  const totalRelTasks=_rl.flatMap(r=>(r.taskIds||[]).filter(id=>fd.filteredTaskIds.has(id))).length;
-  const totalRelDone=_rl.flatMap(r=>(r.taskIds||[]).filter(id=>fd.filteredTaskIds.has(id))).map(id=>_rt.find(t=>t.id===id)).filter(t=>t&&DONE_STATUSES.includes(t.status)).length;
-  const relCompPct=totalRelTasks?Math.round((totalRelDone/totalRelTasks)*100):0;
-  setEl('rpt-rel-comp',relCompPct+'%');
-  const rcBar=document.getElementById('rpt-rel-comp-bar');if(rcBar)rcBar.style.width=relCompPct+'%';
-  const pendingRelTasks=totalRelTasks-totalRelDone;
-  setEl('rpt-rel-pending',pendingRelTasks);
-  setEl('rpt-rel-pending-sub',`across ${_rl.length} release${_rl.length!==1?'s':''}`);
-  setEl('rpt-rel-throughput',_rl.filter(r=>r.status==='Released').length);
-  const relBlockerCount=_rl.filter(r=>!r.releaseNotes||!r.taskIds||!r.taskIds.length).length;
-  setEl('rpt-rel-blockers',relBlockerCount);
+  // ── THEME ANALYTICS ──────────────────────────────────────────────
+  // Build theme map from filtered tasks (respects all existing filters + RBAC)
+  const _visibleThemes = (state.themes || []).filter(th => {
+    // RBAC: PM/Member see only themes mapped to their visible projects
+    if(RBAC.isAdmin()) return true;
+    const vpIds = new Set(RBAC.getVisibleProjects().map(p => p.id));
+    return (th.projectIds || []).some(pid => vpIds.has(pid));
+  });
 
-  // ── RELEASE COMPLETION CHART ──
-  const rcCtx=_getCtx('relCompChart');
-  const rlAbbrv=_rl.map(r=>(r.name||'').length>14?r.name.slice(0,13)+'…':r.name);
-  const rlPcts=_rl.map(r=>{
-    const rTasks=(r.taskIds||[]).filter(id=>fd.filteredTaskIds.has(id)).map(id=>_rt.find(t=>t.id===id)).filter(Boolean);
-    const rDone=rTasks.filter(t=>DONE_STATUSES.includes(t.status)).length;
-    return rTasks.length?Math.round((rDone/rTasks.length)*100):0;
+  // Build per-theme map from _rt (parent tasks) + their subtasks
+  // Subtasks inherit themeId from their parent task
+  const _themeTaskMap = {}; // themeId -> { name, color, tasks[], subtasks[], points }
+  _visibleThemes.forEach(th => {
+    _themeTaskMap[th.id] = { name: th.name, color: th.color||'#8b5cf6', tasks: [], subtasks: [], points: 0 };
   });
-  if(rcCtx){
-    const _rcOpts=_chartOpts({plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},y:{max:100,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11},callback:v=>v+'%'}}}});
-    _rcOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'top',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v+'%',padding:{top:2,bottom:2,left:3,right:3}};_rcOpts.layout={padding:{top:24}};
-    charts.relComp=new Chart(rcCtx,{
-    type:'bar',
-    data:{
-      labels:rlAbbrv.length?rlAbbrv:['No Releases'],
-      datasets:[{label:'Completion %',data:rlPcts.length?rlPcts:[0],backgroundColor:rlPcts.map(v=>v===100?'rgba(16,185,129,0.7)':v>=50?'rgba(99,102,241,0.7)':'rgba(245,158,11,0.65)'),borderRadius:6}]
-    },
-    options:_rcOpts
+  let _tasksWithTheme = 0;
+  let _subtasksWithTheme = 0;
+  (_rt||[]).forEach(t => {
+    const tid = t.themeId;
+    if(tid && _themeTaskMap[tid]) {
+      _themeTaskMap[tid].tasks.push(t);
+      _themeTaskMap[tid].points += (t.points || 0);
+      _tasksWithTheme++;
+      // Collect subtasks that belong to this theme via parent
+      (t.subtasks||[]).forEach(st => {
+        const resolvedThemeId = st.themeId || tid; // subtask can have own themeId or inherits parent
+        if(resolvedThemeId === tid) {
+          _themeTaskMap[tid].subtasks.push(st);
+          _themeTaskMap[tid].points += (st.points || 0);
+          _subtasksWithTheme++;
+        }
+      });
+    }
   });
+
+  // Sort by total work items descending
+  const _themeEntries = Object.values(_themeTaskMap).sort((a,b)=>(b.tasks.length+b.subtasks.length)-(a.tasks.length+a.subtasks.length));
+  const _totalThemeItems = _themeEntries.reduce((acc,e)=>acc+e.tasks.length+e.subtasks.length, 0);
+  const _totalAllItems   = (_rt||[]).length + (_rt||[]).reduce((a,t)=>a+(t.subtasks||[]).length,0);
+  const _themeCovPct     = _totalAllItems ? Math.round((_totalThemeItems/_totalAllItems)*100) : 0;
+
+  // KPI cards
+  setEl('rpt-theme-tasks',        _tasksWithTheme);
+  setEl('rpt-theme-tasks-sub',    `of ${(_rt||[]).length} filtered tasks`);
+  setEl('rpt-theme-subtasks',     _subtasksWithTheme);
+  setEl('rpt-theme-subtasks-sub', `inherited from parent themes`);
+  setEl('rpt-theme-total-items',  _tasksWithTheme + _subtasksWithTheme);
+  setEl('rpt-theme-total-items-sub', `across ${_visibleThemes.length} theme${_visibleThemes.length!==1?'s':''}`);
+  setEl('rpt-theme-coverage',     _themeCovPct+'%');
+  setEl('rpt-theme-coverage-sub', `of ${_totalAllItems} total work items`);
+  const _tcBar = document.getElementById('rpt-theme-coverage-bar');
+  if(_tcBar) _tcBar.style.width = _themeCovPct+'%';
+
+  // ── THEME WORK ITEMS DISTRIBUTION CHART (stacked horizontal bar: Tasks + Subtasks) ──
+  const themeTaskCtx = _getCtx('themeTaskChart');
+  if(themeTaskCtx){
+    const _ttLabels    = _themeEntries.map(e => e.name.length>18 ? e.name.slice(0,17)+'…' : e.name);
+    const _ttTaskData  = _themeEntries.map(e => e.tasks.length);
+    const _ttSubData   = _themeEntries.map(e => e.subtasks.length);
+    const _ttColors    = _themeEntries.map(e => (e.color||'#8b5cf6')+'BF');
+    const _ttSubColors = _themeEntries.map(e => (e.color||'#8b5cf6')+'66');
+    const _ttOpts = _chartOpts({indexAxis:'y',plugins:{legend:{display:true,position:'top'}},scales:{
+      x:{stacked:true,grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11},stepSize:1}},
+      y:{stacked:true,grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}}
+    }});
+    _ttOpts.plugins.datalabels = {display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'center',align:'center',clamp:true,color:'#fff',font:{size:9,weight:'700'},formatter:v=>v};
+    _ttOpts.layout = {padding:{right:28}};
+    charts.themeTask = new Chart(themeTaskCtx,{
+      type:'bar',
+      data:{
+        labels:_ttLabels.length?_ttLabels:['No Themes'],
+        datasets:[
+          {label:'Tasks',    data:_ttTaskData.length?_ttTaskData:[0], backgroundColor:_ttColors,    borderRadius:0},
+          {label:'Subtasks', data:_ttSubData.length?_ttSubData:[0],   backgroundColor:_ttSubColors, borderRadius:[0,5,5,0]}
+        ]
+      },
+      options:_ttOpts
+    });
   }
 
-  // ── RELEASE AGING ──
-  const raCtx=_getCtx('relAgingChart');
-  const now=Date.now();
-  const agingDays=_rl.map(r=>{
-    const created=r.createdAt?new Date(r.createdAt).getTime():now;
-    return Math.max(0,Math.round((now-created)/(1000*60*60*24)));
-  });
-  if(raCtx){
-    const _raOpts=_chartOpts({plugins:{legend:{display:false}}});
-    _raOpts.plugins.datalabels={display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'top',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v+'d',padding:{top:2,bottom:2,left:3,right:3}};_raOpts.layout={padding:{top:24}};
-    charts.relAging=new Chart(raCtx,{
-    type:'bar',
-    data:{
-      labels:rlAbbrv.length?rlAbbrv:['No Releases'],
-      datasets:[{label:'Days since creation',data:agingDays.length?agingDays:[0],backgroundColor:agingDays.map(d=>d>60?'rgba(239,68,68,0.65)':d>30?'rgba(245,158,11,0.65)':'rgba(99,102,241,0.65)'),borderRadius:6}]
-    },
-    options:_raOpts
-  });
+  // ── THEME STORY POINTS CHART (horizontal bar — tasks + subtasks combined) ──
+  const themeSpCtx = _getCtx('themeSpChart');
+  if(themeSpCtx){
+    const _tspLabels = _themeEntries.map(e => e.name.length>18 ? e.name.slice(0,17)+'…' : e.name);
+    const _tspData   = _themeEntries.map(e => e.points);
+    const _tspColors = _themeEntries.map(e => (e.color||'#6366f1')+'99');
+    const _tspOpts = _chartOpts({indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)',lineWidth:1},ticks:{font:{family:'DM Sans',size:11}}},y:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}}}});
+    _tspOpts.plugins.datalabels = {display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,anchor:'end',align:'right',offset:4,clamp:true,clip:false,color:'#6b7194',font:{size:10,weight:'600'},formatter:v=>v+'sp'};
+    _tspOpts.layout = {padding:{right:36}};
+    charts.themeSp = new Chart(themeSpCtx,{
+      type:'bar',
+      data:{labels:_tspLabels.length?_tspLabels:['No Themes'],datasets:[{label:'Story Points (Tasks + Subtasks)',data:_tspData.length?_tspData:[0],backgroundColor:_tspColors,borderRadius:5}]},
+      options:_tspOpts
+    });
+  }
+
+  // ── THEME BREAKDOWN TABLE ──
+  const _themeTbody = document.getElementById('rpt-theme-tbody');
+  if(_themeTbody){
+    const IN_PROGRESS_STATUSES = ['dev-in-progress','in-qa','qa-in-progress','dev-completed','reopen','pending-with-client'];
+    _themeTbody.innerHTML = _themeEntries.map((th, idx) => {
+      const tasks     = th.tasks;
+      const subs      = th.subtasks;
+      const allItems  = [...tasks, ...subs];
+      const c         = th.color || '#8b5cf6';
+      const open      = allItems.filter(t=>t.status==='open').length;
+      const inProg    = allItems.filter(t=>IN_PROGRESS_STATUSES.includes(t.status)).length;
+      const done      = allItems.filter(t=>DONE_STATUSES.includes(t.status)).length;
+      // Mapped project names for this theme
+      const themeObj  = _visibleThemes.find(x=>x.name===th.name);
+      const projNames = themeObj ? (themeObj.projectIds||[]).map(pid=>{const p=getProject(pid);return p?p.name:'';}).filter(Boolean).join(', ') : '—';
+      const bg = idx%2!==0?'background:rgba(0,0,0,0.018)':'';
+      return `<tr style="${bg};border-bottom:1px solid rgba(0,0,0,0.05)">
+        <td style="padding:10px 12px">
+          <div style="display:inline-flex;align-items:center;gap:6px;padding:2px 9px 2px 7px;border-radius:999px;background:${c}22;color:${c};border:1px solid ${c}55;font-weight:600;font-size:12.5px">
+            <span style="width:7px;height:7px;border-radius:50%;background:${c};flex-shrink:0"></span>${th.name}
+          </div>
+        </td>
+        <td style="padding:10px 12px;color:var(--text-secondary);font-size:12px;max-width:180px">${projNames||'—'}</td>
+        <td style="padding:10px 12px;text-align:right;font-weight:600">${tasks.length}</td>
+        <td style="padding:10px 12px;text-align:right;font-weight:600;color:#7c3aed">${subs.length}</td>
+        <td style="padding:10px 12px;text-align:right;font-weight:700;color:#0d0f14">${allItems.length}</td>
+        <td style="padding:10px 12px;text-align:right;font-weight:600;color:#6366f1">${th.points}<span style="font-size:11px;font-weight:400;color:#94a3b8"> sp</span></td>
+        <td style="padding:10px 12px;text-align:right;color:#64748b">${open}</td>
+        <td style="padding:10px 12px;text-align:right;color:#2461c8">${inProg}</td>
+        <td style="padding:10px 12px;text-align:right;color:#10b981;font-weight:600">${done}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--text-tertiary);font-size:13px">No theme data for current filters</td></tr>`;
   }
 
   // ── EPIC CHARTS — use _re (already filtered by _getFilteredReportsData) ──
@@ -6663,10 +7000,12 @@ function renderReports(){
   }
 
   // ── PRODUCT BIFURCATION ──
+  // FIX: iterate reportItems (parent tasks + subtasks) instead of _rt (parent tasks only).
+  // reportItems is already filtered through the same RBAC + report-filter pipeline.
   const pbCtx=_getCtx('productBifurcationChart');
   if(pbCtx){
     const _prodMap={};
-    (_rt||[]).forEach(t=>{
+    (reportItems||[]).forEach(t=>{
       const prods=t.products&&t.products.length?t.products
         :(t.productIds&&t.productIds.length?t.productIds.map(pid=>{const p=(state.products||[]).find(x=>x.id===pid);return p?p.name:pid;}):null);
       if(prods&&prods.length){prods.forEach(pn=>{_prodMap[pn]=(_prodMap[pn]||0)+1;});}
@@ -6685,10 +7024,12 @@ function renderReports(){
   }
 
   // ── TAG BIFURCATION ──
+  // FIX: iterate reportItems (parent tasks + subtasks) instead of _rt (parent tasks only).
+  // reportItems is already filtered through the same RBAC + report-filter pipeline.
   const tbCtx=_getCtx('tagBifurcationChart');
   if(tbCtx){
     const _tagMap={};
-    (_rt||[]).forEach(t=>{
+    (reportItems||[]).forEach(t=>{
       if(t.tags&&t.tags.length){t.tags.forEach(tg=>{_tagMap[tg]=(_tagMap[tg]||0)+1;});}
       else{_tagMap['(No Tag)']=(_tagMap['(No Tag)']||0)+1;}
     });
@@ -6726,11 +7067,10 @@ function _applyWorkloadMemberFilter(){
   })));
   const reportItems=[...(_rt||[]),...reportSubs];
 
-  const _wProjSel=document.getElementById('rpt-project-filter');
-  const _wProjFilter=_wProjSel?_wProjSel.value:'all';
+  const _wProjPids=_rptGetProjIds();
   const _wVisibleProjects=RBAC.getVisibleProjects();
-  const _wScopedProjects=(_wProjFilter&&_wProjFilter!=='all')
-    ? _wVisibleProjects.filter(p=>p.id===_wProjFilter)
+  const _wScopedProjects=_wProjPids.length
+    ? _wVisibleProjects.filter(p=>_wProjPids.includes(p.id))
     : _wVisibleProjects;
   const _wMemberIdSet=new Set();
   _wScopedProjects.forEach(p=>{(p.memberIds||[]).forEach(id=>_wMemberIdSet.add(id));});
@@ -6961,6 +7301,98 @@ if(!window._sfModalClickAttached){
 })();
 
 // ─── TASK MODAL ──────────────────────────────────────────────────
+
+// ── Deep-link sharing ─────────────────────────────────────────────
+// Link format:
+//   Task:    ?task=<taskId>
+//   Subtask: ?subtask=<parentId>:<subtaskId>
+function shareTaskLink(taskId){
+  const base=location.href.split('?')[0];
+  const url=base+'?task='+encodeURIComponent(taskId);
+  _copyShareLink(url);
+}
+function shareSubtaskLink(parentId,subtaskId){
+  const base=location.href.split('?')[0];
+  const url=base+'?subtask='+encodeURIComponent(parentId)+':'+encodeURIComponent(subtaskId);
+  _copyShareLink(url);
+}
+function _copyShareLink(url){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>showNotif('Link copied to clipboard ✓')).catch(()=>_copyShareLinkFallback(url));
+  } else {
+    _copyShareLinkFallback(url);
+  }
+}
+function _copyShareLinkFallback(url){
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=url; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showNotif('Link copied to clipboard ✓');
+  }catch(e){ showNotif('Copy failed — link: '+url,'error'); }
+}
+
+// ── Deep-link resolution — called after login + data load ─────────
+// Reads ?task= or ?subtask= from the URL (or from sessionStorage when
+// the user arrived logged-out), validates RBAC, then opens the modal.
+const _DEEP_LINK_KEY='sf_pending_deep_link';
+function _resolveDeepLink(){
+  let search=window.location.search;
+  try{
+    const stored=sessionStorage.getItem(_DEEP_LINK_KEY);
+    if(stored){ search=stored; sessionStorage.removeItem(_DEEP_LINK_KEY); }
+  }catch(e){}
+  if(!search) return;
+  const params=new URLSearchParams(search);
+
+  const taskParam=params.get('task');
+  if(taskParam){
+    const t=getTask(taskParam);
+    if(!t){ showNotif('Access denied or item not found.','error'); _cleanDeepLinkParam(); return; }
+    const visibleIds=new Set(RBAC.getVisibleProjects().map(p=>p.id));
+    if(!visibleIds.has(t.project)){ showNotif('Access denied or item not found.','error'); _cleanDeepLinkParam(); return; }
+    _cleanDeepLinkParam();
+    openTaskModal(taskParam);
+    return;
+  }
+
+  const subParam=params.get('subtask');
+  if(subParam){
+    const parts=subParam.split(':');
+    if(parts.length<2){ _cleanDeepLinkParam(); return; }
+    const parentId=decodeURIComponent(parts[0]);
+    const subtaskId=decodeURIComponent(parts[1]);
+    const parent=getTask(parentId);
+    if(!parent){ showNotif('Access denied or item not found.','error'); _cleanDeepLinkParam(); return; }
+    const visibleIds=new Set(RBAC.getVisibleProjects().map(p=>p.id));
+    if(!visibleIds.has(parent.project)){ showNotif('Access denied or item not found.','error'); _cleanDeepLinkParam(); return; }
+    const sub=(parent.subtasks||[]).find(s=>s.id===subtaskId);
+    if(!sub){ showNotif('Access denied or item not found.','error'); _cleanDeepLinkParam(); return; }
+    _cleanDeepLinkParam();
+    openTaskModal(parentId);
+    setTimeout(()=>openSubtaskModal(parentId,subtaskId),120);
+    return;
+  }
+}
+function _cleanDeepLinkParam(){
+  try{
+    const url=new URL(window.location.href);
+    url.searchParams.delete('task');
+    url.searchParams.delete('subtask');
+    window.history.replaceState({},'',url.toString());
+  }catch(e){}
+}
+function _stashDeepLinkIfNeeded(){
+  if(!window.location.search) return;
+  const params=new URLSearchParams(window.location.search);
+  if(params.has('task')||params.has('subtask')){
+    try{ sessionStorage.setItem(_DEEP_LINK_KEY,window.location.search); }catch(e){}
+  }
+}
+// ── End deep-link sharing ──────────────────────────────────────────
+
 function openTaskModal(taskId){
   const t=getTask(taskId);
   if(!t){showNotif('⚠ Task not found','error');return;}
@@ -7049,6 +7481,10 @@ function openTaskModal(taskId){
           <label>Products</label>
           <div class="flex flex-wrap gap-1 mt-1">${(t.products||[]).map(name=>{ const c=_productColorByName(name); return c ? _coloredChip(name,c,'tag') : `<span class="tag" style="background:var(--accent-ghost);color:var(--accent-dark);border:1px solid var(--accent-ring)">${name}</span>`; }).join('')||'—'}</div>
         </div>
+        <div>
+          <label>Theme</label>
+          <div class="flex flex-wrap gap-1 mt-1">${t.themeName ? _coloredChip(t.themeName, t.themeColor||'var(--accent)', 'tag') : '—'}</div>
+        </div>
       </div>
       ${subtaskSection}
       <div class="flex justify-between items-center pt-4 mt-4 border-t border-slate-100 flex-wrap gap-2">
@@ -7072,6 +7508,7 @@ function openTaskModal(taskId){
           })()}
         </select>
         <div class="flex gap-2">
+          <button class="btn btn-secondary" onclick="event.stopPropagation();shareTaskLink('${t.id}')" title="Copy shareable link" style="padding:0 9px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:block"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
           ${RBAC.canEditTask(t)?`<button class="btn btn-secondary" onclick="closeModal();setTimeout(()=>openEditTaskModal('${t.id}'),220)">Edit</button>`:''}
           ${RBAC.isAdmin()?`<button class="btn btn-danger" onclick="deleteTask('${t.id}')">Delete</button>`:''}
         </div>
@@ -7227,9 +7664,19 @@ function openCreateSubtaskModal(parentTaskId){
             <input type="date" id="cst-endDate"/>
           </div>
         </div>
-        <div>
-          <label>Tags (comma separated)</label>
-          <input type="text" id="cst-tags" placeholder="frontend, api"/>
+        <div class="grid grid-cols-3 gap-3 p-3 rounded-lg" style="background:var(--accent-ghost);border:1px solid var(--accent-ring)">
+          <div>
+            <label style="color:var(--accent-dark)">Products <span style="color:var(--text-muted);font-weight:400">(inherited)</span></label>
+            <div class="flex flex-wrap gap-1 mt-1">${(parent.products||[]).map(name=>{const c=_productColorByName(name);return c?_coloredChip(name,c,'tag'):`<span class="tag" style="background:var(--accent-ghost);color:var(--accent-dark);border:1px solid var(--accent-ring)">${name}</span>`;}).join('')||'<span class="text-xs text-slate-400">—</span>'}</div>
+          </div>
+          <div>
+            <label style="color:var(--accent-dark)">Tags <span style="color:var(--text-muted);font-weight:400">(inherited)</span></label>
+            <div class="flex flex-wrap gap-1 mt-1">${(parent.tags||[]).map(tag=>_coloredChip(tag,_tagColorByName(tag),'tag')).join('')||'<span class="text-xs text-slate-400">—</span>'}</div>
+          </div>
+          <div>
+            <label style="color:var(--accent-dark)">Theme <span style="color:var(--text-muted);font-weight:400">(inherited)</span></label>
+            <div class="flex flex-wrap gap-1 mt-1">${parent.themeName?_coloredChip(parent.themeName,parent.themeColor||'var(--accent)','tag'):'<span class="text-xs text-slate-400">—</span>'}</div>
+          </div>
         </div>
         <div>
           <label>Description</label>
@@ -7270,7 +7717,14 @@ function createSubtask(parentTaskId){
     endDate,
     dueDate:document.getElementById('cst-due').value||null,
     description:_getDescValue('cst-description'),
-    tags:document.getElementById('cst-tags').value.split(',').map(s=>s.trim()).filter(Boolean),
+    // ── Inherited from parent (snapshot at creation time) ──
+    tags:      parent.tags      || [],
+    tagIds:    parent.tagIds    || [],
+    productIds:parent.productIds|| [],
+    products:  parent.products  || [],
+    themeId:   parent.themeId   || null,
+    themeName: parent.themeName  || null,
+    themeColor:parent.themeColor || null,
     comments:[],
     createdAt:Date.now()
   };
@@ -7338,7 +7792,15 @@ function openSubtaskModal(parentTaskId,subtaskId){
         </div>
         <div>
           <label>Tags</label>
-          <div class="flex flex-wrap gap-1 mt-1">${(s.tags||[]).map(tag=>`<span class="tag">${tag}</span>`).join('')||'—'}</div>
+          <div class="flex flex-wrap gap-1 mt-1">${(s.tags||[]).map(tag=>_coloredChip(tag,_tagColorByName(tag),'tag')).join('')||'—'}</div>
+        </div>
+        <div>
+          <label>Products</label>
+          <div class="flex flex-wrap gap-1 mt-1">${(s.products||[]).map(name=>{const c=_productColorByName(name);return c?_coloredChip(name,c,'tag'):`<span class="tag" style="background:var(--accent-ghost);color:var(--accent-dark);border:1px solid var(--accent-ring)">${name}</span>`;}).join('')||'—'}</div>
+        </div>
+        <div>
+          <label>Theme</label>
+          <div class="flex flex-wrap gap-1 mt-1">${s.themeName ? _coloredChip(s.themeName, s.themeColor||'var(--accent)', 'tag') : '—'}</div>
         </div>
       </div>
       <div class="flex justify-between items-center pt-4 border-t border-slate-100 flex-wrap gap-2">
@@ -7355,6 +7817,7 @@ function openSubtaskModal(parentTaskId,subtaskId){
           })()}
         </select>
         <div class="flex gap-2">
+          <button class="btn btn-secondary" onclick="event.stopPropagation();shareSubtaskLink('${parentTaskId}','${s.id}')" title="Copy shareable link" style="padding:0 9px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:block"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
           ${RBAC.canEditSubtask(s)?`<button class="btn btn-secondary" onclick="openEditSubtaskModal('${parentTaskId}','${s.id}')">Edit</button>`:''}
           ${RBAC.isAdmin()||(state.currentUser&&state.currentUser.id===s.assignee)?`<button class="btn btn-danger" onclick="deleteSubtask('${parentTaskId}','${s.id}')">Delete</button>`:''}
         </div>
@@ -7468,9 +7931,19 @@ function openEditSubtaskModal(parentTaskId,subtaskId){
             <input type="date" id="est-endDate" value="${s.endDate||''}" min="${s.startDate||''}" ${_sdis(isReleased)}/>
           </div>
         </div>
-        <div>
-          <label>Tags (comma separated)</label>
-          <input type="text" id="est-tags" value="${(s.tags||[]).join(', ')}" ${_sdis(isReleased)}/>
+        <div class="grid grid-cols-3 gap-3 p-3 rounded-lg" style="background:var(--accent-ghost);border:1px solid var(--accent-ring)">
+          <div>
+            <label style="color:var(--accent-dark)">Products <span style="color:var(--text-muted);font-weight:400">(inherited)</span></label>
+            <div class="flex flex-wrap gap-1 mt-1">${(parent.products||[]).map(name=>{const c=_productColorByName(name);return c?_coloredChip(name,c,'tag'):`<span class="tag" style="background:var(--accent-ghost);color:var(--accent-dark);border:1px solid var(--accent-ring)">${name}</span>`;}).join('')||'<span class="text-xs text-slate-400">—</span>'}</div>
+          </div>
+          <div>
+            <label style="color:var(--accent-dark)">Tags <span style="color:var(--text-muted);font-weight:400">(inherited)</span></label>
+            <div class="flex flex-wrap gap-1 mt-1">${(parent.tags||[]).map(tag=>_coloredChip(tag,_tagColorByName(tag),'tag')).join('')||'<span class="text-xs text-slate-400">—</span>'}</div>
+          </div>
+          <div>
+            <label style="color:var(--accent-dark)">Theme <span style="color:var(--text-muted);font-weight:400">(inherited)</span></label>
+            <div class="flex flex-wrap gap-1 mt-1">${parent.themeName?_coloredChip(parent.themeName,parent.themeColor||'var(--accent)','tag'):'<span class="text-xs text-slate-400">—</span>'}</div>
+          </div>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4" style="border-top:1px solid rgba(0,0,0,0.05)">
@@ -7527,7 +8000,14 @@ function saveSubtask(parentTaskId,subtaskId){
   s.startDate=startDate;
   s.endDate=endDate;
   s.dueDate=document.getElementById('est-due').value||null;
-  s.tags=document.getElementById('est-tags').value.split(',').map(x=>x.trim()).filter(Boolean);
+  // ── Re-sync inherited metadata from parent (tags/products/theme are never editable on subtask) ──
+  s.tags=       parent.tags      || [];
+  s.tagIds=     parent.tagIds    || [];
+  s.productIds= parent.productIds|| [];
+  s.products=   parent.products  || [];
+  s.themeId=    parent.themeId   || null;
+  s.themeName=  parent.themeName  || null;
+  s.themeColor= parent.themeColor || null;
   // ── Firebase: persist parent task with updated subtask ──
   FirebaseDB.saveEntity('tasks', parent).catch(e=>console.warn('[saveSubtask] Firebase error:',e));
   SaveManager.save();
@@ -7904,6 +8384,17 @@ function openCreateTaskModal(){
             </div>
           </div>
         </div>
+        <div>
+          <label>Theme</label>
+          <div class="ms-control" id="ct-theme">
+            <div class="ms-chips-row">
+              <span id="ct-theme-chips"></span>
+              <input class="ms-input" id="ct-theme-input" type="text" placeholder="Search themes…" autocomplete="off"
+                oninput="_msInput('ct-theme')" onfocus="_msFocus('ct-theme')" onblur="_msBlur('ct-theme')"/>
+            </div>
+            <div class="ms-dropdown" id="ct-theme-drop"></div>
+          </div>
+        </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4" style="border-top:1px solid rgba(0,0,0,0.05)">
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
@@ -7918,8 +8409,10 @@ function openCreateTaskModal(){
   // Initialize Products + Tags multi-selects (project-filtered)
   const _ctProductItems = (state.products||[]).filter(p=>(p.projectIds||[]).includes(firstProjectId)).map(p=>({id:p.id,name:p.name,color:p.color||''}));
   const _ctTagItems     = (state.tags||[]).filter(t=>(t.projectIds||[]).includes(firstProjectId)).map(t=>({id:t.id,name:t.name,color:t.color||''}));
+  const _ctThemeItems   = (state.themes||[]).filter(th=>(th.projectIds||[]).includes(firstProjectId)).map(th=>({id:th.id,name:th.name,color:th.color||''}));
   initMultiSelect('ct-products', _ctProductItems, []);
   initMultiSelect('ct-tags',     _ctTagItems,     []);
+  initMultiSelect('ct-theme',    _ctThemeItems,   [], false);
 }
 
 // Called when project changes — refresh sprint dropdown to matching sprints only
@@ -7964,6 +8457,10 @@ function ctOnProjectChange(projectId){
   if(_msState['ct-tags']){
     const newTags = (state.tags||[]).filter(t=>(t.projectIds||[]).includes(projectId)).map(t=>({id:t.id,name:t.name,color:t.color||''}));
     _msRefreshItems('ct-tags', newTags, true);
+  }
+  if(_msState['ct-theme']){
+    const newThemes = (state.themes||[]).filter(th=>(th.projectIds||[]).includes(projectId)).map(th=>({id:th.id,name:th.name,color:th.color||''}));
+    _msRefreshItems('ct-theme', newThemes, true);
   }
 }
 
@@ -8049,6 +8546,12 @@ function createTask(){
   const productIds  = _msGetSelectedIds('ct-products');
   const tagNames    = _msGetSelected('ct-tags');
   const productNames= _msGetSelected('ct-products');
+  // Theme: single selection (first selected id)
+  const _ctThemeIds   = _msGetSelectedIds('ct-theme');
+  const _ctThemeId    = _ctThemeIds[0] || null;
+  const _ctThemeObj   = _ctThemeId ? (state.themes||[]).find(th=>th.id===_ctThemeId) : null;
+  const _ctThemeName  = _ctThemeObj ? _ctThemeObj.name  : null;
+  const _ctThemeColor = _ctThemeObj ? (_ctThemeObj.color||null) : null;
   const _selfId = RBAC.memberSelfOnlyId();
   const task = {
     id:uid(),
@@ -8068,6 +8571,9 @@ function createTask(){
     productIds,
     tags:tagNames,
     products:productNames,
+    themeId:_ctThemeId,
+    themeName:_ctThemeName,
+    themeColor:_ctThemeColor,
     subtasks:[]
   };
   state.tasks.push(task);
@@ -8246,6 +8752,17 @@ function openEditTaskModal(taskId){
             </div>
           </div>
         </div>
+        <div>
+          <label>Theme</label>
+          <div class="ms-control" id="et-theme">
+            <div class="ms-chips-row">
+              <span id="et-theme-chips"></span>
+              <input class="ms-input" id="et-theme-input" type="text" placeholder="Search themes…" autocomplete="off" ${(freezeAll||freezeNonStatus)?'disabled style="display:none"':''}
+                oninput="_msInput('et-theme')" onfocus="_msFocus('et-theme')" onblur="_msBlur('et-theme')"/>
+            </div>
+            <div class="ms-dropdown" id="et-theme-drop"></div>
+          </div>
+        </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4" style="border-top:1px solid rgba(0,0,0,0.05)">
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
@@ -8264,6 +8781,7 @@ function openEditTaskModal(taskId){
   const _etProjectId    = t.project || '';
   const _etProductItems = (state.products||[]).filter(p=>(p.projectIds||[]).includes(_etProjectId)).map(p=>({id:p.id,name:p.name,color:p.color||''}));
   const _etTagItems     = (state.tags||[]).filter(tg=>(tg.projectIds||[]).includes(_etProjectId)).map(tg=>({id:tg.id,name:tg.name,color:tg.color||''}));
+  const _etThemeItems   = (state.themes||[]).filter(th=>(th.projectIds||[]).includes(_etProjectId)).map(th=>({id:th.id,name:th.name,color:th.color||''}));
   const _frozen = freezeAll || freezeNonStatus;
   // Backward compat: use id-arrays if present; otherwise resolve legacy name-arrays
   const _etProductIds = (t.productIds||[]).length
@@ -8272,8 +8790,10 @@ function openEditTaskModal(taskId){
   const _etTagIds = (t.tagIds||[]).length
     ? t.tagIds
     : (t.tags||[]).map(name=>{ const tg=_etTagItems.find(x=>x.name===name); return tg?tg.id:null; }).filter(Boolean);
+  const _etThemeIds = t.themeId ? [t.themeId] : [];
   initMultiSelect('et-products', _etProductItems, _etProductIds, _frozen);
   initMultiSelect('et-tags',     _etTagItems,     _etTagIds,     _frozen);
+  initMultiSelect('et-theme',    _etThemeItems,   _etThemeIds,   _frozen);
 }
 
 // Edit task modal — project change handler
@@ -8315,6 +8835,10 @@ function etOnProjectChange(projectId){
   if(_msState['et-tags']){
     const newTags = (state.tags||[]).filter(t=>(t.projectIds||[]).includes(projectId)).map(t=>({id:t.id,name:t.name,color:t.color||''}));
     _msRefreshItems('et-tags', newTags, true);
+  }
+  if(_msState['et-theme']){
+    const newThemes = (state.themes||[]).filter(th=>(th.projectIds||[]).includes(projectId)).map(th=>({id:th.id,name:th.name,color:th.color||''}));
+    _msRefreshItems('et-theme', newThemes, true);
   }
 }
 
@@ -8473,6 +8997,13 @@ function saveTask(taskId){
   // Resolve to name arrays for all existing display paths (kanban, view modal, search, export)
   t.tags     = _msGetSelected('et-tags');
   t.products = _msGetSelected('et-products');
+  // Theme: single selection
+  const _etSavedThemeIds = _msGetSelectedIds('et-theme');
+  const _etSavedThemeId  = _etSavedThemeIds[0] || null;
+  const _etSavedThemeObj = _etSavedThemeId ? (state.themes||[]).find(th=>th.id===_etSavedThemeId) : null;
+  t.themeId    = _etSavedThemeId;
+  t.themeName  = _etSavedThemeObj ? _etSavedThemeObj.name  : null;
+  t.themeColor = _etSavedThemeObj ? (_etSavedThemeObj.color||null) : null;
   // ── Debounced Firebase write — protects against rapid save sequences ──
   SyncState.markPending(t.id);
   DebounceWrite.schedule('tasks', t, 300);
@@ -10825,8 +11356,22 @@ function performGlobalSearch(rawQ){
     results.push({type:'project',item:p,score:p.name.toLowerCase().startsWith(q)?2:1});
   });
 
+  // ── Subtasks — scoped via RBAC.getVisibleTasks for project-visibility parity ──
+  RBAC.getVisibleTasks(state.tasks).forEach(t=>{
+    (t.subtasks||[]).forEach(s=>{
+      const parentTitleL=(t.title||'').toLowerCase();
+      const matchQ=
+        (s.title||'').toLowerCase().includes(q)||
+        (s.id||'').toLowerCase().includes(q)||
+        parentTitleL.includes(q)||
+        (t.id||'').toLowerCase().includes(q);
+      if(!matchQ)return;
+      results.push({type:'subtask',item:{...s,_parentId:t.id,_parentTitle:t.title,_parentProject:t.project},score:(s.title||'').toLowerCase().startsWith(q)?2:1});
+    });
+  });
+
   // Sort: higher score first, then by type priority
-  const typePriority={task:0,epic:1,sprint:2,release:3,project:4};
+  const typePriority={task:0,epic:1,sprint:2,release:3,project:4,subtask:5};
   results.sort((a,b)=>b.score-a.score||(typePriority[a.type]||9)-(typePriority[b.type]||9));
 
   if(!results.length){
@@ -10844,22 +11389,23 @@ function performGlobalSearch(rawQ){
   if(resultsPanel)resultsPanel.style.display='block';
 
   // Group by type
-  const groups={task:[],epic:[],sprint:[],release:[],project:[]};
+  const groups={task:[],epic:[],sprint:[],release:[],project:[],subtask:[]};
   results.forEach(r=>{ if(groups[r.type])groups[r.type].push(r); });
 
-  const groupLabels={task:'Tasks',epic:'Epics',sprint:'Sprints',release:'Releases',project:'Projects'};
+  const groupLabels={task:'Tasks',epic:'Epics',sprint:'Sprints',release:'Releases',project:'Projects',subtask:'Subtasks'};
   const groupIcons={
     task:'<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/>',
     epic:'<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14l3 3 3-3m0-3v6"/>',
     sprint:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
     release:'<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>',
-    project:'<path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>'
+    project:'<path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>',
+    subtask:'<path d="M9 20H5a2 2 0 01-2-2V6a2 2 0 012-2h4m4-2h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M9 12h6"/>'
   };
 
   // Build all HTML at once, then one innerHTML write
   const htmlParts=[];
   const displayQ=rawQ||q;
-  ['task','epic','sprint','release','project'].forEach(type=>{
+  ['task','epic','sprint','release','project','subtask'].forEach(type=>{
     const group=groups[type];
     if(!group.length)return;
     const limit=type==='task'?8:4;
@@ -10954,6 +11500,24 @@ function renderSearchResultItem(type,item,q){
         <div style="font-size:11px;color:#94a3b8">${hl(item.key)} · ${tasks} tasks · ${item.status}</div>
       </div>
       <span class="badge badge-${item.status}" style="font-size:9px;padding:1px 6px;flex-shrink:0">${item.status}</span>
+    </div>`;
+  }
+  if(type==='subtask'){
+    const proj=item._parentProject?getProject(item._parentProject):null;
+    const assignee=item.assignee?getUser(item.assignee):null;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background 0.1s"
+      onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background=''"
+      onclick="closeSearchDropdown();openSubtaskModal('${item._parentId}','${item.id}')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2.5" style="flex-shrink:0"><path d="M9 20H5a2 2 0 01-2-2V6a2 2 0 012-2h4m4-2h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M9 12h6"/></svg>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${hl(item.title||'—')}</div>
+        <div style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:6px;margin-top:1px">
+          ${proj?`<span>${proj.key}</span><span>·</span>`:''}
+          <span>Parent: ${_escHtml(item._parentTitle||'')}</span>
+          ${item.status?`<span>·</span><span class="badge badge-${statusBadgeClass(item.status)}" style="font-size:9px;padding:1px 5px">${statusLabel(item.status)}</span>`:''}
+        </div>
+      </div>
+      ${assignee?userAvatar(item.assignee,20):''}
     </div>`;
   }
   return '';
@@ -11235,10 +11799,16 @@ function _pdfFilename() {
 
 function _pdfGetFilterSummary() {
   const parts = [];
-  const projSel   = document.getElementById('rpt-project-filter');
-  const sprintSel = document.getElementById('rpt-sprint-filter');
-  if (projSel   && projSel.value   !== 'all') parts.push('Project: ' + (projSel.options[projSel.selectedIndex]?.text || projSel.value));
-  if (sprintSel && sprintSel.value !== 'all') parts.push('Sprint: '  + (sprintSel.options[sprintSel.selectedIndex]?.text || sprintSel.value));
+  const pids = _rptGetProjIds();
+  const sids = _rptGetSprintIds();
+  if(pids.length){
+    const names = pids.map(id => { const p = RBAC.getVisibleProjects().find(x=>x.id===id); return p?p.name:id; });
+    parts.push('Projects: ' + names.join(', '));
+  }
+  if(sids.length){
+    const names = sids.map(id => { const s = RBAC.getVisibleSprints().find(x=>x.id===id); return s?s.name:id; });
+    parts.push('Sprints: ' + names.join(', '));
+  }
   const f = (typeof _rptAdvFilters !== 'undefined' && _rptAdvFilters) ? _rptAdvFilters : {};
   if (f.status   && f.status   !== 'all') parts.push('Status: '   + f.status);
   if (f.priority && f.priority !== 'all') parts.push('Priority: ' + f.priority);
@@ -12730,7 +13300,7 @@ async function _xlSheetTasks(data) {
   const headers = [
     'Task ID','Title','Type','Parent Task',
     'Project','Sprint','Status','Priority',
-    'Assignee','Story Points','Tags / Labels','Products',
+    'Assignee','Story Points','Tags / Labels','Products','Theme',
     'Created Date','Updated Date',
   ];
 
@@ -12760,12 +13330,17 @@ async function _xlSheetTasks(data) {
         points:      t.points != null ? t.points : '—',
         tags:        _xlStr(t.tags),
         products:    _xlStr(_tProducts),
+        theme:       t.themeName ? _xlStr(t.themeName) : '',
         createdAt:   t.createdAt ? new Date(t.createdAt).getTime() : 0,
         createdFmt:  _xlFmtDate(t.createdAt),
         updatedFmt:  _xlFmtDate(t.updatedAt),
       });
       // Subtask rows — subtasks don't carry products; inherit parent's if needed
-      for (const s of (t.subtasks || [])) {
+      // Apply assignee filter to subtasks if active
+      const _filteredSubs = data._activeAssigneeIds
+        ? (t.subtasks || []).filter(s => data._activeAssigneeIds.includes(s.assignee))
+        : (t.subtasks || []);
+      for (const s of _filteredSubs) {
         combinedRows.push({
           id:         _xlStr(s.id),
           title:      _xlStr(s.title),
@@ -12779,6 +13354,7 @@ async function _xlSheetTasks(data) {
           points:     s.points != null ? s.points : '—',
           tags:       _xlStr(s.tags),
           products:   '—',
+          theme:      s.themeName ? _xlStr(s.themeName) : '',
           createdAt:  s.createdAt ? new Date(s.createdAt).getTime() : 0,
           createdFmt: _xlFmtDate(s.createdAt),
           updatedFmt: _xlFmtDate(s.updatedAt),
@@ -12796,7 +13372,7 @@ async function _xlSheetTasks(data) {
     rows.push([
       r.id, r.title, r.type, r.parentTask,
       r.project, r.sprint, r.status, r.priority,
-      r.assignee, r.points, r.tags, r.products,
+      r.assignee, r.points, r.tags, r.products, r.theme,
       r.createdFmt, r.updatedFmt,
     ]);
   }
@@ -12804,7 +13380,7 @@ async function _xlSheetTasks(data) {
   if (rows.length === 1) rows.push(['No tasks in scope']);
 
   return _xlBuildSheet(rows, {
-    colWidths: [14,40,10,36, 24,18,20,12, 20,10,20,24, 22,22]
+    colWidths: [14,40,10,36, 24,18,20,12, 20,10,20,24,22, 22,22]
   });
 }
 
@@ -13172,7 +13748,7 @@ function _xlSheetMetrics(data) {
 // ══════════════════════════════════════════════════════════════════════════
 //  MAIN ENTRY POINT
 // ══════════════════════════════════════════════════════════════════════════
-async function exportReportExcel(mode, fromDate, toDate) {
+async function exportReportExcel(mode, fromDate, toDate, exportFilters) {
   mode = mode || 'analytics';
 
   // ── Close dropdown ──
@@ -13200,7 +13776,7 @@ async function exportReportExcel(mode, fromDate, toDate) {
   _xlSetBtnState(true);
   _xlShowLoader(true);
   const modeLabels = {
-    full:      fromDate ? `Building Full Database Export… (${fromDate} → ${toDate})` : 'Building Full Database Export…',
+    full:      'Building Full Database Export…',
     analytics: 'Building Analytics Export…'
   };
   _xlSetTitle(modeLabels[mode] || 'Building Excel…');
@@ -13213,10 +13789,10 @@ async function exportReportExcel(mode, fromDate, toDate) {
     try {
       await _xlYield(60);
 
-      // ── Collect data (date-range aware for 'full' mode) ──
+      // ── Collect data (filter-aware for 'full' mode) ──
       _xlProgress(10, 'Resolving data…', '');
-      const data = (mode === 'full' && fromDate)
-        ? _xlGetDataWithRange(mode, fromDate, toDate)
+      const data = (mode === 'full' && exportFilters)
+        ? _xlGetDataWithFilters(mode, exportFilters)
         : _xlGetData(mode);
       await _xlYield();
 
@@ -13329,13 +13905,18 @@ async function exportReportExcel(mode, fromDate, toDate) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-//  SPRINTFLOW — DATE RANGE MODAL SYSTEM
+//  SPRINTFLOW — EXPORT MODAL SYSTEM
 //  Used by: Export Full Database + Export Audit Logs
-//  Opens a premium modal with quick filters + date pickers.
-//  Calls the appropriate export function after confirmation.
+//  Export Full Database: Project / Sprint / Assignee multi-select filters
+//  Export Audit Logs: date-range pickers (unchanged)
 // ══════════════════════════════════════════════════════════════════════════
 
-/** Open the date-range selection modal before a date-scoped export.
+// ── Export Full Database: in-modal filter state ──────────────────────────
+const _expSelProjs     = new Set();
+const _expSelSprints   = new Set();
+const _expSelAssignees = new Set();
+
+/** Open the export modal.
  *  @param {'full'|'audit'} exportType
  */
 function openExportDateRangeModal(exportType) {
@@ -13353,32 +13934,26 @@ function openExportDateRangeModal(exportType) {
     return;
   }
 
-  const isAudit = exportType === 'audit';
-  const modalId = '_export_dr_modal';
+  // ── Route: Audit Logs → legacy date modal; Full DB → new filter modal ──
+  if (exportType === 'audit') {
+    _openAuditExportModal();
+    return;
+  }
 
-  // Remove any stale modal
+  // ── Full Database: Project / Sprint / Assignee modal ──────────────────
+  _expSelProjs.clear(); _expSelSprints.clear(); _expSelAssignees.clear();
+
+  const modalId = '_export_dr_modal';
   const stale = document.getElementById(modalId);
   if (stale) stale.remove();
 
-  // Build default dates
-  const now   = new Date();
-  const toStr = _drFmtDate(now);
-  const from30 = new Date(now); from30.setDate(from30.getDate() - 30);
-  const fromStr = _drFmtDate(from30);
+  const accentColor = '#6366f1';
+  const accentBg    = 'rgba(99,102,241,0.1)';
+  const icon        = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>';
 
   const overlay = document.createElement('div');
   overlay.id = modalId;
   overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(8,10,20,0.54);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:16px;font-family:"DM Sans",sans-serif;opacity:0;transition:opacity 0.2s ease';
-
-  const accentColor = isAudit ? '#a855f7' : '#6366f1';
-  const accentBg    = isAudit ? 'rgba(168,85,247,0.1)' : 'rgba(99,102,241,0.1)';
-  const title       = isAudit ? 'Export Audit Logs' : 'Export Full Database';
-  const subtitle    = isAudit
-    ? 'Select a date range to export enterprise audit logs.'
-    : 'Select a date range to export all project data.';
-  const icon        = isAudit
-    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
-    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>';
 
   overlay.innerHTML = `
     <div style="background:rgba(255,255,255,0.98);border:1px solid rgba(255,255,255,0.9);border-radius:20px;width:min(520px,95vw);
@@ -13390,45 +13965,49 @@ function openExportDateRangeModal(exportType) {
       <div style="padding:24px 26px 0;display:flex;align-items:flex-start;gap:14px">
         <div style="width:44px;height:44px;border-radius:12px;background:${accentBg};color:${accentColor};display:flex;align-items:center;justify-content:center;flex-shrink:0">${icon}</div>
         <div style="flex:1">
-          <div style="font-size:17px;font-weight:700;color:#0d0f14;letter-spacing:-.02em">${title}</div>
-          <div style="font-size:13px;color:#64748b;margin-top:3px">${subtitle}</div>
+          <div style="font-size:17px;font-weight:700;color:#0d0f14;letter-spacing:-.02em">Export Full Database</div>
+          <div style="font-size:13px;color:#64748b;margin-top:3px">Filter by project, sprint, or assignee. Leave blank to export all visible data.</div>
         </div>
         <button onclick="closeExportDateRangeModal()" style="width:32px;height:32px;border:none;background:rgba(0,0,0,0.05);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s" onmouseover="this.style.background='rgba(0,0,0,0.09)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <!-- Quick Filters -->
-      <div style="padding:18px 26px 0">
-        <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;margin-bottom:9px">Quick Range</div>
-        <div style="display:flex;flex-wrap:wrap;gap:7px" id="_dr_quick_wrap">
-          <button onclick="drQuickSelect('7')"   class="_dr_quick" data-v="7"  style="${_drQuickStyle(accentColor)}">Last 7 Days</button>
-          <button onclick="drQuickSelect('30')"  class="_dr_quick" data-v="30" style="${_drQuickStyle(accentColor)} outline:2px solid ${accentColor};outline-offset:1px">Last 30 Days</button>
-          <button onclick="drQuickSelect('this')" class="_dr_quick" data-v="this" style="${_drQuickStyle(accentColor)}">This Month</button>
-          <button onclick="drQuickSelect('last')" class="_dr_quick" data-v="last" style="${_drQuickStyle(accentColor)}">Last Month</button>
-          <button onclick="drQuickSelect('90')"  class="_dr_quick" data-v="90"  style="${_drQuickStyle(accentColor)}">Last 90 Days</button>
-          <button onclick="drQuickSelect('custom')" class="_dr_quick" data-v="custom" style="${_drQuickStyle(accentColor)}">Custom Range</button>
+      <!-- Filters -->
+      <div style="padding:18px 26px 0;display:flex;flex-direction:column;gap:12px">
+        <!-- Projects -->
+        <div>
+          <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;display:block;margin-bottom:5px">Projects</label>
+          <button id="_exp_proj_btn" onclick="_expToggleProjDrop()" style="width:100%;height:38px;border:1px solid rgba(0,0,0,0.09);border-radius:9px;padding:0 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:#475569;background:#f4f5f9;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:border-color 0.15s,box-shadow 0.15s" onmouseover="this.style.borderColor='${accentColor}'" onmouseout="this.style.borderColor='rgba(0,0,0,0.09)'">
+            <span id="_exp_proj_label">All Projects</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+        <!-- Sprints -->
+        <div>
+          <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;display:block;margin-bottom:5px">Sprints</label>
+          <button id="_exp_spr_btn" onclick="_expToggleSprintDrop()" style="width:100%;height:38px;border:1px solid rgba(0,0,0,0.09);border-radius:9px;padding:0 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:#475569;background:#f4f5f9;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:border-color 0.15s,box-shadow 0.15s" onmouseover="this.style.borderColor='${accentColor}'" onmouseout="this.style.borderColor='rgba(0,0,0,0.09)'">
+            <span id="_exp_spr_label">All Sprints</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+        <!-- Assignees -->
+        <div>
+          <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;display:block;margin-bottom:5px">Assignees</label>
+          <button id="_exp_asgn_btn" onclick="_expToggleAssigneeDrop()" style="width:100%;height:38px;border:1px solid rgba(0,0,0,0.09);border-radius:9px;padding:0 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:#475569;background:#f4f5f9;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:border-color 0.15s,box-shadow 0.15s" onmouseover="this.style.borderColor='${accentColor}'" onmouseout="this.style.borderColor='rgba(0,0,0,0.09)'">
+            <span id="_exp_asgn_label">All Assignees</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
         </div>
       </div>
-      <!-- Date Inputs -->
-      <div style="padding:16px 26px 0;display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div>
-          <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;display:block;margin-bottom:5px">From Date</label>
-          <input type="date" id="_dr_from" value="${fromStr}" style="width:100%;height:38px;border:1px solid rgba(0,0,0,0.09);border-radius:9px;padding:0 12px;font-size:13.5px;font-family:'DM Sans',sans-serif;color:#0d0f14;background:#f4f5f9;outline:none;transition:border-color 0.15s,box-shadow 0.15s" onfocus="this.style.borderColor='${accentColor}';this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.14)'" onblur="this.style.borderColor='rgba(0,0,0,0.09)';this.style.boxShadow='none'" onchange="drUpdateEstimate('${exportType}')">
-        </div>
-        <div>
-          <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;display:block;margin-bottom:5px">To Date</label>
-          <input type="date" id="_dr_to" value="${toStr}" style="width:100%;height:38px;border:1px solid rgba(0,0,0,0.09);border-radius:9px;padding:0 12px;font-size:13.5px;font-family:'DM Sans',sans-serif;color:#0d0f14;background:#f4f5f9;outline:none;transition:border-color 0.15s,box-shadow 0.15s" onfocus="this.style.borderColor='${accentColor}';this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.14)'" onblur="this.style.borderColor='rgba(0,0,0,0.09)';this.style.boxShadow='none'" onchange="drUpdateEstimate('${exportType}')">
-        </div>
-      </div>
-      <!-- Estimated count -->
-      <div id="_dr_estimate" style="margin:14px 26px 0;background:rgba(248,249,252,0.92);border-radius:9px;padding:11px 14px;font-size:12.5px;color:#475569;display:flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,0.052)">
+      <!-- Info row -->
+      <div style="margin:14px 26px 0;background:rgba(248,249,252,0.92);border-radius:9px;padding:11px 14px;font-size:12.5px;color:#475569;display:flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,0.052)">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span id="_dr_estimate_text">Calculating estimated records…</span>
+        <span id="_exp_info_text">No filters selected — all visible data will be exported.</span>
       </div>
       <!-- Action Buttons -->
       <div style="padding:18px 26px 22px;display:flex;justify-content:flex-end;gap:10px">
         <button onclick="closeExportDateRangeModal()" style="height:38px;padding:0 18px;border:1px solid rgba(0,0,0,0.09);border-radius:9px;background:rgba(255,255,255,0.95);color:#64748b;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background 0.14s" onmouseover="this.style.background='#f4f5f9'" onmouseout="this.style.background='rgba(255,255,255,0.95)'">Cancel</button>
-        <button onclick="confirmExportDateRange('${exportType}')" style="height:38px;padding:0 22px;border:none;border-radius:9px;background:${accentColor};color:#fff;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity 0.14s,transform 0.12s;box-shadow:0 2px 8px rgba(0,0,0,0.18)" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+        <button onclick="confirmExportDateRange('full')" style="height:38px;padding:0 22px;border:none;border-radius:9px;background:${accentColor};color:#fff;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity 0.14s,transform 0.12s;box-shadow:0 2px 8px rgba(0,0,0,0.18)" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:5px;vertical-align:-2px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Generate Export
         </button>
@@ -13437,97 +14016,260 @@ function openExportDateRangeModal(exportType) {
 
   document.body.appendChild(overlay);
 
-  // Animate in
   requestAnimationFrame(() => {
     overlay.style.opacity = '1';
     const box = document.getElementById('_dr_box');
     if (box) { box.style.transform = 'translateY(0) scale(1)'; box.style.opacity = '1'; }
   });
 
-  // Close on backdrop
   overlay.addEventListener('click', e => { if (e.target === overlay) closeExportDateRangeModal(); });
-
-  // Initial estimate
-  setTimeout(() => drUpdateEstimate(exportType), 100);
 }
 
-function _drQuickStyle(accent) {
-  return `padding:5px 12px;border:1px solid rgba(0,0,0,0.08);border-radius:99px;background:#f4f5f9;color:#475569;font-size:11.5px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.13s`;
+// ── Export filter dropdown helpers ───────────────────────────────────────
+
+function _expUpdateInfoText() {
+  const el = document.getElementById('_exp_info_text');
+  if (!el) return;
+  const parts = [];
+  if (_expSelProjs.size)     parts.push(_expSelProjs.size     === 1 ? '1 project'    : _expSelProjs.size     + ' projects');
+  if (_expSelSprints.size)   parts.push(_expSelSprints.size   === 1 ? '1 sprint'     : _expSelSprints.size   + ' sprints');
+  if (_expSelAssignees.size) parts.push(_expSelAssignees.size === 1 ? '1 assignee'   : _expSelAssignees.size + ' assignees');
+  el.textContent = parts.length
+    ? 'Exporting data matching: ' + parts.join(', ') + '.'
+    : 'No filters selected — all visible data will be exported.';
 }
+
+function _expToggleProjDrop() {
+  const p = document.getElementById('sf-msdrop-panel');
+  if (p && p.style.display !== 'none' && _expToggleProjDrop._open) {
+    _sfMsDrop.apply(); _expToggleProjDrop._open = false; return;
+  }
+  const allProj = RBAC.getVisibleProjects();
+  const active    = allProj.filter(p => (p.status||'').toLowerCase() === 'active');
+  const completed = allProj.filter(p => (p.status||'').toLowerCase() === 'completed');
+  const items = [
+    ...active.map(p    => ({ id: p.id, name: p.name, group: active.length    ? 'Active'    : '' })),
+    ...completed.map(p => ({ id: p.id, name: p.name, group: completed.length ? 'Completed' : '' }))
+  ];
+  _sfMsDrop.open(
+    document.getElementById('_exp_proj_btn'),
+    items,
+    _expSelProjs,
+    sel => {
+      _expSelProjs.clear(); sel.forEach(id => _expSelProjs.add(id));
+      _expOnProjApply();
+    },
+    document.getElementById('_exp_proj_label')
+  );
+  document.getElementById('_exp_proj_label').dataset.allLabel = 'All Projects';
+  _expToggleProjDrop._open = true;
+}
+_expToggleProjDrop._open = false;
+
+function _expOnProjApply() {
+  // Prune sprint selections no longer in scope
+  const selPids = [..._expSelProjs];
+  if (selPids.length) {
+    [..._expSelSprints].forEach(sid => {
+      const s = RBAC.getVisibleSprints().find(x => x.id === sid);
+      if (!s || !selPids.includes(s.project)) _expSelSprints.delete(sid);
+    });
+    const sprLbl = document.getElementById('_exp_spr_label');
+    if (sprLbl) {
+      if (_expSelSprints.size === 0) sprLbl.textContent = 'All Sprints';
+      else if (_expSelSprints.size === 1) {
+        const s = RBAC.getVisibleSprints().find(x => x.id === [..._expSelSprints][0]);
+        sprLbl.textContent = s ? s.name : '1 selected';
+      } else sprLbl.textContent = _expSelSprints.size + ' selected';
+    }
+    // Also prune assignees if sprints changed
+    _expPruneAssignees();
+  }
+  _expUpdateInfoText();
+}
+
+function _expToggleSprintDrop() {
+  const p = document.getElementById('sf-msdrop-panel');
+  if (p && p.style.display !== 'none' && _expToggleSprintDrop._open) {
+    _sfMsDrop.apply(); _expToggleSprintDrop._open = false; return;
+  }
+  const selPids = [..._expSelProjs];
+  let allSpr = RBAC.getVisibleSprints();
+  if (selPids.length) allSpr = allSpr.filter(s => selPids.includes(s.project));
+  const active    = allSpr.filter(s => (s.status||'').toLowerCase() === 'active');
+  const completed = allSpr.filter(s => (s.status||'').toLowerCase() === 'completed');
+  const items = [
+    ...active.map(s    => ({ id: s.id, name: s.name, group: active.length    ? 'Active'    : '' })),
+    ...completed.map(s => ({ id: s.id, name: s.name, group: completed.length ? 'Completed' : '' }))
+  ];
+  _sfMsDrop.open(
+    document.getElementById('_exp_spr_btn'),
+    items,
+    _expSelSprints,
+    sel => {
+      _expSelSprints.clear(); sel.forEach(id => _expSelSprints.add(id));
+      _expPruneAssignees();
+      _expUpdateInfoText();
+    },
+    document.getElementById('_exp_spr_label')
+  );
+  document.getElementById('_exp_spr_label').dataset.allLabel = 'All Sprints';
+  _expToggleSprintDrop._open = true;
+}
+_expToggleSprintDrop._open = false;
+
+function _expPruneAssignees() {
+  // Prune assignee selections that no longer match project/sprint scope
+  if (!_expSelAssignees.size) return;
+  const validIds = new Set(_expGetScopedUsers().map(u => u.id));
+  [..._expSelAssignees].forEach(uid => { if (!validIds.has(uid)) _expSelAssignees.delete(uid); });
+  const asgnLbl = document.getElementById('_exp_asgn_label');
+  if (asgnLbl) {
+    if (_expSelAssignees.size === 0) asgnLbl.textContent = 'All Assignees';
+    else if (_expSelAssignees.size === 1) {
+      const u = (state.users || []).find(x => x.id === [..._expSelAssignees][0]);
+      asgnLbl.textContent = u ? (u.name || u.email || '1 selected') : '1 selected';
+    } else asgnLbl.textContent = _expSelAssignees.size + ' selected';
+  }
+}
+
+function _expGetScopedUsers() {
+  const selPids = [..._expSelProjs];
+  const selSids = [..._expSelSprints];
+  // No project/sprint filter selected → show all users (same as every other assignee dropdown)
+  if (!selPids.length && !selSids.length) {
+    return RBAC.isAdmin()
+      ? (state.users || [])
+      : RBAC.getVisibleTasks(state.tasks || []).reduce((acc, t) => {
+          const ids = new Set(acc.map(u => u.id));
+          if (t.assignee && !ids.has(t.assignee)) { const u = (state.users||[]).find(x=>x.id===t.assignee); if(u) acc.push(u); }
+          (t.subtasks||[]).forEach(s => { if(s.assignee && !ids.has(s.assignee)){ const u=(state.users||[]).find(x=>x.id===s.assignee); if(u){ acc.push(u); ids.add(u.id); } } });
+          return acc;
+        }, []);
+  }
+  // Project/sprint filter active → narrow to assignees within that scope
+  let tasks = RBAC.getVisibleTasks(state.tasks || []);
+  if (selPids.length) tasks = tasks.filter(t => selPids.includes(t.project));
+  if (selSids.length) tasks = tasks.filter(t => selSids.includes(t.sprint));
+  const assigneeIds = new Set();
+  tasks.forEach(t => {
+    if (t.assignee) assigneeIds.add(t.assignee);
+    (t.subtasks || []).forEach(s => { if (s.assignee) assigneeIds.add(s.assignee); });
+  });
+  return (state.users || []).filter(u => assigneeIds.has(u.id));
+}
+
+function _expToggleAssigneeDrop() {
+  const p = document.getElementById('sf-msdrop-panel');
+  if (p && p.style.display !== 'none' && _expToggleAssigneeDrop._open) {
+    _sfMsDrop.apply(); _expToggleAssigneeDrop._open = false; return;
+  }
+  const users = _expGetScopedUsers();
+  const items = users.map(u => ({ id: u.id, name: u.name || u.email || u.id, group: '' }));
+  _sfMsDrop.open(
+    document.getElementById('_exp_asgn_btn'),
+    items,
+    _expSelAssignees,
+    sel => {
+      _expSelAssignees.clear(); sel.forEach(id => _expSelAssignees.add(id));
+      _expUpdateInfoText();
+    },
+    document.getElementById('_exp_asgn_label')
+  );
+  document.getElementById('_exp_asgn_label').dataset.allLabel = 'All Assignees';
+  _expToggleAssigneeDrop._open = true;
+}
+_expToggleAssigneeDrop._open = false;
+
+// ── Audit Logs modal (date-range, unchanged logic) ────────────────────────
 
 function _drFmtDate(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
-function drQuickSelect(val) {
-  // Highlight selected chip
-  document.querySelectorAll('._dr_quick').forEach(b => { b.style.outline = 'none'; });
-  const clicked = [...document.querySelectorAll('._dr_quick')].find(b => b.dataset.v === val);
-  if (clicked) clicked.style.outline = '2px solid #6366f1';
+function _openAuditExportModal() {
+  const modalId = '_export_dr_modal';
+  const stale = document.getElementById(modalId);
+  if (stale) stale.remove();
 
-  const now = new Date();
-  const fromEl = document.getElementById('_dr_from');
-  const toEl   = document.getElementById('_dr_to');
-  if (!fromEl || !toEl) return;
+  const now    = new Date();
+  const toStr  = _drFmtDate(now);
+  const from30 = new Date(now); from30.setDate(from30.getDate() - 30);
+  const fromStr = _drFmtDate(from30);
 
-  const start = new Date();
-  if (val === '7')      { start.setDate(now.getDate() - 7); }
-  else if (val === '30'){ start.setDate(now.getDate() - 30); }
-  else if (val === '90'){ start.setDate(now.getDate() - 90); }
-  else if (val === 'this') {
-    start.setDate(1);
-    start.setMonth(now.getMonth());
-    start.setFullYear(now.getFullYear());
-  } else if (val === 'last') {
-    start.setDate(1);
-    start.setMonth(now.getMonth() - 1);
-    const last = new Date(now.getFullYear(), now.getMonth(), 0);
-    toEl.value = _drFmtDate(last);
-  } else if (val === 'custom') {
-    // Just let user set dates manually
-    return;
-  }
+  const overlay = document.createElement('div');
+  overlay.id = modalId;
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(8,10,20,0.54);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:16px;font-family:"DM Sans",sans-serif;opacity:0;transition:opacity 0.2s ease';
 
-  fromEl.value = _drFmtDate(start);
-  if (val !== 'last') toEl.value = _drFmtDate(now);
+  const accentColor = '#a855f7';
+  const accentBg    = 'rgba(168,85,247,0.1)';
+  const icon        = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
 
-  // Detect export type from button visibility
-  const modal = document.getElementById('_export_dr_modal');
-  const exportType = modal ? (modal.innerHTML.includes('Audit') ? 'audit' : 'full') : 'full';
-  drUpdateEstimate(exportType);
+  overlay.innerHTML = `
+    <div style="background:rgba(255,255,255,0.98);border:1px solid rgba(255,255,255,0.9);border-radius:20px;width:min(520px,95vw);
+      box-shadow:0 36px 90px rgba(0,0,0,0.22),0 10px 36px rgba(0,0,0,0.1),inset 0 1px 0 #fff;
+      backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+      transform:translateY(22px) scale(0.972);opacity:0;
+      transition:transform 0.26s cubic-bezier(.34,1.38,.64,1),opacity 0.2s ease" id="_dr_box">
+      <div style="padding:24px 26px 0;display:flex;align-items:flex-start;gap:14px">
+        <div style="width:44px;height:44px;border-radius:12px;background:${accentBg};color:${accentColor};display:flex;align-items:center;justify-content:center;flex-shrink:0">${icon}</div>
+        <div style="flex:1">
+          <div style="font-size:17px;font-weight:700;color:#0d0f14;letter-spacing:-.02em">Export Audit Logs</div>
+          <div style="font-size:13px;color:#64748b;margin-top:3px">Select a date range to export enterprise audit logs.</div>
+        </div>
+        <button onclick="closeExportDateRangeModal()" style="width:32px;height:32px;border:none;background:rgba(0,0,0,0.05);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s" onmouseover="this.style.background='rgba(0,0,0,0.09)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div style="padding:16px 26px 0;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;display:block;margin-bottom:5px">From Date</label>
+          <input type="date" id="_dr_from" value="${fromStr}" style="width:100%;height:38px;border:1px solid rgba(0,0,0,0.09);border-radius:9px;padding:0 12px;font-size:13.5px;font-family:'DM Sans',sans-serif;color:#0d0f14;background:#f4f5f9;outline:none;transition:border-color 0.15s,box-shadow 0.15s" onfocus="this.style.borderColor='${accentColor}';this.style.boxShadow='0 0 0 3px rgba(168,85,247,0.14)'" onblur="this.style.borderColor='rgba(0,0,0,0.09)';this.style.boxShadow='none'" onchange="drUpdateEstimate('audit')">
+        </div>
+        <div>
+          <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;display:block;margin-bottom:5px">To Date</label>
+          <input type="date" id="_dr_to" value="${toStr}" style="width:100%;height:38px;border:1px solid rgba(0,0,0,0.09);border-radius:9px;padding:0 12px;font-size:13.5px;font-family:'DM Sans',sans-serif;color:#0d0f14;background:#f4f5f9;outline:none;transition:border-color 0.15s,box-shadow 0.15s" onfocus="this.style.borderColor='${accentColor}';this.style.boxShadow='0 0 0 3px rgba(168,85,247,0.14)'" onblur="this.style.borderColor='rgba(0,0,0,0.09)';this.style.boxShadow='none'" onchange="drUpdateEstimate('audit')">
+        </div>
+      </div>
+      <div id="_dr_estimate" style="margin:14px 26px 0;background:rgba(248,249,252,0.92);border-radius:9px;padding:11px 14px;font-size:12.5px;color:#475569;display:flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,0.052)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="_dr_estimate_text">Calculating estimated records…</span>
+      </div>
+      <div style="padding:18px 26px 22px;display:flex;justify-content:flex-end;gap:10px">
+        <button onclick="closeExportDateRangeModal()" style="height:38px;padding:0 18px;border:1px solid rgba(0,0,0,0.09);border-radius:9px;background:rgba(255,255,255,0.95);color:#64748b;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background 0.14s" onmouseover="this.style.background='#f4f5f9'" onmouseout="this.style.background='rgba(255,255,255,0.95)'">Cancel</button>
+        <button onclick="confirmExportDateRange('audit')" style="height:38px;padding:0 22px;border:none;border-radius:9px;background:${accentColor};color:#fff;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity 0.14s,transform 0.12s;box-shadow:0 2px 8px rgba(0,0,0,0.18)" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:5px;vertical-align:-2px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Generate Export
+        </button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => {
+    overlay.style.opacity = '1';
+    const box = document.getElementById('_dr_box');
+    if (box) { box.style.transform = 'translateY(0) scale(1)'; box.style.opacity = '1'; }
+  });
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeExportDateRangeModal(); });
+  setTimeout(() => drUpdateEstimate('audit'), 100);
 }
 
 function drUpdateEstimate(exportType) {
+  // Only used for audit modal
   const fromEl = document.getElementById('_dr_from');
   const toEl   = document.getElementById('_dr_to');
   const estEl  = document.getElementById('_dr_estimate_text');
   if (!fromEl || !toEl || !estEl) return;
-
   const from = new Date(fromEl.value);
   const to   = new Date(toEl.value);
   if (isNaN(from) || isNaN(to) || from > to) {
     estEl.textContent = 'Invalid date range — please check From / To dates.';
     return;
   }
-
   const diffDays = Math.round((to - from) / 86400000) + 1;
-
-  if (exportType === 'audit') {
-    // Estimate based on state tasks (all events) — rough multiplier
-    const baseEvents = (state.tasks ? state.tasks.length : 0) * 4;
-    const estimated  = Math.round(baseEvents * (diffDays / 30));
-    estEl.textContent = `Estimated ~${estimated.toLocaleString()} audit events across ${diffDays} days`;
-  } else {
-    // Full database — count tasks in date range (use createdAt or fallback to all)
-    const tasks = state.tasks || [];
-    const inRange = tasks.filter(t => {
-      if (!t.createdAt) return true;
-      const d = new Date(t.createdAt);
-      return d >= from && d <= to;
-    });
-    const extras = (state.sprints ? state.sprints.length : 0) + (state.epics ? state.epics.length : 0) + (state.releases ? state.releases.length : 0);
-    estEl.textContent = `Estimated ~${(inRange.length + extras).toLocaleString()} records across ${diffDays} days`;
-  }
+  const baseEvents = (state.tasks ? state.tasks.length : 0) * 4;
+  const estimated  = Math.round(baseEvents * (diffDays / 30));
+  estEl.textContent = `Estimated ~${estimated.toLocaleString()} audit events across ${diffDays} days`;
 }
 
 function closeExportDateRangeModal() {
@@ -13540,28 +14282,32 @@ function closeExportDateRangeModal() {
 }
 
 function confirmExportDateRange(exportType) {
+  if (exportType === 'full') {
+    // Use Project/Sprint/Assignee filter state — no date validation needed
+    closeExportDateRangeModal();
+    setTimeout(() => {
+      exportReportExcel('full', null, null, {
+        projectIds:  [..._expSelProjs],
+        sprintIds:   [..._expSelSprints],
+        assigneeIds: [..._expSelAssignees]
+      });
+    }, 260);
+    return;
+  }
+
+  // Audit: date validation
   const fromEl = document.getElementById('_dr_from');
   const toEl   = document.getElementById('_dr_to');
   if (!fromEl || !toEl) return;
-
   const fromDate = fromEl.value;
   const toDate   = toEl.value;
-
   if (!fromDate || !toDate || new Date(fromDate) > new Date(toDate)) {
     const est = document.getElementById('_dr_estimate_text');
     if (est) est.textContent = '⚠ Please select a valid date range before exporting.';
     return;
   }
-
   closeExportDateRangeModal();
-
-  setTimeout(() => {
-    if (exportType === 'audit') {
-      exportAuditLogs(fromDate, toDate);
-    } else {
-      exportReportExcel('full', fromDate, toDate);
-    }
-  }, 260);
+  setTimeout(() => { exportAuditLogs(fromDate, toDate); }, 260);
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -13861,9 +14607,13 @@ async function exportAuditLogs(fromDate, toDate) {
 
 function _applyExportMenuRBAC() {
   if (!RBAC) return;
-  const wrap = document.getElementById("rpt-export-wrap");
-  // Only Admins can export — hide the entire export button for everyone else
-  if (wrap) wrap.style.display = RBAC.isAdmin() ? "inline-block" : "none";
+  const wrap    = document.getElementById("rpt-export-wrap");
+  const fullBtn = document.getElementById("rpt-menu-full-btn");
+  // Admin: all options visible
+  // Program Manager: Export PDF visible, Full Database hidden
+  // Team Member: entire export menu hidden
+  if (wrap)    wrap.style.display    = (RBAC.isAdmin() || RBAC.isProgramManager()) ? "inline-block" : "none";
+  if (fullBtn) fullBtn.style.display = RBAC.isAdmin() ? "flex" : "none";
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -13895,14 +14645,18 @@ function renderAdminConfig(){
   section.style.display = 'block';
   _renderProductsList();
   _renderTagsList();
+  _renderThemesList();
 
-  // Program Managers: hide all admin-only Settings sections; show only Products & Tags
+  // Program Managers: hide all admin-only Settings sections; show only Products, Tags & Themes
   if(!RBAC.isAdmin() && RBAC.isProgramManager()){
     document.querySelectorAll('#page-settings > .max-w-2xl > .settings-section, #page-settings > .max-w-2xl > .mt-4').forEach(el => {
       el.style.display = 'none';
     });
+    // Hide Add Theme button for PM (view-only)
+    const addThemeBtn = document.getElementById('btn-add-theme');
+    if(addThemeBtn) addThemeBtn.style.display = 'none';
     const subtitle = document.querySelector('#page-settings .page-subtitle');
-    if(subtitle) subtitle.textContent = 'Manage products and tags for your projects';
+    if(subtitle) subtitle.textContent = 'Manage products, tags and themes for your projects';
   }
 }
 
@@ -14229,26 +14983,211 @@ function deleteTag(tagId){
   _renderTagsList();
   showNotif('Tag deleted');
 }
+// ─── THEME CRUD ───────────────────────────────────────────────────
+
+function _themeId(){ return 'THM' + Date.now().toString(36).toUpperCase(); }
+
+function _renderThemesList(){
+  const el = document.getElementById('admin-themes-list');
+  if(!el) return;
+  const themes = state.themes || [];
+  if(!themes.length){
+    el.innerHTML = `<div class="settings-row" style="justify-content:center;color:var(--text-tertiary);font-size:13px">No themes yet.</div>`;
+    return;
+  }
+  el.innerHTML = themes.map(thm => {
+    const mappedNames = (thm.projectIds || []).map(pid => {
+      const p = getProject(pid);
+      return p ? `<span style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--accent-ghost);color:var(--accent-dark);border-radius:var(--r-pill);font-size:11px;font-weight:600;border:1px solid var(--accent-ring)">${_esc(p.name)}</span>` : '';
+    }).filter(Boolean).join(' ');
+    const c = thm.color;
+    const colorSwatch = c ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${_esc(c)};border:1px solid rgba(0,0,0,0.14);flex-shrink:0;margin-right:6px"></span>` : '';
+    const nameStyle = c ? `display:inline-flex;align-items:center;padding:2px 9px 2px 7px;border-radius:var(--r-pill);font-size:13px;font-weight:600;background:${_esc(c)}22;color:${_esc(c)};border:1px solid ${_esc(c)}55` : `font-size:13.5px;font-weight:600;color:var(--text-primary)`;
+    const isAdmin = RBAC.isAdmin();
+    return `<div class="settings-row">
+      <div style="flex:1;min-width:0">
+        <div style="${nameStyle}">${colorSwatch}${_esc(thm.name)}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">${mappedNames || '<span style="font-size:11px;color:var(--text-tertiary)">No projects mapped</span>'}</div>
+      </div>
+      ${isAdmin ? `<div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-secondary" style="height:28px;font-size:11.5px;padding:0 10px" onclick="openThemeModal('${_esc(thm.id)}')">Edit</button>
+        <button class="btn btn-danger" style="height:28px;font-size:11.5px;padding:0 10px" onclick="deleteTheme('${_esc(thm.id)}')">Delete</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function _fbSaveTheme(theme){
+  SaveManager.save();
+  if(FirebaseDB.isReady()){
+    FirebaseDB.saveEntity('themes', theme).catch(e => console.warn('[AdminConfig] saveTheme Firebase error:', e));
+  }
+}
+
+function _fbDeleteTheme(themeId){
+  SaveManager.save();
+  if(FirebaseDB.isReady()){
+    FirebaseDB.deleteEntity('themes', themeId).catch(e => console.warn('[AdminConfig] deleteTheme Firebase error:', e));
+  }
+}
+
+function openThemeModal(themeId){
+  if(!RBAC.isAdmin()){ showNotif('Only admins can manage themes','error'); return; }
+  const isEdit = !!themeId;
+  const thm = isEdit ? (state.themes||[]).find(t => t.id === themeId) : null;
+  const currentColor = (thm && thm.color) ? thm.color : '';
+  const PRESET_COLORS = ['#6366f1','#8b5cf6','#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#64748b'];
+  const presetSwatches = PRESET_COLORS.map(c =>
+    `<span onclick="document.getElementById('thm-color-input').value='${c}';document.getElementById('thm-color-preview').style.background='${c}'"
+      style="display:inline-block;width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${c===currentColor?'#0d0f14':'transparent'};transition:border-color 0.12s;flex-shrink:0" title="${c}"></span>`
+  ).join('');
+  const html = `
+    <div style="padding:24px 24px 20px">
+      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:18px">${isEdit ? 'Edit Theme' : 'Add Theme'}</div>
+      <div style="margin-bottom:14px">
+        <label>Theme Name</label>
+        <input id="thm-name-input" type="text" placeholder="e.g. Claims Modernization" value="${isEdit ? _esc(thm.name) : ''}" style="margin-top:4px"/>
+      </div>
+      <div style="margin-bottom:14px">
+        <label>Color <span style="font-size:10px;font-weight:400;color:var(--text-tertiary)">(optional)</span></label>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+          ${presetSwatches}
+          <label style="display:inline-flex;align-items:center;gap:5px;margin:0;cursor:pointer;font-size:12px;color:var(--text-secondary);font-weight:500">
+            <span id="thm-color-preview" style="display:inline-block;width:22px;height:22px;border-radius:50%;background:${currentColor||'#e2e8f0'};border:2px solid rgba(0,0,0,0.10);flex-shrink:0;overflow:hidden;position:relative">
+              <input type="color" id="thm-color-input" value="${currentColor||'#8b5cf6'}"
+                oninput="document.getElementById('thm-color-preview').style.background=this.value"
+                style="position:absolute;inset:-4px;width:calc(100%+8px);height:calc(100%+8px);opacity:0;cursor:pointer;border:none;padding:0"/>
+            </span>
+            Custom
+          </label>
+          <button type="button" onclick="document.getElementById('thm-color-input').value='';document.getElementById('thm-color-preview').style.background='#e2e8f0'"
+            style="font-size:11px;color:var(--text-tertiary);background:none;border:none;cursor:pointer;padding:2px 4px;text-decoration:underline">Clear</button>
+        </div>
+      </div>
+      <div style="margin-bottom:18px">
+        <label style="margin-bottom:8px">Mapped Projects</label>
+        <div id="thm-projects-container" style="display:flex;flex-direction:column;gap:2px;padding:8px 12px;background:var(--control-bg);border:1px solid var(--control-border);border-radius:var(--r-md);max-height:220px;overflow-y:auto">
+          ${_projectMultiSelectHTML(isEdit ? thm.projectIds : [], 'thm')}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTheme('${isEdit ? themeId : ''}')">
+          ${isEdit ? 'Save Changes' : 'Add Theme'}
+        </button>
+      </div>
+    </div>`;
+  openModal(html);
+  if(currentColor){
+    setTimeout(()=>{
+      const preview = document.getElementById('thm-color-preview');
+      if(preview) preview.style.background = currentColor;
+    }, 30);
+  }
+  setTimeout(()=>{ const inp=document.getElementById('thm-name-input'); if(inp) inp.focus(); }, 80);
+}
+
+function saveTheme(themeId){
+  if(!RBAC.isAdmin()){ showNotif('Only admins can manage themes','error'); return; }
+  const nameEl = document.getElementById('thm-name-input');
+  const name = (nameEl ? nameEl.value.trim() : '');
+  if(!name){ showNotif('Theme name is required','error'); if(nameEl) nameEl.focus(); return; }
+  const projectIds = _collectCheckedProjects('thm-projects-container');
+  const colorEl = document.getElementById('thm-color-input');
+  const color = (colorEl && colorEl.value && colorEl.value !== '' && colorEl.value !== '#e2e8f0') ? colorEl.value : '';
+  state.themes = state.themes || [];
+  let savedTheme;
+  if(themeId){
+    const idx = state.themes.findIndex(t => t.id === themeId);
+    if(idx > -1){
+      state.themes[idx] = { ...state.themes[idx], name, projectIds, color: color||undefined, updatedAt: _now() };
+      if(!state.themes[idx].color) delete state.themes[idx].color;
+      savedTheme = state.themes[idx];
+    }
+  } else {
+    savedTheme = { id: _themeId(), name, projectIds, ...(color ? {color} : {}), createdAt: _now(), updatedAt: _now() };
+    state.themes.push(savedTheme);
+  }
+  if(savedTheme) _fbSaveTheme(savedTheme);
+  closeModal();
+  _renderThemesList();
+  showNotif(themeId ? 'Theme updated ✓' : 'Theme added ✓');
+}
+
+function deleteTheme(themeId){
+  if(!RBAC.isAdmin()){ showNotif('Only admins can manage themes','error'); return; }
+  if(!confirm('Delete this theme?')) return;
+  state.themes = (state.themes || []).filter(t => t.id !== themeId);
+  _fbDeleteTheme(themeId);
+  _renderThemesList();
+  showNotif('Theme deleted');
+}
 // ─── END ADMIN CONFIG ─────────────────────────────────────────────
 
-function _xlGetDataWithRange(mode, fromDate, toDate) {
-  const data = _xlGetData ? _xlGetData(mode) : { tasks: [], subtasks: [], sprints: [], epics: [], releases: [], users: [], projects: [], comments: [] };
+// ══════════════════════════════════════════════════════════════════════════
+//  EXPORT FULL DATABASE — PROJECT / SPRINT / ASSIGNEE FILTER
+//  Replaces the previous date-range filter.
+//  exportFilters: { projectIds: string[], sprintIds: string[], assigneeIds: string[] }
+//  Empty arrays = no filter (export all visible data for that dimension).
+// ══════════════════════════════════════════════════════════════════════════
 
-  if ((mode === 'full') && fromDate && toDate) {
-    const from = new Date(fromDate);
-    const to   = new Date(toDate);
-    to.setHours(23, 59, 59, 999);
-    data.tasks = data.tasks.filter(t => {
-      if (!t.createdAt) return true; // include tasks without date
-      const d = new Date(t.createdAt);
-      return d >= from && d <= to;
-    });
-    // Rebuild subtasks from filtered tasks
-    data.subtasks = data.tasks.flatMap(t =>
-      (t.subtasks || []).map(s => ({ ...s, _parentTask: t }))
-    );
-    data._dateRange = { from: fromDate, to: toDate };
+function _xlGetDataWithFilters(mode, exportFilters) {
+  // Start from RBAC-scoped base (full mode uses raw state but still respects RBAC on filters)
+  const data = _xlGetData ? _xlGetData(mode) : { tasks: [], subtasks: [], sprints: [], epics: [], releases: [], users: [], projects: [] };
+
+  if (mode !== 'full' || !exportFilters) return data;
+
+  const { projectIds = [], sprintIds = [], assigneeIds = [] } = exportFilters;
+  const hasProj    = projectIds.length > 0;
+  const hasSprint  = sprintIds.length > 0;
+  const hasAssignee = assigneeIds.length > 0;
+
+  // If no filters selected, return full data as-is
+  if (!hasProj && !hasSprint && !hasAssignee) return data;
+
+  // ── Filter tasks ──
+  data.tasks = data.tasks.filter(t => {
+    if (hasProj    && !projectIds.includes(t.project))  return false;
+    if (hasSprint  && !sprintIds.includes(t.sprint))    return false;
+    if (hasAssignee && !assigneeIds.includes(t.assignee)) return false;
+    return true;
+  });
+
+  // ── Rebuild subtasks from filtered tasks, also filtering subtasks by assignee ──
+  data.subtasks = data.tasks.flatMap(t =>
+    (t.subtasks || [])
+      .filter(s => !hasAssignee || assigneeIds.includes(s.assignee))
+      .map(s => ({ ...s, _parentTask: t }))
+  );
+
+  // ── Store active assignee filter for sheet builders ──
+  data._activeAssigneeIds = hasAssignee ? assigneeIds : null;
+
+  // ── Filter sprints ──
+  if (hasSprint) {
+    data.sprints = data.sprints.filter(s => sprintIds.includes(s.id));
+  } else if (hasProj) {
+    data.sprints = data.sprints.filter(s => projectIds.includes(s.project));
   }
+
+  // ── Filter epics ──
+  if (hasProj) {
+    data.epics = data.epics.filter(e => projectIds.includes(e.project));
+  }
+
+  // ── Filter releases ──
+  if (hasProj) {
+    data.releases = data.releases.filter(r => projectIds.includes(r.project));
+  }
+
+  // ── Filter projects ──
+  if (hasProj) {
+    data.projects = data.projects.filter(p => projectIds.includes(p.id));
+  }
+
+  // ── Store filter metadata (for Cover sheet) ──
+  data._exportFilters = exportFilters;
+
   return data;
 }
 </script>
@@ -14458,6 +15397,9 @@ const NotificationSystem = (function () {
       // ── RBAC visibility gate ──
       if(!cu) return false;
       if(RBAC.isAdmin()){
+        // Admin sees only their own notifications — not every notification in the system
+        const ownNotif = n.userId === cu.id;
+        if(!ownNotif) return false;
         if(userId && n.userId!==userId) return false;
         return true;
       }
@@ -15488,6 +16430,8 @@ window.NotificationUI = NotificationUI;
           RBAC.init(user);
           _applyExportMenuRBAC();
           refreshAll();
+          // ── Resolve deep links after data + RBAC are ready ──
+          setTimeout(_resolveDeepLink, 300);
           // ── Start realtime listeners after initial load ──
           RealtimeSync.start();
           // ── Start notification system (standalone — no app rerenders) ──
@@ -15503,6 +16447,7 @@ window.NotificationUI = NotificationUI;
           _applyExportMenuRBAC();
           console.warn('[SprintFlow] Firebase loadAppData failed, running on local state:', e.message || e);
           refreshAll();
+          setTimeout(_resolveDeepLink, 300);
           NotificationSystem.init(db, { ref, set, update, remove, onChildAdded, onChildChanged, onChildRemoved });
           ReminderEngine.start();
           NotificationUI.init();
@@ -15514,6 +16459,7 @@ window.NotificationUI = NotificationUI;
         NotificationSystem.stop(); // detach notification listeners, clear state
         ReminderEngine.stop();
         NotificationUI.close();
+        _stashDeepLinkIfNeeded();
         showLogin();
       }
     });
@@ -15964,6 +16910,841 @@ function confirmDeleteRetro(retroId){
     </div>
   `);
 }
+
+// ═══════════════════════════════════════════════════════════════════
+//  RELEASE REPORTS — Project & Sprint based released task reporting
+//  NEW functions only — does NOT modify any existing Reports logic.
+// ═══════════════════════════════════════════════════════════════════
+
+// ── Internal state ──
+let _rrInitialized = false;
+
+// ── Read helpers — delegate to the new multi-select Sets ──
+function _rrGetSelectedProjects(){ return [..._rrSelProjs2];   }
+function _rrGetSelectedSprints(){  return [..._rrSelSprints2]; }
+
+// ── Populate functions are now no-ops (buttons self-populate on click) ──
+function _rrPopulateProjectSel(){}
+function _rrPopulateSprintSel(){}
+
+// ── Called when project filter changes ──
+function _rrOnProjectChange(){ _debouncedRenderReleaseReports(); }
+
+// ── Debounced render ──
+let _rrFilterTimer = null;
+function _debouncedRenderReleaseReports(){
+  clearTimeout(_rrFilterTimer);
+  _rrFilterTimer = setTimeout(() => renderReleaseReports(), 150);
+}
+
+// ── Reset filters ──
+function _rrResetFilters(){
+  _rrSelProjs2.clear();
+  _rrSelSprints2.clear();
+  const pl = document.getElementById('rr-proj-label'); if(pl) pl.textContent = 'All Projects';
+  const sl = document.getElementById('rr-spr-label');  if(sl) sl.textContent = 'All Sprints';
+  renderReleaseReports();
+}
+
+// ── Get filtered released tasks (with subtask sprint inheritance) ──
+function _getReleaseReportsData(){
+  const selectedProjectIds = _rrGetSelectedProjects();
+  const selectedSprintIds  = _rrGetSelectedSprints();
+
+  // RBAC-gated — released parent tasks only
+  let tasks = RBAC.getVisibleTasks(state.tasks).filter(t => (t.status || '') === 'released');
+
+  // Subtask sprint inheritance: if a task has no sprint, inherit from its parent
+  const _parentSprintMap = {};
+  state.tasks.forEach(parent => {
+    if(parent.sprint && Array.isArray(parent.subtasks)){
+      parent.subtasks.forEach(sub => {
+        if(!_parentSprintMap[sub.id]) _parentSprintMap[sub.id] = parent.sprint;
+      });
+    }
+  });
+  tasks = tasks.map(t => (!t.sprint && _parentSprintMap[t.id])
+    ? { ...t, sprint: _parentSprintMap[t.id] } : t);
+
+  // Project filter — empty = All
+  if(selectedProjectIds.length > 0){
+    tasks = tasks.filter(t => selectedProjectIds.includes(t.project));
+  }
+  // Sprint filter — empty = All
+  if(selectedSprintIds.length > 0){
+    tasks = tasks.filter(t => selectedSprintIds.includes(t.sprint));
+  }
+
+  const involvedProjectIds = [...new Set(tasks.map(t => t.project).filter(Boolean))];
+  const involvedSprintIds  = [...new Set(tasks.map(t => t.sprint).filter(Boolean))];
+
+  return { tasks, involvedProjectIds, involvedSprintIds, selectedProjectIds, selectedSprintIds };
+}
+
+// ── Main render function ──
+function renderReleaseReports(){
+  // Scope subtitle
+  const subEl = document.getElementById('rr-scope-subtitle');
+  if(subEl){
+    subEl.textContent = RBAC.isAdmin()
+      ? 'Project & Sprint based released task reporting — All Projects'
+      : 'Project & Sprint based released task reporting — Your Projects Only';
+  }
+
+  // Filters are driven by the multi-select button dropdowns — no populate needed here.
+  _rrInitialized = true;
+
+  const { tasks, involvedProjectIds, involvedSprintIds } = _getReleaseReportsData();
+
+  // KPI cards
+  const _setEl = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  _setEl('rr-kpi-tasks',    tasks.length);
+  _setEl('rr-kpi-points',   tasks.reduce((a, t) => a + (t.points || 0), 0));
+  _setEl('rr-kpi-projects', involvedProjectIds.length);
+  _setEl('rr-kpi-sprints',  involvedSprintIds.length);
+
+  // Empty state toggle
+  const emptyEl   = document.getElementById('rr-empty-state');
+  const contentEl = document.getElementById('rr-content');
+  if(!tasks.length){
+    if(emptyEl)   emptyEl.style.display   = '';
+    if(contentEl) contentEl.style.display = 'none';
+    // Clear theme section too
+    const thEmptyEl   = document.getElementById('rr-theme-empty');
+    const thContentEl = document.getElementById('rr-theme-content');
+    if(thEmptyEl)   thEmptyEl.style.display   = '';
+    if(thContentEl) thContentEl.style.display = 'none';
+    ['rr-th-count','rr-th-items','rr-th-points'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = '0'; });
+    const topEl = document.getElementById('rr-th-top'); if(topEl) topEl.textContent = '—';
+    return;
+  }
+  if(emptyEl)   emptyEl.style.display   = 'none';
+  if(contentEl) contentEl.style.display = '';
+
+  // ── Project Release Breakdown ──
+  const projTbody = document.getElementById('rr-project-tbody');
+  if(projTbody){
+    const projMap = {};
+    tasks.forEach(t => {
+      if(!t.project) return;
+      if(!projMap[t.project]) projMap[t.project] = { count: 0, points: 0 };
+      projMap[t.project].count++;
+      projMap[t.project].points += (t.points || 0);
+    });
+    projTbody.innerHTML = Object.entries(projMap).map(([pid, data], idx) => {
+      const proj = getProject(pid);
+      const bg   = idx % 2 !== 0 ? 'background:rgba(0,0,0,0.018)' : '';
+      return `<tr style="${bg};border-bottom:1px solid rgba(0,0,0,0.05)">
+        <td style="padding:10px 14px;color:var(--text-primary);font-weight:500">${_escHtml(proj ? proj.name : pid)}</td>
+        <td style="padding:10px 14px;text-align:right;font-variant-numeric:tabular-nums">${data.count}</td>
+        <td style="padding:10px 14px;text-align:right;font-variant-numeric:tabular-nums">${data.points}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="3" style="padding:14px;text-align:center;color:var(--text-tertiary);font-size:13px">No project data</td></tr>';
+  }
+
+  // ── Sprint Release Breakdown ──
+  const sprintTbody = document.getElementById('rr-sprint-tbody');
+  if(sprintTbody){
+    const sprintMap = {};
+    tasks.forEach(t => {
+      if(!t.sprint) return;
+      const key = (t.sprint || '') + '|' + (t.project || '');
+      if(!sprintMap[key]) sprintMap[key] = { sprintId: t.sprint, projectId: t.project, count: 0, points: 0 };
+      sprintMap[key].count++;
+      sprintMap[key].points += (t.points || 0);
+    });
+    sprintTbody.innerHTML = Object.values(sprintMap).map((data, idx) => {
+      const sprint = getSprint(data.sprintId);
+      const proj   = getProject(data.projectId);
+      const bg     = idx % 2 !== 0 ? 'background:rgba(0,0,0,0.018)' : '';
+      return `<tr style="${bg};border-bottom:1px solid rgba(0,0,0,0.05)">
+        <td style="padding:10px 14px;color:var(--text-primary);font-weight:500">${_escHtml(sprint ? sprint.name : data.sprintId)}</td>
+        <td style="padding:10px 14px;color:var(--text-secondary)">${_escHtml(proj ? proj.name : (data.projectId || '\u2014'))}</td>
+        <td style="padding:10px 14px;text-align:right;font-variant-numeric:tabular-nums">${data.count}</td>
+        <td style="padding:10px 14px;text-align:right;font-variant-numeric:tabular-nums">${data.points}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="4" style="padding:14px;text-align:center;color:var(--text-tertiary);font-size:13px">No sprint data</td></tr>';
+  }
+
+  // ── Released Task Details ──
+  const taskTbody = document.getElementById('rr-task-tbody');
+  if(taskTbody){
+    const priorityBadge = p => {
+      const cls = { critical:'badge-critical', high:'badge-high', medium:'badge-medium', low:'badge-low' };
+      return `<span class="badge ${cls[(p||'').toLowerCase()] || 'badge-open'}">${_escHtml(p || '\u2014')}</span>`;
+    };
+    taskTbody.innerHTML = tasks.map((t, idx) => {
+      const proj   = getProject(t.project);
+      const sprint = getSprint(t.sprint);
+      const epic   = t.epicId ? getEpic(t.epicId) : null;
+      const bg     = idx % 2 !== 0 ? 'background:rgba(0,0,0,0.018)' : '';
+      const taskKey = proj ? (proj.key + '-' + (t.id || '').slice(-4).toUpperCase()) : (t.id || '\u2014');
+      return `<tr style="${bg};border-bottom:1px solid rgba(0,0,0,0.04)">
+        <td style="padding:9px 12px;font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-tertiary);white-space:nowrap">${_escHtml(taskKey)}</td>
+        <td style="padding:9px 12px;color:var(--text-primary);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${_escHtml(t.title || '')}">${_escHtml(t.title || '\u2014')}</td>
+        <td style="padding:9px 12px;color:var(--text-secondary)">${_escHtml(proj ? proj.name : '\u2014')}</td>
+        <td style="padding:9px 12px;color:var(--text-secondary)">${_escHtml(sprint ? sprint.name : '\u2014')}</td>
+        <td style="padding:9px 12px;color:var(--text-secondary)">${_escHtml(epic ? epic.title : '\u2014')}</td>
+        <td style="padding:9px 12px">${priorityBadge(t.priority)}</td>
+        <td style="padding:9px 12px;text-align:right;font-variant-numeric:tabular-nums">${t.points || 0}</td>
+        <td style="padding:9px 12px"><span class="badge badge-released">Released</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Theme Release Analysis ──
+  _renderRRThemeAnalysis(tasks);
+}
+
+// ── Theme Release Analysis ──────────────────────────────────────────────────
+function _renderRRThemeAnalysis(tasks){
+  // Visible themes filtered by RBAC (same pattern as dashboard theme analytics)
+  const _visibleThemes = (state.themes || []).filter(th => {
+    if(RBAC.isAdmin()) return true;
+    const vpIds = new Set(RBAC.getVisibleProjects().map(p => p.id));
+    return (th.projectIds || []).some(pid => vpIds.has(pid));
+  });
+
+  // Build per-theme map: themeId -> { name, color, projectIds, releasedTasks[], releasedSubtasks[], points }
+  const themeMap = {};
+  _visibleThemes.forEach(th => {
+    themeMap[th.id] = {
+      name: th.name,
+      color: th.color || '#8b5cf6',
+      projectIds: th.projectIds || [],
+      releasedTasks: [],
+      releasedSubtasks: [],
+      points: 0
+    };
+  });
+
+  // Walk filtered (already RBAC + project + sprint filtered) released parent tasks
+  tasks.forEach(t => {
+    const tid = t.themeId;
+    if(tid && themeMap[tid]){
+      themeMap[tid].releasedTasks.push(t);
+      themeMap[tid].points += (t.points || 0);
+      // Count released subtasks; subtask inherits parent themeId if no own themeId
+      (t.subtasks || []).forEach(st => {
+        if((st.status || '') === 'released'){
+          const resolvedTid = st.themeId || tid;
+          if(resolvedTid === tid){
+            themeMap[tid].releasedSubtasks.push(st);
+            themeMap[tid].points += (st.points || 0);
+          }
+        }
+      });
+    }
+  });
+
+  // Filter to themes with at least one released work item
+  const entries = Object.entries(themeMap)
+    .map(([id, d]) => ({ id, ...d, totalItems: d.releasedTasks.length + d.releasedSubtasks.length }))
+    .filter(e => e.totalItems > 0)
+    .sort((a, b) => b.totalItems - a.totalItems);
+
+  const emptyEl   = document.getElementById('rr-theme-empty');
+  const contentEl = document.getElementById('rr-theme-content');
+
+  if(!entries.length){
+    if(emptyEl)   emptyEl.style.display   = '';
+    if(contentEl) contentEl.style.display = 'none';
+    // Zero out summary cards
+    ['rr-th-count','rr-th-items','rr-th-points'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.textContent = '0';
+    });
+    const topEl = document.getElementById('rr-th-top'); if(topEl) topEl.textContent = '—';
+    return;
+  }
+  if(emptyEl)   emptyEl.style.display   = 'none';
+  if(contentEl) contentEl.style.display = '';
+
+  const totalItems  = entries.reduce((a, e) => a + e.totalItems, 0);
+  const totalPoints = entries.reduce((a, e) => a + e.points, 0);
+  const topTheme    = entries[0];
+
+  // Summary cards
+  const _s = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  _s('rr-th-count',  entries.length);
+  _s('rr-th-top',    topTheme ? topTheme.name : '—');
+  _s('rr-th-items',  totalItems);
+  _s('rr-th-points', totalPoints);
+
+  // ── Work Items Chart (horizontal bar: Tasks + Subtasks stacked) ──
+  if(charts.rrThemeItems){ try{ charts.rrThemeItems.destroy(); }catch(e){} delete charts.rrThemeItems; }
+  const wiCtx = _getCtx('rrThemeItemsChart');
+  if(wiCtx){
+    const labels   = entries.map(e => e.name.length > 18 ? e.name.slice(0, 17) + '…' : e.name);
+    const taskData = entries.map(e => e.releasedTasks.length);
+    const subData  = entries.map(e => e.releasedSubtasks.length);
+    const colors   = entries.map(e => (e.color || '#8b5cf6') + 'BF');
+    const subClrs  = entries.map(e => (e.color || '#8b5cf6') + '66');
+    const wiOpts = _chartOpts({ indexAxis:'y', plugins:{ legend:{ display:true, position:'top' } }, scales:{
+      x:{ stacked:true, grid:{ color:'rgba(0,0,0,0.04)', lineWidth:1 }, ticks:{ font:{ family:'DM Sans', size:11 }, stepSize:1 } },
+      y:{ stacked:true, grid:{ display:false }, ticks:{ font:{ family:'DM Sans', size:11 } } }
+    }});
+    wiOpts.plugins.datalabels = { display: ctx => ctx.dataset.data[ctx.dataIndex] > 0, anchor:'center', align:'center', clamp:true, color:'#fff', font:{ size:9, weight:'700' }, formatter: v => v };
+    wiOpts.layout = { padding:{ right:28 } };
+    charts.rrThemeItems = new Chart(wiCtx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label:'Tasks',    data: taskData, backgroundColor: colors,  borderRadius: 0 },
+          { label:'Subtasks', data: subData,  backgroundColor: subClrs, borderRadius: [0,5,5,0] }
+        ]
+      },
+      options: wiOpts
+    });
+  }
+
+  // ── Story Points Chart (horizontal bar) ──
+  if(charts.rrThemePoints){ try{ charts.rrThemePoints.destroy(); }catch(e){} delete charts.rrThemePoints; }
+  const spCtx = _getCtx('rrThemePointsChart');
+  if(spCtx){
+    const labels   = entries.map(e => e.name.length > 18 ? e.name.slice(0, 17) + '…' : e.name);
+    const ptData   = entries.map(e => e.points);
+    const ptColors = entries.map(e => (e.color || '#8b5cf6') + 'CC');
+    const spOpts = _chartOpts({ indexAxis:'y', plugins:{ legend:{ display:false } }, scales:{
+      x:{ grid:{ color:'rgba(0,0,0,0.04)', lineWidth:1 }, ticks:{ font:{ family:'DM Sans', size:11 } } },
+      y:{ grid:{ display:false }, ticks:{ font:{ family:'DM Sans', size:11 } } }
+    }});
+    spOpts.plugins.datalabels = { display: ctx => ctx.dataset.data[ctx.dataIndex] > 0, anchor:'end', align:'right', clamp:true, color:'var(--text-secondary)', font:{ size:9, weight:'700' }, formatter: v => v };
+    spOpts.layout = { padding:{ right:36 } };
+    charts.rrThemePoints = new Chart(spCtx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label:'Story Points', data: ptData, backgroundColor: ptColors, borderRadius: 5 }
+        ]
+      },
+      options: spOpts
+    });
+  }
+
+  // ── Theme Breakdown Table ──
+  const tbody = document.getElementById('rr-theme-tbody');
+  if(tbody){
+    tbody.innerHTML = entries.map((e, idx) => {
+      const bg = idx % 2 !== 0 ? 'background:rgba(0,0,0,0.018)' : '';
+      // Resolve project names for this theme
+      const projNames = (e.projectIds || [])
+        .map(pid => { const p = getProject(pid); return p ? _escHtml(p.name) : null; })
+        .filter(Boolean).join(', ') || '—';
+      // Color swatch
+      const swatch = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${_escHtml(e.color)};margin-right:6px;flex-shrink:0;vertical-align:middle"></span>`;
+      return `<tr style="${bg};border-bottom:1px solid rgba(0,0,0,0.05)">
+        <td style="padding:10px 14px;color:var(--text-primary);font-weight:600;white-space:nowrap">${swatch}${_escHtml(e.name)}</td>
+        <td style="padding:10px 14px;color:var(--text-secondary);font-size:12px">${projNames}</td>
+        <td style="padding:10px 14px;text-align:right;font-variant-numeric:tabular-nums">${e.releasedTasks.length}</td>
+        <td style="padding:10px 14px;text-align:right;font-variant-numeric:tabular-nums">${e.releasedSubtasks.length}</td>
+        <td style="padding:10px 14px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--accent)">${e.totalItems}</td>
+        <td style="padding:10px 14px;text-align:right;font-variant-numeric:tabular-nums">${e.points}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="6" style="padding:14px;text-align:center;color:var(--text-tertiary);font-size:13px">No theme data</td></tr>';
+  }
+}
+
+// ── Export Release Reports to PDF ──
+function exportReleaseReportsPDF(){
+  if(typeof window.jspdf === 'undefined'){
+    showNotif('PDF library not loaded', 'error'); return;
+  }
+  const { jsPDF } = window.jspdf;
+
+  const { tasks, involvedProjectIds, involvedSprintIds, selectedProjectIds, selectedSprintIds } = _getReleaseReportsData();
+
+  const visProjects = RBAC.getVisibleProjects();
+  const visSprints  = RBAC.getVisibleSprints();
+
+  const selProjNames   = selectedProjectIds.length   ? selectedProjectIds.map(id => { const p = visProjects.find(x => x.id === id); return p ? p.name : id; })   : ['All Projects'];
+  const selSprintNames = selectedSprintIds.length    ? selectedSprintIds.map(id => { const s = visSprints.find(x => x.id === id);  return s ? s.name : id; })    : ['All Sprints'];
+
+  const totalPoints = tasks.reduce((a, t) => a + (t.points || 0), 0);
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+
+  const meta = {
+    date: new Date().toLocaleDateString(),
+    user: state.currentUser ? (state.currentUser.name || state.currentUser.email || '') : '',
+    filters: 'Projects: ' + selProjNames.slice(0, 3).join(', ') + (selProjNames.length > 3 ? '…' : '') +
+             '  |  Sprints: ' + selSprintNames.slice(0, 3).join(', ') + (selSprintNames.length > 3 ? '…' : '')
+  };
+
+  // Rough total page count estimate (1 summary + 1 breakdown + task pages)
+  const estTaskPages = Math.max(1, Math.ceil(tasks.length / 28));
+  const estTotal     = 2 + estTaskPages;
+
+  // ── PAGE 1: Release Summary ──
+  _pdfDrawHeader(doc, meta, 'Release Reports');
+  const ca = _pdfContentArea(doc);
+  let y = ca.y + 8;
+
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...PDF_TEXT_DARK);
+  doc.text('Release Summary', ca.x, y + 14);
+  y += 32;
+
+  // 4-stat boxes
+  const boxW = (ca.w - 9) / 4;
+  [
+    { label: 'Released Tasks',   value: String(tasks.length) },
+    { label: 'Story Points',     value: String(totalPoints)  },
+    { label: 'Projects',         value: String(involvedProjectIds.length) },
+    { label: 'Sprints',          value: String(involvedSprintIds.length)  }
+  ].forEach((s, i) => {
+    const bx = ca.x + i * (boxW + 3);
+    doc.setFillColor(245, 247, 252);
+    doc.roundedRect(bx, y, boxW, 52, 6, 6, 'F');
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...PDF_ACCENT);
+    doc.text(s.value, bx + boxW / 2, y + 28, { align: 'center' });
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...PDF_TEXT_LIGHT);
+    doc.text(s.label, bx + boxW / 2, y + 44, { align: 'center' });
+  });
+  y += 68;
+
+  // Selected Projects list
+  y = _pdfSectionBand(doc, 'Selected Projects', y);
+  selProjNames.forEach(name => {
+    doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.setTextColor(...PDF_TEXT_MID);
+    doc.text('\u2022 ' + name, ca.x + 8, y);
+    y += 17;
+  });
+  y += 8;
+
+  // Selected Sprints list
+  y = _pdfSectionBand(doc, 'Selected Sprints', y);
+  selSprintNames.forEach(name => {
+    doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.setTextColor(...PDF_TEXT_MID);
+    doc.text('\u2022 ' + name, ca.x + 8, y);
+    y += 17;
+  });
+
+  _pdfDrawFooter(doc, 1, estTotal, tasks.length);
+
+  // ── PAGE 2: Project & Sprint Breakdown ──
+  doc.addPage();
+  _pdfDrawHeader(doc, meta, 'Release Reports');
+  y = ca.y + 8;
+
+  y = _pdfSectionBand(doc, 'Project Release Breakdown', y);
+  const projMap = {};
+  tasks.forEach(t => {
+    if(!t.project) return;
+    if(!projMap[t.project]) projMap[t.project] = { count: 0, points: 0 };
+    projMap[t.project].count++;
+    projMap[t.project].points += (t.points || 0);
+  });
+  if(typeof doc.autoTable === 'function'){
+    doc.autoTable({
+      startY: y,
+      margin: { left: ca.x, right: PDF_MARGIN },
+      head: [['Project', 'Released Tasks', 'Released Story Points']],
+      body: Object.entries(projMap).map(([pid, d]) => { const p = getProject(pid); return [p ? p.name : pid, d.count, d.points]; }),
+      headStyles: { fillColor: PDF_ACCENT, textColor: 255, fontStyle: 'bold', fontSize: 9 },
+      bodyStyles: { fontSize: 10, textColor: PDF_TEXT_MID },
+      alternateRowStyles: { fillColor: [248, 249, 252] },
+      columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } },
+      theme: 'grid'
+    });
+    y = doc.lastAutoTable.finalY + 20;
+  }
+
+  y = _pdfSectionBand(doc, 'Sprint Release Breakdown', y);
+  const sprintMap2 = {};
+  tasks.forEach(t => {
+    if(!t.sprint) return;
+    const key = (t.sprint || '') + '|' + (t.project || '');
+    if(!sprintMap2[key]) sprintMap2[key] = { sprintId: t.sprint, projectId: t.project, count: 0, points: 0 };
+    sprintMap2[key].count++;
+    sprintMap2[key].points += (t.points || 0);
+  });
+  if(typeof doc.autoTable === 'function'){
+    doc.autoTable({
+      startY: y,
+      margin: { left: ca.x, right: PDF_MARGIN },
+      head: [['Sprint', 'Project', 'Released Tasks', 'Released Story Points']],
+      body: Object.values(sprintMap2).map(d => {
+        const s = getSprint(d.sprintId); const p = getProject(d.projectId);
+        return [s ? s.name : d.sprintId, p ? p.name : (d.projectId || '\u2014'), d.count, d.points];
+      }),
+      headStyles: { fillColor: PDF_ACCENT, textColor: 255, fontStyle: 'bold', fontSize: 9 },
+      bodyStyles: { fontSize: 10, textColor: PDF_TEXT_MID },
+      alternateRowStyles: { fillColor: [248, 249, 252] },
+      columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' } },
+      theme: 'grid'
+    });
+  }
+  _pdfDrawFooter(doc, 2, estTotal, tasks.length);
+
+  // ── PAGE 3+: Released Task Details ──
+  doc.addPage();
+  _pdfDrawHeader(doc, meta, 'Release Reports');
+  y = ca.y + 8;
+  y = _pdfSectionBand(doc, 'Released Task Details', y);
+
+  if(typeof doc.autoTable === 'function'){
+    doc.autoTable({
+      startY: y + 4,
+      margin: { left: ca.x, right: PDF_MARGIN },
+      head: [['Task ID', 'Title', 'Project', 'Sprint', 'Epic', 'Priority', 'Pts', 'Status']],
+      body: tasks.map(t => {
+        const proj   = getProject(t.project);
+        const sprint = getSprint(t.sprint);
+        const epic   = t.epicId ? getEpic(t.epicId) : null;
+        const key    = proj ? proj.key + '-' + (t.id || '').slice(-4).toUpperCase() : (t.id || '\u2014');
+        return [key, t.title || '\u2014', proj ? proj.name : '\u2014', sprint ? sprint.name : '\u2014',
+                epic ? epic.title : '\u2014', t.priority || '\u2014', t.points || 0, 'Released'];
+      }),
+      headStyles: { fillColor: PDF_ACCENT, textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      bodyStyles: { fontSize: 8.5, textColor: PDF_TEXT_MID },
+      alternateRowStyles: { fillColor: [248, 249, 252] },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 46 },
+        1: { cellWidth: 120 },
+        6: { halign: 'right', cellWidth: 24 },
+        7: { cellWidth: 46 }
+      },
+      theme: 'grid',
+      didDrawPage: function(data) {
+        _pdfDrawHeader(doc, meta, 'Release Reports');
+      }
+    });
+  }
+
+  // Draw footer on all pages
+  const totalPages = doc.internal.getNumberOfPages();
+  for(let pg = 1; pg <= totalPages; pg++){
+    doc.setPage(pg);
+    _pdfDrawFooter(doc, pg, totalPages, tasks.length);
+  }
+
+  doc.save('SprintFlow-ReleaseReport-' + new Date().toISOString().slice(0, 10) + '.pdf');
+  showNotif('Release Report PDF exported \u2713');
+}
+// ── END RELEASE REPORTS ──────────────────────────────────────────────────────
+</script>
+
+<!-- ── SHARED MULTI-SELECT DROPDOWN PANEL (Reports + Release Reports) ─── -->
+<div id="sf-msdrop-panel" class="sf-msdrop">
+  <div class="sf-msdrop-search">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="sf-msdrop-search" type="text" placeholder="Search…" oninput="_sfMsDrop.search(this.value)" autocomplete="off"/>
+  </div>
+  <div class="sf-msdrop-scroll" id="sf-msdrop-list"></div>
+  <div class="sf-msdrop-foot">
+    <button class="btn btn-secondary text-xs" style="height:26px;padding:0 10px;font-size:11px" onclick="_sfMsDrop.clear()">Clear</button>
+    <button class="btn btn-primary text-xs" style="height:26px;padding:0 10px;font-size:11px" onclick="_sfMsDrop.apply()">Apply</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  SHARED MULTI-SELECT FILTER DROPDOWN
+//  Used by: Reports (rpt-proj/spr) and Release Reports (rr-proj/spr)
+//  Single floating panel, repositioned per trigger button.
+//  Zero impact on any existing filter logic — additive only.
+// ═══════════════════════════════════════════════════════════════════
+
+const _sfMsDrop = (function(){
+  // ── Internal state ──
+  let _ctx    = null;  // current context: { items, selected Set, onApply, labelEl, btnEl, searchQuery }
+  let _allItems = [];  // full list for current context
+
+  const _panel  = ()=> document.getElementById('sf-msdrop-panel');
+  const _list   = ()=> document.getElementById('sf-msdrop-list');
+  const _search = ()=> document.getElementById('sf-msdrop-search');
+
+  // ── Open panel anchored to triggerBtn ──
+  function open(triggerBtn, items, selectedSet, onApply, labelEl){
+    // items: [{id, name, group?}], selectedSet: Set of ids, onApply: fn(Set)
+    _ctx = { items, selected: new Set(selectedSet), onApply, labelEl, btnEl: triggerBtn };
+    _allItems = items;
+    const inp = _search(); if(inp) inp.value = '';
+    render('');
+    const p = _panel(); if(!p) return;
+    p.style.display = 'block';
+    _reposition(triggerBtn);
+  }
+
+  function _reposition(btn){
+    const p = _panel(); if(!p || !btn) return;
+    const r = btn.getBoundingClientRect();
+    const pw = p.offsetWidth || 240;
+    let left = r.left;
+    if(left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+    p.style.top  = (r.bottom + 4) + 'px';
+    p.style.left = left + 'px';
+  }
+
+  function close(){
+    const p = _panel(); if(p) p.style.display = 'none';
+    _ctx = null;
+  }
+
+  function render(q){
+    if(!_ctx) return;
+    const listEl = _list(); if(!listEl) return;
+    const lq = q.toLowerCase();
+    const filtered = _allItems.filter(x => !lq || x.name.toLowerCase().includes(lq));
+
+    // Group items by group field if present
+    const groups = {};
+    filtered.forEach(x => {
+      const g = x.group || '';
+      if(!groups[g]) groups[g] = [];
+      groups[g].push(x);
+    });
+
+    const checkSVG = `<svg width="9" height="9" viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 5,9.5 10.5,2.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+    let html = '';
+    // "All" row
+    const allOn = _ctx.selected.size === 0;
+    html += `<div class="sf-msdrop-item sf-msdrop-all" onclick="_sfMsDrop.selectAll()">
+      <div class="sf-msdrop-check ${allOn?'on':''}">${allOn?checkSVG:''}</div>
+      <span>All</span>
+    </div>`;
+
+    Object.entries(groups).forEach(([grp, items]) => {
+      if(grp) html += `<div style="padding:5px 12px 2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary)">${_escHtml(grp)}</div>`;
+      items.forEach(x => {
+        const on = _ctx.selected.has(x.id);
+        html += `<div class="sf-msdrop-item" onclick="_sfMsDrop.toggle('${x.id.replace(/'/g,"\\'")}')">
+          <div class="sf-msdrop-check ${on?'on':''}">${on?checkSVG:''}</div>
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(x.name)}</span>
+        </div>`;
+      });
+    });
+    if(!filtered.length) html = `<div class="sf-msdrop-item" style="color:var(--text-tertiary);font-style:italic;cursor:default">No matches</div>`;
+    listEl.innerHTML = html;
+  }
+
+  function toggle(id){
+    if(!_ctx) return;
+    if(_ctx.selected.has(id)) _ctx.selected.delete(id);
+    else _ctx.selected.add(id);
+    render(_search()?.value || '');
+  }
+
+  function selectAll(){
+    if(!_ctx) return;
+    _ctx.selected.clear();
+    render(_search()?.value || '');
+  }
+
+  function search(q){ render(q); }
+
+  function clear(){
+    if(!_ctx) return;
+    _ctx.selected.clear();
+    render(_search()?.value || '');
+  }
+
+  function apply(){
+    if(!_ctx) return;
+    const sel = new Set(_ctx.selected);
+    const labelEl = _ctx.labelEl;
+    const onApply = _ctx.onApply;
+    close();
+    if(labelEl) _updateLabel(labelEl, sel, _allItems);
+    if(onApply) onApply(sel);
+  }
+
+  function _updateLabel(labelEl, sel, items){
+    if(sel.size === 0){ labelEl.textContent = labelEl.dataset.allLabel || 'All'; return; }
+    if(sel.size === 1){
+      const found = items.find(x => x.id === [...sel][0]);
+      labelEl.textContent = found ? found.name : '1 selected';
+    } else {
+      labelEl.textContent = sel.size + ' selected';
+    }
+  }
+
+  // Close on outside click
+  document.addEventListener('mousedown', e => {
+    const p = _panel();
+    if(!p || p.style.display === 'none') return;
+    if(p.contains(e.target)) return;
+    if(_ctx && _ctx.btnEl && _ctx.btnEl.contains(e.target)) return;
+    apply(); // auto-apply on outside click
+  }, true);
+
+  // Close on Escape
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape'){ const p = _panel(); if(p && p.style.display !== 'none') apply(); }
+  });
+
+  return { open, close, toggle, selectAll, search, clear, apply };
+})();
+
+// ══════════════════════════════════════════════════════════════════
+//  REPORTS PAGE — multi-select filter state + helpers
+// ══════════════════════════════════════════════════════════════════
+const _rptSelProjs   = new Set(); // selected project IDs; empty = All
+const _rptSelSprints = new Set(); // selected sprint IDs;  empty = All
+
+// Return selected project IDs (empty array = All)
+function _rptGetProjIds(){   return [..._rptSelProjs];   }
+// Return selected sprint IDs (empty array = All)
+function _rptGetSprintIds(){ return [..._rptSelSprints]; }
+
+// Open project dropdown for Reports
+function _rptToggleProjDrop(e){
+  const p = document.getElementById('sf-msdrop-panel');
+  if(p && p.style.display !== 'none' && _rptToggleProjDrop._open){
+    _sfMsDrop.apply(); _rptToggleProjDrop._open = false; return;
+  }
+  const allProj = RBAC.getVisibleProjects();
+  const active    = allProj.filter(p => (p.status||'').toLowerCase() === 'active');
+  const completed = allProj.filter(p => (p.status||'').toLowerCase() === 'completed');
+  const items = [
+    ...active.map(p    => ({ id: p.id, name: p.name, group: active.length    ? 'Active'    : '' })),
+    ...completed.map(p => ({ id: p.id, name: p.name, group: completed.length ? 'Completed' : '' }))
+  ];
+  _sfMsDrop.open(
+    document.getElementById('rpt-proj-btn'),
+    items,
+    _rptSelProjs,
+    sel => { _rptSelProjs.clear(); sel.forEach(id => _rptSelProjs.add(id)); _rptOnProjApply(); },
+    document.getElementById('rpt-proj-label')
+  );
+  document.getElementById('rpt-proj-label').dataset.allLabel = 'All Projects';
+  _rptToggleProjDrop._open = true;
+}
+_rptToggleProjDrop._open = false;
+
+// Open sprint dropdown for Reports
+function _rptToggleSprintDrop(e){
+  const p = document.getElementById('sf-msdrop-panel');
+  if(p && p.style.display !== 'none' && _rptToggleSprintDrop._open){
+    _sfMsDrop.apply(); _rptToggleSprintDrop._open = false; return;
+  }
+  const selPids = _rptGetProjIds();
+  let allSpr = RBAC.getVisibleSprints();
+  if(selPids.length) allSpr = allSpr.filter(s => selPids.includes(s.project));
+  const active    = allSpr.filter(s => (s.status||'').toLowerCase() === 'active');
+  const completed = allSpr.filter(s => (s.status||'').toLowerCase() === 'completed');
+  const items = [
+    ...active.map(s    => ({ id: s.id, name: s.name, group: active.length    ? 'Active'    : '' })),
+    ...completed.map(s => ({ id: s.id, name: s.name, group: completed.length ? 'Completed' : '' }))
+  ];
+  _sfMsDrop.open(
+    document.getElementById('rpt-spr-btn'),
+    items,
+    _rptSelSprints,
+    sel => { _rptSelSprints.clear(); sel.forEach(id => _rptSelSprints.add(id)); _debouncedRenderReports(); },
+    document.getElementById('rpt-spr-label')
+  );
+  document.getElementById('rpt-spr-label').dataset.allLabel = 'All Sprints';
+  _rptToggleSprintDrop._open = true;
+}
+_rptToggleSprintDrop._open = false;
+
+function _rptOnProjApply(){
+  // When project filter changes, prune any sprint selections that no longer belong
+  const selPids = _rptGetProjIds();
+  if(selPids.length){
+    [..._rptSelSprints].forEach(sid => {
+      const s = RBAC.getVisibleSprints().find(x => x.id === sid);
+      if(!s || !selPids.includes(s.project)) _rptSelSprints.delete(sid);
+    });
+    // Update sprint label if selections were pruned
+    const sprLbl = document.getElementById('rpt-spr-label');
+    if(sprLbl){
+      if(_rptSelSprints.size === 0) sprLbl.textContent = 'All Sprints';
+      else if(_rptSelSprints.size === 1){
+        const s = RBAC.getVisibleSprints().find(x => x.id === [..._rptSelSprints][0]);
+        sprLbl.textContent = s ? s.name : '1 selected';
+      } else sprLbl.textContent = _rptSelSprints.size + ' selected';
+    }
+  }
+  _debouncedRenderReports();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  RELEASE REPORTS PAGE — multi-select filter state + helpers
+// ══════════════════════════════════════════════════════════════════
+const _rrSelProjs2   = new Set(); // selected project IDs; empty = All
+const _rrSelSprints2 = new Set(); // selected sprint IDs;  empty = All
+
+// Open project dropdown for Release Reports
+function _rrToggleProjDrop(e){
+  const p = document.getElementById('sf-msdrop-panel');
+  if(p && p.style.display !== 'none' && _rrToggleProjDrop._open){
+    _sfMsDrop.apply(); _rrToggleProjDrop._open = false; return;
+  }
+  const allProj = RBAC.getVisibleProjects();
+  const active    = allProj.filter(p => (p.status||'').toLowerCase() === 'active');
+  const completed = allProj.filter(p => (p.status||'').toLowerCase() === 'completed');
+  const items = [
+    ...active.map(p    => ({ id: p.id, name: p.name, group: active.length    ? 'Active'    : '' })),
+    ...completed.map(p => ({ id: p.id, name: p.name, group: completed.length ? 'Completed' : '' }))
+  ];
+  _sfMsDrop.open(
+    document.getElementById('rr-proj-btn'),
+    items,
+    _rrSelProjs2,
+    sel => { _rrSelProjs2.clear(); sel.forEach(id => _rrSelProjs2.add(id)); _rrOnProjApply2(); },
+    document.getElementById('rr-proj-label')
+  );
+  document.getElementById('rr-proj-label').dataset.allLabel = 'All Projects';
+  _rrToggleProjDrop._open = true;
+}
+_rrToggleProjDrop._open = false;
+
+// Open sprint dropdown for Release Reports
+function _rrToggleSprintDrop(e){
+  const p = document.getElementById('sf-msdrop-panel');
+  if(p && p.style.display !== 'none' && _rrToggleSprintDrop._open){
+    _sfMsDrop.apply(); _rrToggleSprintDrop._open = false; return;
+  }
+  const selPids = [..._rrSelProjs2];
+  let allSpr = RBAC.getVisibleSprints();
+  if(selPids.length) allSpr = allSpr.filter(s => selPids.includes(s.project));
+  const active    = allSpr.filter(s => (s.status||'').toLowerCase() === 'active');
+  const completed = allSpr.filter(s => (s.status||'').toLowerCase() === 'completed');
+  const items = [
+    ...active.map(s    => ({ id: s.id, name: s.name, group: active.length    ? 'Active'    : '' })),
+    ...completed.map(s => ({ id: s.id, name: s.name, group: completed.length ? 'Completed' : '' }))
+  ];
+  _sfMsDrop.open(
+    document.getElementById('rr-spr-btn'),
+    items,
+    _rrSelSprints2,
+    sel => { _rrSelSprints2.clear(); sel.forEach(id => _rrSelSprints2.add(id)); _debouncedRenderReleaseReports(); },
+    document.getElementById('rr-spr-label')
+  );
+  document.getElementById('rr-spr-label').dataset.allLabel = 'All Sprints';
+  _rrToggleSprintDrop._open = true;
+}
+_rrToggleSprintDrop._open = false;
+
+function _rrOnProjApply2(){
+  // Prune sprint selections no longer in scope
+  const selPids = [..._rrSelProjs2];
+  if(selPids.length){
+    [..._rrSelSprints2].forEach(sid => {
+      const s = RBAC.getVisibleSprints().find(x => x.id === sid);
+      if(!s || !selPids.includes(s.project)) _rrSelSprints2.delete(sid);
+    });
+    const sprLbl = document.getElementById('rr-spr-label');
+    if(sprLbl){
+      if(_rrSelSprints2.size === 0) sprLbl.textContent = 'All Sprints';
+      else if(_rrSelSprints2.size === 1){
+        const s = RBAC.getVisibleSprints().find(x => x.id === [..._rrSelSprints2][0]);
+        sprLbl.textContent = s ? s.name : '1 selected';
+      } else sprLbl.textContent = _rrSelSprints2.size + ' selected';
+    }
+  }
+  _debouncedRenderReleaseReports();
+}
+// ── END SHARED MULTI-SELECT SYSTEM ───────────────────────────────────────────
 </script>
 </body>
 </html>
