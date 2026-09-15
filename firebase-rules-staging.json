@@ -1,0 +1,134 @@
+{
+  "rules": {
+    ".read": "auth != null",
+
+    "sprintflow": {
+
+      "users": {
+        ".read": "auth != null",
+
+        "$userId": {
+          ".write": "auth != null && ( auth.token.email === 'jatin.chaudhary@mediassist.in' || (data.exists() && data.child('email').val() === auth.token.email && newData.child('role').val() === data.child('role').val() && newData.child('canDeleteTasks').val() === data.child('canDeleteTasks').val() && newData.child('aiChatEnabled').val() === data.child('aiChatEnabled').val() && newData.child('aiWritingEnabled').val() === data.child('aiWritingEnabled').val()) || (!data.exists() && newData.child('email').val() === auth.token.email && newData.child('role').val() === 'team_member' && !newData.hasChild('canDeleteTasks') && !newData.hasChild('aiChatEnabled') && !newData.hasChild('aiWritingEnabled')) )",
+
+          "role": {
+            ".write": "auth.token.email === 'jatin.chaudhary@mediassist.in'"
+          },
+
+          "canDeleteTasks": {
+            ".write": "auth.token.email === 'jatin.chaudhary@mediassist.in'"
+          },
+
+          "aiChatEnabled": {
+            ".write": "auth.token.email === 'jatin.chaudhary@mediassist.in'"
+          },
+
+          "aiWritingEnabled": {
+            ".write": "auth.token.email === 'jatin.chaudhary@mediassist.in'"
+          }
+        }
+      },
+
+      "projects": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+
+      "tasks": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".indexOn": ["project"]
+      },
+
+      "sprints": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".indexOn": ["project"]
+      },
+
+      "epics": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".indexOn": ["projectId"]
+      },
+
+      "releases": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".indexOn": ["projectId"]
+      },
+
+      "retrospectives": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+
+      "retrospectiveEntries": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+
+      "products": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+
+      "tags": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+
+      "themes": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+
+      "taskDescriptions": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+
+      "taskComments": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+
+      "notifications": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+
+        "$uid": {
+          ".indexOn": ["createdAt"]
+        }
+      },
+
+      "notifications_archive": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+
+        "$uid": {
+          ".indexOn": ["createdAt"]
+        }
+      },
+
+      "notificationCounts": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+
+      "notificationMeta": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+
+      "userMeta": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+
+      "settings": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    }
+  }
+}

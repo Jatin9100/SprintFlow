@@ -1,0 +1,6653 @@
+[
+ {
+  "name": "DEFAULT_DATA",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 4034,
+  "category": "state",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "state",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 4062,
+  "category": "state",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "currentPage",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 4078,
+  "category": "state",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "RBAC",
+  "type": "iife",
+  "sourceBlock": "main",
+  "line": 4084,
+  "category": "rbac",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "updateSidebarUserDisplay",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 4396,
+  "category": "rbac",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "draggedTaskId",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 4414,
+  "category": "state",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "kanbanDraggedId",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 4415,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "kanbanDraggedSubtask",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 4416,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "charts",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 4417,
+  "category": "state",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "FirebaseDB",
+  "type": "iife",
+  "sourceBlock": "main",
+  "line": 4424,
+  "category": "firebase",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "RealtimeSync",
+  "type": "iife",
+  "sourceBlock": "main",
+  "line": 4816,
+  "category": "sync",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "PendingSyncQueue",
+  "type": "iife",
+  "sourceBlock": "main",
+  "line": 5283,
+  "category": "sync",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "SyncState",
+  "type": "iife",
+  "sourceBlock": "main",
+  "line": 5393,
+  "category": "sync",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "DebounceWrite",
+  "type": "iife",
+  "sourceBlock": "main",
+  "line": 5408,
+  "category": "sync",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_refreshSyncDotForEntity",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5451,
+  "category": "sync",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_retrySingleEntity",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5466,
+  "category": "sync",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "loadState",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5529,
+  "category": "state",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "SaveManager",
+  "type": "iife",
+  "sourceBlock": "main",
+  "line": 5561,
+  "category": "sync",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "saveState",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5597,
+  "category": "sync",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "saveStateImmediate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5602,
+  "category": "sync",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "resetData",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5607,
+  "category": "state",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_domCache",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 5616,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "$el",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5617,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_clearDomCache",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5626,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_userMap",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 5629,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_invalidateMaps",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5630,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getProject",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5632,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getUser",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5636,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getSprint",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5640,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getTask",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5644,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getEpic",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5648,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "invalidateStateMaps",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5653,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_chartFingerprints",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 5656,
+  "category": "charts",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_chartDataChanged",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5657,
+  "category": "charts",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_invalidateChartFingerprints",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5663,
+  "category": "charts",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_makeDebounce",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5666,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_addPassiveListener",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5675,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptFilterTimer",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 5681,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_debouncedRenderReports",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5682,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_kanbanFilterTimer",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 5688,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_debouncedRenderKanban",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5689,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_backlogPlannerFilterTimer",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 5695,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_debouncedRenderBacklogPlanner",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5696,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_sprintPlanFilterTimer",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 5702,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_debouncedRenderSprintPlanning",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5703,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_spOnProjectFilterChange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5709,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_spSyncLabel",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5733,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_epicsFilterTimer",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 5746,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_debouncedRenderEpics",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5747,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_releaseBoardTimer",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 5753,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_debouncedRenderReleaseBoard",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5754,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "uid",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5759,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "stid",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5760,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "spid",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5761,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "ppid",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5762,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "muid",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5763,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "epid",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5764,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_now",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5767,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_qaPointsFor",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5774,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_qaUserPoints",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5786,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_qaItemBelongsTo",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5790,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "cleanupEpicReferences",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5800,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "cleanupSprintReferences",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5818,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "cleanupReleaseReferences",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5846,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "cleanupMemberReferences",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5862,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getEpicTasks",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5883,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getEpicProgress",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5884,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getEpicStoryPoints",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5894,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "epicStatusBadgeClass",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5900,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "initials",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5905,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "randomColor",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5908,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "priorityColor",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5912,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "typeIcon",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5915,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "typeColor",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5918,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "formatDate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5921,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "formatDateTime",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5926,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_captureCreator",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5930,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_createdByLabel",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5941,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "sprintDaysLeft",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5948,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "sprintProgress",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5952,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "userAvatar",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5960,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_initDescEditor",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 5968,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_sanitizeDescHTML",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6030,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_getDescValue",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6065,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_setDescValue",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6080,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_MAX_NOTIFS",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 6088,
+  "category": "notifications",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "showNotif",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6089,
+  "category": "utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "applyRbacUI",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6109,
+  "category": "rbac",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "navigate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6147,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_renderPageInProgress",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 6182,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderPage",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6183,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_refreshAllTimer",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 6215,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "refreshAll",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6217,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "toggleSidebar",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6254,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "updateSidebarProject",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6268,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "showProjectSwitcher",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6276,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_getCtx",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6301,
+  "category": "charts",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "destroyCharts",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6308,
+  "category": "charts",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_populateDashboardFilters",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6314,
+  "category": "charts",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getRoleScopedAnalyticsData",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6368,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_sfDropRegistry",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 6458,
+  "category": "sf-dropdown-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_sfDropRegister",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6460,
+  "category": "sf-dropdown-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_sfDropGetOrCreate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6464,
+  "category": "sf-dropdown-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_sfDropPosition",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6477,
+  "category": "sf-dropdown-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_sfDropToggle",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6493,
+  "category": "sf-dropdown-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_sfDropSelect",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6510,
+  "category": "sf-dropdown-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_sfAttrStr",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6531,
+  "category": "sf-dropdown-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_sfDropBuild",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6535,
+  "category": "sf-dropdown-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_sfDropSyncLabel",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6553,
+  "category": "sf-dropdown-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_dashSprintGetOrCreateDrop",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6618,
+  "category": "dashboard",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_dashSprintDropToggle",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6620,
+  "category": "dashboard",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_dashSprintSelect",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6622,
+  "category": "dashboard",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderDashboard",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6624,
+  "category": "dashboard",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "renderProjects",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 6961,
+  "category": "project-cards",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getVisibleProjects",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7033,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "selectProject",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7037,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_bulkSelect",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7051,
+  "category": "bulk-select",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blKeyProject",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7054,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blKeySprint",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7064,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blCanAdd",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7075,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blToggleTask",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7089,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blToggleSubtask",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7110,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blClearAll",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7129,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blSyncGroupHeaders",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7140,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blToggleGroupAll",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7153,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blUpdateBar",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7193,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blToast",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7219,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blSuccessToast",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7231,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blSubRows",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7243,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blPanelCleanup",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7246,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blClosePanel",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7247,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blOpenPanel",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7252,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blAction",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7295,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blResolvedItems",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7312,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blDoAssign",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7327,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blApplyAssign",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7351,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blDoStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7366,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blApplyStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7373,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blDoProducts",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7412,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blApplyProduct",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7428,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blDoTags",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7454,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blApplyTag",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7470,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blDoThemes",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7495,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blApplyTheme",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7511,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blDoEpic",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7527,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blApplyEpic",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7576,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blDoSprint",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7612,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blApplySprint",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7625,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blDoDelete",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7644,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blGetCommonValue",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7682,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_esc",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7688,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_blRerenderCurrentView",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7693,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "STATUS_META",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7709,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "statusLabel",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7722,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "statusBadgeClass",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7723,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "DONE_STATUSES",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7726,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "SPILLOVER_DONE_STATUSES",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7736,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "LOCKED_TASK_STATUSES",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7741,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "isTaskLocked",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7743,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "canReleaseItem",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7754,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "canChangeTaskStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7763,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "resolveRollbackStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7783,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_QA_STAGES",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7791,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_DEV_STAGES",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7792,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_trackQAReopen",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7794,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "EPIC_STATUS_ORDER",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7808,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "canChangeEpicStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7810,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "isEpicLocked",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7826,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "isReleaseLocked",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7836,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "isProjectCompleted",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7839,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "isSprintCompleted",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7842,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getSubtasks",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7845,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "subtaskProgress",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7849,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "subtaskStatusDot",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7855,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "canMoveToClosedStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7859,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "subtaskAssigneeAvatars",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7868,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "taskRow",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7874,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "toggleBacklogSubtasks",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7932,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_BLP_VALUE_WEIGHT",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7954,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_BLP_POINTS_PER_MEMBER",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7963,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_BLP_ROLE_POINTS",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7968,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blpCapacityTouched",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 7975,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blpMemberPoints",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7980,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blpIdealCapacity",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 7986,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blpUseIdealCapacity",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8018,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_sprintUtilization",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8027,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_sprintUtilizationBadgeHtml",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8039,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blpUrgencyScore",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8044,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_blpAgingScore",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8057,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "computeBacklogPriorityScore",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8067,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderBacklogPlanner",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8076,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderSprintPlanning",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8205,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "sprintTaskChip",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8493,
+  "category": "backlog-planner",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "taskDragStart",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8512,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "taskDragEnd",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8517,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "sprintDragOver",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8521,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "sprintDragLeave",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8527,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "sprintDrop",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8534,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "removeTaskFromSprint",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8573,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "renderKanban",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8592,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_kanbanRenderProjectCache",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 8858,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_kanbanRenderUserCache",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 8859,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_kanbanRenderEpicCache",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 8860,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "kanbanCard",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8862,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "kanbanSubtaskCard",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8911,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "kanbanDragStart",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8940,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "kanbanDragEnd",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8956,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "kanbanSubDragStart",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8964,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "kanbanSubDragEnd",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8980,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_lastDragOverCol",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 8988,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "kanbanDragOver",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 8989,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "kanbanDragLeave",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9001,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "kanbanDrop",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9008,
+  "category": "kanban",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rptProdSort",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 9074,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "setSortProd",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9075,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rptAdvFilters",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 9078,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptAdvPending",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 9080,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "toggleRptFilterPanel",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9082,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rptPopulateAdvFilterDropdowns",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9113,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "applyRptAdvFilters",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9138,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "resetRptAdvFilters",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9149,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "removeRptAdvFilter",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9161,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rptActiveFilterCount",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9168,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptUpdateActiveBadge",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9176,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptUpdateActiveChips",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9188,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_getFilteredReportsData",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9212,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptFilteredTasks",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9262,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptFilteredSprints",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9283,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptHealthDot",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9292,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_chartOpts",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9300,
+  "category": "charts",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_fmtPts",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9339,
+  "category": "charts",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderProductivityTable",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9347,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "renderReports",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 9419,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_applyWorkloadMemberFilter",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10152,
+  "category": "teams",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_teamsViewMode",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 10220,
+  "category": "teams",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "setTeamsView",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10221,
+  "category": "teams",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "renderTeams",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10230,
+  "category": "teams",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_teamsListHtml",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10351,
+  "category": "teams",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_modalOpen",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 10385,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_modalCloseTimer",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 10386,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_modalEnsureVisible",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10388,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "openModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10403,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "replaceModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10417,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "closeModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10424,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_isModalFullscreen",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10447,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_modalFullscreenIconHtml",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10451,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_modalFullscreenBtnHtml",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10456,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "toggleModalFullscreen",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10460,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "shareTaskLink",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10518,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "shareSubtaskLink",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10523,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_copyShareLink",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10528,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_copyShareLinkFallback",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10535,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_DEEP_LINK_KEY",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 10549,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_resolveDeepLink",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10550,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cleanDeepLinkParam",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10588,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_stashDeepLinkIfNeeded",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10596,
+  "category": "modal-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmCache",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 10619,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmTaskFbPath",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10624,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmSubFbPath",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10625,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmFbPath",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10626,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmCacheKey",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10629,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmFirebaseRead",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10632,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmLoad",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10656,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmMigrateLegacy",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10694,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmFirebaseWrite",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10741,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmFirebaseUpdate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10762,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmFirebaseDelete",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10786,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmUpdateMetadata",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10803,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmInvalidate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10825,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmRollbackTask",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10834,
+  "category": "comments",
+  "alreadyWindowExposed": true,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descCache",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 10862,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descTaskFbPath",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10865,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descSubFbPath",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10866,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descFbPath",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10867,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descCacheKey",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10870,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_compressSingleImage",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10886,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_compressImagesInHtml",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10936,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descGeneratePreview",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10975,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descFirebaseRead",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 10983,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descLoad",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11002,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descMigrateLegacy",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11038,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descFirebaseSave",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11080,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descSave",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11098,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descUpdateMetadata",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11127,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descInvalidate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11147,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descRollbackTask",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11155,
+  "category": "description-editor",
+  "alreadyWindowExposed": true,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_payloadCountImages",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11184,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_payloadLargestImage",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11191,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_payloadGetDescHtml",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11204,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_payloadGetCommentText",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11216,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_payloadComputeMeta",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11232,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_payloadUpdateMetadata",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11265,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_payloadFmtBytes",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11281,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_payloadColor",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11289,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_renderPayloadAnalysis",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11297,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmId",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11402,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmFormatTime",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11405,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmCanComment",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11416,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmCanEdit",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11432,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmCanDelete",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11441,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmRoleLabel",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11450,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmRoleBadgeClass",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11457,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmItemHtml",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11466,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmSectionHtmlSync",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11497,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_descHydrate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11551,
+  "category": "description-editor",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmSectionHtml",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11562,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmInitEditor",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11575,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmHydrate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11582,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmSubmit",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11595,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_cmNotify",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11671,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmRefreshSection",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11695,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmStartEdit",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11710,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_cmCancelEdit",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11730,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_cmSaveEdit",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11739,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_cmDeleteComment",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11785,
+  "category": "comments",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openTaskModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 11843,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drStampCompletionDate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12014,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "updateTaskStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12022,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "deleteTask",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12061,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openCreateSubtaskModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12081,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "createSubtask",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12204,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openSubtaskModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12264,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openEditSubtaskModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12396,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "saveSubtask",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12546,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "updateSubtaskStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12623,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "deleteSubtask",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12661,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_sprintOptionsForProject",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12685,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_assigneeOptionsForProject",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12697,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_qaAssigneeOptionsForProject",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12725,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_ctFieldError",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12740,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_ctClearErrors",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12755,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_msState",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 12768,
+  "category": "multiselect-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "initMultiSelect",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12770,
+  "category": "multiselect-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_msRender",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12791,
+  "category": "multiselect-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "openCreateTaskModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 12899,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "ctOnProjectChange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13056,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "ctOnSprintChange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13105,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "ctOnStartDateChange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13116,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "createTask",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13125,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openEditTaskModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13260,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "etOnProjectChange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13481,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "etOnSprintChange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13527,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "etOnStatusChange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13538,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "etOnStartDateChange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13557,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "cstOnStartDateChange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13567,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "estOnStatusChange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13577,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "estOnStartDateChange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13596,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "saveTask",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13605,
+  "category": "tasks-subtasks",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openCreateSprintModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13755,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "csOnStartDateChange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13802,
+  "category": "task-modal",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "createSprint",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13811,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openEditSprintModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13857,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "saveSprint",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 13926,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_openSprintCompletionModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14008,
+  "category": "sprint-completion",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_scUpdateUI",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14099,
+  "category": "sprint-completion",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_executeSprintCompletion",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14118,
+  "category": "sprint-completion",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "confirmDeleteSprint",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14234,
+  "category": "sprint-planning",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openCreateProjectModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14260,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "createProject",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14327,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_epToggleMember",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14364,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openEditProjectModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14379,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "saveProjectEdit",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14469,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "deleteProject",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14504,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "toggleProjCard",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14526,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_applyProjCardState",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14538,
+  "category": "project-cards",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "initProjCards",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14557,
+  "category": "project-cards",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "toggleEpicCard",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14582,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_applyEpicCardState",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14592,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "initEpicCards",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14610,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_viewerScopeUI",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14632,
+  "category": "viewer-scope",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_cmToggleViewerScopeUI",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14650,
+  "category": "viewer-scope",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_emToggleViewerScopeUI",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14651,
+  "category": "viewer-scope",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_emSyncDeleteToggleVisibility",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14656,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_emToggleDeleteFlag",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14663,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openCreateMemberModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14673,
+  "category": "teams",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "createMember",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14790,
+  "category": "teams",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openEditMemberModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14857,
+  "category": "teams",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "saveMember",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 14989,
+  "category": "teams",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "deleteMember",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15058,
+  "category": "teams",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "renderEpics",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15086,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "openCreateEpicModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15180,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "createEpic",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15256,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openEditEpicModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15302,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "saveEpic",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15402,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "deleteEpic",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15464,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openEpicDetailModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15483,
+  "category": "epics",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "RELEASE_STATUSES",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 15551,
+  "category": "release-domain",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "rlid",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15554,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getRelease",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15557,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getReleaseTasks",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15559,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getReleaseProgress",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15572,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getReleaseStoryPoints",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15579,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "createRelease",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15587,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_autoCreateReleaseForSprint",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15636,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "updateRelease",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15657,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "deleteRelease",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15686,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "RELEASE_VALIDATION_WARNINGS",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 15701,
+  "category": "release-domain",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_releaseNotesTextLength",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15711,
+  "category": "release-domain",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "validateReleaseNotesForRelease",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15720,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "validateTaskStatusTransition",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15732,
+  "category": "task-domain-utils",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "saveReleases",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15745,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "loadReleases",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15749,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "RELEASE_STATUS_COLORS",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 15758,
+  "category": "release-domain",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "releaseStatusColor",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15764,
+  "category": "release-domain",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "releaseStatusBadge",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15765,
+  "category": "release-domain",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "getQueueTasks",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15768,
+  "category": "release-domain",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "toggleReleaseQueue",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15806,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rqDragTaskId",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 15818,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rqDragProjectId",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 15819,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rqDragMousedown",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15821,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rqDragStart",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15827,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rqDragEnd",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15838,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rqDragOver",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15848,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rqDragLeave",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15862,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rqDrop",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15869,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "renderReleaseQueue",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15914,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "mapTaskToRelease",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15968,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "unmapTaskFromRelease",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 15990,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "populateReleaseFilters",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16008,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "clearReleaseFilters",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16038,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "getFilteredReleases",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16047,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderReleaseBoard",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16069,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "releaseCard",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16135,
+  "category": "release-domain",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "toggleReleaseTasks",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16254,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "confirmDeleteRelease",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16263,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_releaseSprintOptions",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16274,
+  "category": "release-domain",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_releaseOwnerOptions",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16281,
+  "category": "release-domain",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_releaseProjectChanged",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16289,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openCreateReleaseModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16297,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "submitCreateRelease",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16345,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openEditReleaseModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16369,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "submitEditRelease",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16425,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_searchDebounce",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 16488,
+  "category": "search-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "SEARCH_RECENT_KEY",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 16489,
+  "category": "search-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "MAX_RECENT",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 16490,
+  "category": "search-widget",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_lastSearchKey",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 16493,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_lastSearchHTML",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 16494,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_getSearchCacheKey",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16496,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_invalidateSearchCache",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16499,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "loadRecentSearches",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16502,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "saveRecentSearch",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16505,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "clearRecentSearches",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16512,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "highlightMatch",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16518,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "clearSearch",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16525,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "closeSearchDropdown",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16534,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openSearchDropdown",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16543,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderRecentSearches",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16549,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "applyRecentSearch",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16575,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "removeRecentSearch",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16581,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "performGlobalSearch",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16588,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderSearchResultItem",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16756,
+  "category": "search",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptToast",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16929,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptExportMenuListenerAttached",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 16945,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "toggleRptExportMenu",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16946,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_getReportExportData",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 16963,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "PDF_MARGIN",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 17096,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "PDF_HEADER_H",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 17097,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "PDF_FOOTER_H",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 17098,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "PDF_ACCENT",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 17099,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "PDF_BG",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 17100,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "PDF_CARD_BG",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 17101,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "PDF_TEXT_DARK",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 17102,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "PDF_TEXT_MID",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 17103,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "PDF_TEXT_LIGHT",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 17104,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "PDF_LINE_COLOR",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 17105,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "PDF_CHART_SCALE",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 17107,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfShowLoader",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17111,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfProgress",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17141,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfSetExportBtnState",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17150,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfFilename",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17162,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfGetFilterSummary",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17167,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfContentArea",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17195,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfDrawHeader",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17211,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfDrawFooter",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17265,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfSectionBand",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17297,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfKpiCard",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17320,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfKpiCardProgress",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17358,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfCaptureChart",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17397,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfInsertChart",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17416,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfEnsureSpace",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17431,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfBuildCoverPage",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17443,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfBuildExecutiveSummary",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17534,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfBuildSprintAnalytics",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17668,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfBuildTeamProductivityCharts",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17732,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfBuildMemberProductivityTable",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17773,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfBuildProjectAnalytics",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17813,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfBuildReleaseAnalytics",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17876,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfBuildEpicAnalytics",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17935,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfBuildSummaryTables",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 17994,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_pdfBuildTaskList",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18048,
+  "category": "export-pdf",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "exportReportPDF",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18131,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_xlShowLoader",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18321,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlProgress",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18364,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlSetTitle",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18374,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlSetBtnState",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18380,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlYield",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18389,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlCell",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18405,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlBuildSheet",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18420,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlFmtDate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18465,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlStr",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18478,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlLookup",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18487,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlTaskCompletion",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18513,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlReopenCount",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18526,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlDevStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18533,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlQaStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18544,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlProdStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18551,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlFilename",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18558,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlGetData",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18571,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlSheetCover",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18615,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlSheetSummary",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18648,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlSheetTasks",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18708,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlSheetSprints",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18836,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlSheetEpics",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18883,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlSheetReleases",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18929,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlSheetTeam",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 18975,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlSheetProjects",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19032,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlSheetMetrics",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19087,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "exportReportExcel",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19199,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_expSelProjs",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 19420,
+  "category": "export-shared-ui",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_expSelSprints",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 19421,
+  "category": "export-shared-ui",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_expSelAssignees",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 19422,
+  "category": "export-shared-ui",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "openExportDateRangeModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19427,
+  "category": "export-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_expUpdateInfoText",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19545,
+  "category": "export-shared-ui",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_expToggleProjDrop",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19557,
+  "category": "export-shared-ui",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_expOnProjApply",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19584,
+  "category": "export-shared-ui",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_expToggleSprintDrop",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19606,
+  "category": "export-shared-ui",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_expPruneAssignees",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19636,
+  "category": "export-shared-ui",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_expGetScopedUsers",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19651,
+  "category": "export-shared-ui",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_expToggleAssigneeDrop",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19677,
+  "category": "export-shared-ui",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drFmtDate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19702,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_openAuditExportModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19706,
+  "category": "export-shared-ui",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "drUpdateEstimate",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19773,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "closeExportDateRangeModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19791,
+  "category": "export-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "confirmExportDateRange",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19800,
+  "category": "export-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "exportAuditLogs",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 19853,
+  "category": "export-shared-ui",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_applyExportMenuRBAC",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20142,
+  "category": "rbac",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_xlGetData_orig",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 20170,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prdId",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20178,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_tagId",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20179,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderAdminConfig",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20182,
+  "category": "admin-settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_tagColorByName",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20226,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_productColorByName",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20230,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_coloredChip",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20234,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_renderProductsList",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20241,
+  "category": "admin-settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_renderTagsList",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20271,
+  "category": "admin-settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "NOTIF_CLEANUP_INTERVAL_KEY",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 20303,
+  "category": "notifications",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "NOTIF_CLEANUP_LASTRUN_KEY",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 20304,
+  "category": "notifications",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_getNotifCleanupIntervalDays",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20306,
+  "category": "notif-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_getNotifCleanupLastRun",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20310,
+  "category": "notif-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_setNotifCleanupLastRun",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20314,
+  "category": "notif-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_renderNotifCleanupStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20317,
+  "category": "notif-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_formatNotifBytes",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20326,
+  "category": "notif-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_setNotifScanSummary",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20334,
+  "category": "notif-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_notifAutoCleanupTimer",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 20343,
+  "category": "notifications",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_startNotifAutoCleanupSchedule",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20344,
+  "category": "notif-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "scanNotificationsDataNow",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20358,
+  "category": "notifications",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "setNotifCleanupInterval",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20383,
+  "category": "notif-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_maybeRunNotifAutoCleanup",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20392,
+  "category": "notif-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "adminDeleteNotificationsNow",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20407,
+  "category": "notifications",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_runNotifPurgeNow",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20451,
+  "category": "notifications",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_esc",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20527,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "IMG_CLEANUP_LASTRUN_KEY",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 20546,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "IMG_CLEANUP_INTERVAL_KEY",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 20547,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_getImgCleanupLastRun",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20549,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_setImgCleanupLastRun",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20553,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_getImgCleanupIntervalDays",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20556,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_renderImgCleanupStatus",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20560,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_formatImgBytes",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20569,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_setImgScanSummary",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20575,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_imgCleanupEligibleSprintIds",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20584,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_imgCleanupEligibleTaskIds",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20609,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_stripDataUriImages",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20618,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_imgCleanupPlanForTask",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20631,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_imgCleanupScanOrRun",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20682,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "scanImageCleanupNow",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20724,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "adminStripImagesNow",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20747,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_runImageStripNow",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20777,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "setImgCleanupInterval",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20807,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_maybeRunImgAutoCleanup",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20818,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_imgAutoCleanupTimer",
+  "type": "assign",
+  "sourceBlock": "main",
+  "line": 20842,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_startImgAutoCleanupSchedule",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20843,
+  "category": "img-cleanup-admin",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_projectMultiSelectHTML",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20857,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_collectCheckedProjects",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20873,
+  "category": "admin-settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_saveAdminConfig",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20880,
+  "category": "admin-settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_fbSaveProduct",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20884,
+  "category": "admin-settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_fbDeleteProduct",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20891,
+  "category": "admin-settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_fbSaveTag",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20898,
+  "category": "admin-settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_fbDeleteTag",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20905,
+  "category": "admin-settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "openProductModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20914,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "saveProduct",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20971,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "deleteProduct",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 20998,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openTagModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 21009,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "saveTag",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 21065,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "deleteTag",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 21092,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_themeId",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 21102,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_renderThemesList",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 21104,
+  "category": "admin-settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_fbSaveTheme",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 21134,
+  "category": "admin-settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_fbDeleteTheme",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 21141,
+  "category": "admin-settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "openThemeModal",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 21148,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "saveTheme",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 21204,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "deleteTheme",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 21231,
+  "category": "settings",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_xlGetDataWithFilters",
+  "type": "function",
+  "sourceBlock": "main",
+  "line": 21248,
+  "category": "export-excel",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "NotificationSystem",
+  "type": "iife",
+  "sourceBlock": "notification-system",
+  "line": 21364,
+  "category": "notifications",
+  "alreadyWindowExposed": true,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "NotificationTriggers",
+  "type": "iife",
+  "sourceBlock": "notification-system",
+  "line": 22263,
+  "category": "notifications",
+  "alreadyWindowExposed": true,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "ReminderEngine",
+  "type": "iife",
+  "sourceBlock": "reminder-engine",
+  "line": 22459,
+  "category": "notifications",
+  "alreadyWindowExposed": true,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "NotificationUI",
+  "type": "iife",
+  "sourceBlock": "notification-ui",
+  "line": 22544,
+  "category": "notifications",
+  "alreadyWindowExposed": true,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "RetroManager",
+  "type": "iife",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23161,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_populateRetroProjectFilter",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23370,
+  "category": "projects",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_populateRetroSprintFilter",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23388,
+  "category": "release-reports-extra",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_onRetroProjectFilterChange",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23426,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "renderRetrospectives",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23432,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_escHtml",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23536,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_escAttr",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23539,
+  "category": "utils-core",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "openRetroAddEntry",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23544,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_submitRetroEntry",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23578,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "confirmDeleteRetro",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23591,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rrInitialized",
+  "type": "assign",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23611,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrGetSelectedProjects",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23614,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrGetSelectedSprints",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23615,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrPopulateProjectSel",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23618,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrPopulateSprintSel",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23619,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrOnProjectChange",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23622,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrFilterTimer",
+  "type": "assign",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23625,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_debouncedRenderReleaseReports",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23626,
+  "category": "main-bootstrap",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrResetFilters",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23632,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrDatePreset",
+  "type": "assign",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23644,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrDateRangeStart",
+  "type": "assign",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23645,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrDateRangeEnd",
+  "type": "assign",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23646,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrComputeDateRange",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23649,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrOnDatePreset",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23670,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rrOnCustomDate",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23691,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rrUpdateDateChip",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23704,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrClearDateFilter",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23727,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_getReleaseReportsData",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23740,
+  "category": "release-reports-extra",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrSprintSpillover",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23809,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderReleaseReports",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23832,
+  "category": "release-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_renderRRThemeAnalysis",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 23968,
+  "category": "release-reports-extra",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_renderRRReleaseNotes",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 24121,
+  "category": "releases",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "exportReleaseReportsPDF",
+  "type": "function",
+  "sourceBlock": "retro-manager-and-release-reports",
+  "line": 24189,
+  "category": "release-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_sfMsDrop",
+  "type": "iife",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24451,
+  "category": "export-shared",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptSelProjs",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24586,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptSelSprints",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24587,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptGetProjIds",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24590,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptGetSprintIds",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24592,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rptToggleProjDrop",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24595,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rptToggleSprintDrop",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24620,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rptOnProjApply",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24646,
+  "category": "reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrSelProjs2",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24670,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrSelSprints2",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24671,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_rrToggleProjDrop",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24674,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rrToggleSprintDrop",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24699,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_rrOnProjApply2",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24725,
+  "category": "retrospectives",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drSelProjs",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24775,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drSelSprints",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24776,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drAdvFilters",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24777,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drGetProjIds",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24779,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drGetSprintIds",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24780,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drToggleProjDrop",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24783,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drToggleSprintDrop",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24808,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drOnProjApply",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24834,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "toggleDrFilterPanel",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24854,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drPopulateAdvFilters",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24859,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "applyDrAdvFilters",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24875,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "resetDrAdvFilters",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24883,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drDatePreset",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24892,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drDateRangeStart",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24893,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drDateRangeEnd",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24894,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drComputeDateRange",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24895,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drOnDatePreset",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24913,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drOnCustomDate",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24927,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drUpdateDateChip",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24937,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drClearDateFilter",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24954,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drFilterTimer",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24964,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_debouncedRenderDelayReports",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24965,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drClearAllFilters",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24970,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drDrillProject",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24981,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drDrillEpic",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24987,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drDrillSprint",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24992,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drDrillAssignee",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 24998,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drOpenItem",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25004,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drDueDateStr",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25011,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drIsDone",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25016,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drComputeDelay",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25024,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drIsCardDelayed",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25062,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_getDelayReportsData",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25077,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drComputeKpis",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25149,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_DR_KIND_LABELS",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25167,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_DR_KIND_COLORS",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25168,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drDestroyChart",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25171,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drRenderCharts",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25175,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_drRenderTables",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25315,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderDelayReports",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25440,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_drGetFilterSummary",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25478,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "exportDelayReportsPDF",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25493,
+  "category": "delay-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_prSelProjs",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25562,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prSelAssignees",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25563,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prDatePreset",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25564,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prDateStart",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25565,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prDateEnd",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25566,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prComputeDateRange",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25569,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prOnDatePreset",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25592,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_prOnCustomDate",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25607,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_prClearDateFilter",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25617,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_prUpdateDateChip",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25628,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prToggleProjDrop",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25649,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_prToggleAssigneeDrop",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25671,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_prGetFilteredSprintIds",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25700,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_PR_RELEASED_STATUSES",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25717,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_PR_DONE_STATUSES",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25719,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_PR_ACTIVE_STATUSES",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25721,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prCalcScore",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25723,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prScoreBadge",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25734,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prUtilLabel",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25740,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prTopPerformerScore",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25747,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prBuildUserMetrics",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25753,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderProductivityReport",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25851,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_prDebounceTimer",
+  "type": "assign",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25856,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_prDebounced",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25857,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_renderProductivityReport",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 25859,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "exportProductivityPDF",
+  "type": "function",
+  "sourceBlock": "shared-multiselect-and-more",
+  "line": 26175,
+  "category": "productivity-report",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_erEpicProjectIds",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26403,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_erEpicProjectNames",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26406,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_erGetScopedEpics",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26413,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_erPopulateFilters",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26424,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_erOnProjectChange",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26442,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_erOnEpicChange",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26446,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_erSelectEpic",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26450,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "_erFilterTimer",
+  "type": "assign",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26456,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_debouncedRenderEpicReports",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26457,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_getEpicReportsData",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26463,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_erEpicMetrics",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26474,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_ER_STATUS_COLORS",
+  "type": "assign",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26486,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_erStatusColor",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26491,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_erDestroyChart",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26494,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_erRenderOverviewCharts",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26499,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "_erRenderEpicDetailCharts",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26614,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": false
+ },
+ {
+  "name": "renderEpicReports",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26659,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "exportEpicReportsPDF",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26820,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ },
+ {
+  "name": "exportEpicReportsExcel",
+  "type": "function",
+  "sourceBlock": "epic-reports-tail",
+  "line": 26987,
+  "category": "epic-reports",
+  "alreadyWindowExposed": false,
+  "neededGlobalByInlineHandler": true
+ }
+]
